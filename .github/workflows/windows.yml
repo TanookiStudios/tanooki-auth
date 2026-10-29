@@ -1,0 +1,49 @@
+name: Windows
+
+# Real run on real Windows: unit tests, the end-to-end app test (DPAPI secure storage,
+# vault on disk), and a release build uploaded as an artifact.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.5
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter test integration_test/app_test.dart -d windows --dart-define=TA_STORAGE=itest
+      - run: flutter build windows --release
+      - name: Build installer
+        shell: pwsh
+        working-directory: windows-installer
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (!(Test-Path $iscc)) { choco install innosetup -y --no-progress }
+          $env:APP_VERSION = (Select-String -Path ../app/pubspec.yaml -Pattern '^version: ([0-9.]+)').Matches[0].Groups[1].Value
+          & $iscc TanookiAuth.iss
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+      - name: Install it silently and check the app landed
+        shell: pwsh
+        working-directory: dist
+        run: |
+          $setup = Get-ChildItem *.exe | Select-Object -First 1
+          Start-Process $setup.FullName -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART' -Wait
+          $exe = "${env:ProgramFiles}\Tanooki Auth\TanookiAuth.exe"
+          if (!(Test-Path $exe)) { Write-Error "installer did not place $exe"; exit 1 }
+          Write-Host "Installed: $exe" 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tanooki-auth-windows-setup
+          path: dist/*.exe

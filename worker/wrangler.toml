@@ -1,0 +1,11 @@
+# Tanooki Auth Premium: turns a paid Stripe Checkout into a license key page.
+# Secrets (set with `npx wrangler secret put NAME`, never in this file):
+#   STRIPE_KEY    Stripe restricted key with read access to Checkout Sessions
+#   LICENSE_SEED  base64 Ed25519 seed from ~/.tanooki-auth-signing/license_ed25519.json
+name = "tanooki-auth-premium"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+# Public half of the signing key; must match lib/core/license.dart.
+LICENSE_PUBLIC = "JZ9iKjegJLat8xNt2L80HNWmHfXJc9at34lUBynULM8="

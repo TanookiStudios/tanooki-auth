@@ -1,0 +1,17 @@
+.DS_Store
+# Signing material lives outside the repo (e.g. ~/.tanooki-auth-signing). Belt and braces:
+*.jks
+*.keystore
+*.p12
+*.p8
+*.pem
+*.mobileprovision
+*.provisionprofile
+key.properties
+*.tanookiauth
+dist/
+
+# Local tool state and private working notes; never published.
+.wrangler/
+.hallmark/
+PLAN.md

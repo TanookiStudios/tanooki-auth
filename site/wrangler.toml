@@ -1,0 +1,14 @@
+# The Tanooki Auth website at auth.tanookistudios.com. Deploy: cd site && npx wrangler deploy
+# Installers live in the R2 bucket below; upload with scripts/publish-downloads.sh.
+name = "tanooki-auth-site"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+routes = [{ pattern = "auth.tanookistudios.com", custom_domain = true }]
+
+[assets]
+directory = "public"
+binding = "ASSETS"
+
+[[r2_buckets]]
+binding = "DOWNLOADS"
+bucket_name = "tanooki-auth-downloads"

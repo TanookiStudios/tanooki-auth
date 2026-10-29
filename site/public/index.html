@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tanooki Auth: two-factor codes that stay on your devices</title>
+<meta name="description" content="Tanooki Auth is a free two-factor authenticator for Mac, Windows and Android. Your codes stay on your device, encrypted. No account, no cloud, no tracking.">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;650&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="container">
+    <nav class="pill" aria-label="Main">
+      <a class="brand" href="/" aria-label="Tanooki Auth home"><img src="icon.png" alt="" width="28" height="28">Tanooki Auth</a>
+      <ul>
+        <li><a href="#promise">Privacy</a></li>
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#themes">Premium</a></li>
+        <li><a href="https://tanookistudios.com/SupportMe">Donate</a></li>
+      </ul>
+      <a class="btn" href="#download">Download</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero">
+    <div class="container">
+      <div>
+        <h1>Your codes stay on your devices.</h1>
+        <p class="lead">A free authenticator for Mac, Windows and Android. No account, no cloud.</p>
+        <div class="actions">
+          <a class="btn btn--primary" href="#download">Download free</a>
+          <a class="text" href="#promise">Read our privacy promise</a>
+        </div>
+        <small>iPhone and iPad are coming to the App Store.</small>
+      </div>
+      <figure class="hero-well">
+      <div class="screen" data-slot="hero" data-kind="product" data-alt="The account list on a phone, dark theme">
+        <img src="screens/phone-accounts.jpg" alt="Tanooki Auth on a phone showing six accounts, each with its current six-digit code" width="900" height="1808" fetchpriority="high">
+      </div>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section promise" id="promise">
+    <div class="container">
+      <h2>What we promise, in writing</h2>
+      <dl class="rows">
+        <div><dt>No account</dt><dd>There is nothing to sign up for, so there is no password of ours to leak and no profile of you to sell.</dd></div>
+        <div><dt>Nothing leaves your device</dt><dd>Your codes live in one file on your own device, locked with AES-256. The key sits in your device’s secure storage.</dd></div>
+        <div><dt>No ads, no analytics</dt><dd>The app holds no tracking code. We never see which sites you use or how often.</dd></div>
+        <div><dt>Works offline</dt><dd>Codes come from your device’s clock, so they keep working on a plane or with Wi‑Fi off.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="section section--l" id="how">
+    <div class="container">
+      <h2>From QR code to signed in</h2>
+      <ol class="stages">
+        <li class="stage">
+          <div>
+            <h3>Scan it</h3>
+            <p>Point your camera at the QR code, or open a screenshot of it. Leaving Google Authenticator? One scan brings every account over.</p>
+          </div>
+          <figure>
+            <div class="screen" data-slot="stage-1" data-kind="product" data-alt="The add account screen">
+              <img src="screens/phone-add.jpg" alt="The add account screen with options to scan a QR code, open an image or type a key" width="900" height="1808" loading="lazy">
+            </div>
+          </figure>
+        </li>
+        <li class="stage">
+          <div>
+            <h3>Fill it in</h3>
+            <p>Tap a code to copy it. On your computer, the browser extension fills it in for you, only on the site it belongs to, talking only to the app on that computer.</p>
+          </div>
+          <figure>
+            <div class="screen screen--ext" data-slot="stage-2" data-kind="product" data-alt="The browser extension popup">
+              <img src="screens/extension.png" alt="The Tanooki Auth browser extension showing a code with a Copy button" width="360" height="600" loading="lazy">
+            </div>
+          </figure>
+        </li>
+        <li class="stage">
+          <div>
+            <h3>Back it up</h3>
+            <p>Save an encrypted backup with a password only you know, then open it on your next phone or computer.</p>
+          </div>
+          <figure>
+            <div class="screen" data-slot="stage-3" data-kind="product" data-alt="The settings screen with backup">
+              <img src="screens/phone-settings.jpg" alt="The settings screen with the backup and restore options" width="900" height="1300" loading="lazy">
+            </div>
+          </figure>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="themes" id="themes">
+    <div class="container">
+      <div>
+        <h2>Make it yours</h2>
+        <p class="intro">Dark and Light are free. Premium adds Pastel Pink, Pastel Blue and more.</p>
+        <p class="price"><strong>$5</strong><span>once, never a subscription. Buy it in Settings.</span></p>
+        <div class="seg" role="tablist" aria-label="Theme" hidden>
+          <button type="button" role="tab" id="t-dark" aria-controls="p-dark" aria-selected="true">Dark</button>
+          <button type="button" role="tab" id="t-light" aria-controls="p-light" aria-selected="false" tabindex="-1">Light</button>
+          <button type="button" role="tab" id="t-pink" aria-controls="p-pink" aria-selected="false" tabindex="-1">Pastel Pink <small>Premium</small></button>
+          <button type="button" role="tab" id="t-blue" aria-controls="p-blue" aria-selected="false" tabindex="-1">Pastel Blue <small>Premium</small></button>
+        </div>
+      </div>
+      <div class="panels">
+        <figure role="tabpanel" id="p-dark" aria-labelledby="t-dark"><div class="screen" data-slot="theme-dark" data-kind="product" data-alt="Dark theme"><img src="screens/theme-dark.jpg" alt="The account list in the Dark theme" width="900" height="1808" loading="lazy"></div><figcaption>Dark, free</figcaption></figure>
+        <figure role="tabpanel" id="p-light" aria-labelledby="t-light"><div class="screen" data-slot="theme-light" data-kind="product" data-alt="Light theme"><img src="screens/theme-light.jpg" alt="The account list in the Light theme" width="900" height="1808" loading="lazy"></div><figcaption>Light, free</figcaption></figure>
+        <figure role="tabpanel" id="p-pink" aria-labelledby="t-pink"><div class="screen" data-slot="theme-pink" data-kind="product" data-alt="Pastel Pink theme"><img src="screens/theme-pink.jpg" alt="The account list in the Pastel Pink theme" width="900" height="1808" loading="lazy"></div><figcaption>Pastel Pink, Premium</figcaption></figure>
+        <figure role="tabpanel" id="p-blue" aria-labelledby="t-blue"><div class="screen" data-slot="theme-blue" data-kind="product" data-alt="Pastel Blue theme"><img src="screens/theme-blue.jpg" alt="The account list in the Pastel Blue theme" width="900" height="1808" loading="lazy"></div><figcaption>Pastel Blue, Premium</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="section download" id="download">
+    <div class="container">
+      <h2>Download Tanooki Auth</h2>
+      <p class="intro">Free on every platform. Each file’s SHA-256 is under it, if you like to check.</p>
+      <table>
+        <thead><tr><th scope="col">Platform</th><th scope="col">Needs</th><th scope="col">Size</th><th scope="col"><span class="visually-hidden">Download</span></th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Mac</td>
+            <td>macOS 12 or newer. Open it, drag Tanooki Auth into Applications.<details><summary>SHA-256</summary><code>b10652d82f5943c79b5e83b91decc01c1317f330032f401afc41525f9aa29d48</code></details></td>
+            <td class="num">22.7&nbsp;MB</td>
+            <td><a class="btn" href="download/Tanooki-Auth-0.1.0-mac.dmg">Download</a></td>
+          </tr>
+          <tr>
+            <td>Windows</td>
+            <td>Windows 10 or newer. If Windows says it protected your PC, click More info, then Run anyway.<details><summary>SHA-256</summary><code>1f70a1e30d75992c2559dae212aa97d7ae4be1fc140305a65a261b762c0d302d</code></details></td>
+            <td class="num">11.3&nbsp;MB</td>
+            <td><a class="btn" href="download/Tanooki-Auth-0.1.0-windows-setup.exe">Download</a></td>
+          </tr>
+          <tr>
+            <td>Android</td>
+            <td>Android 7 or newer. Your phone asks once to allow installs from your browser.<details><summary>SHA-256</summary><code>1f642d3341cb3c7de4a4f1a300b3daa838a5b78e778c5b081d81636229563262</code></details></td>
+            <td class="num">73.4&nbsp;MB</td>
+            <td><a class="btn" href="download/Tanooki-Auth-0.1.0-android.apk">Download</a></td>
+          </tr>
+          <tr>
+            <td>Browser extension</td>
+            <td>Chrome, Brave or Edge, beside the Mac or Windows app. Unzip it, open chrome://extensions, turn on Developer mode, then Load unpacked.<details><summary>SHA-256</summary><code>08c8a31101c01ec9d4f8c1b390ea8ecb9a0353f98013a439a8c5de8edd373503</code></details></td>
+            <td class="num">79&nbsp;KB</td>
+            <td><a class="btn" href="download/Tanooki-Auth-0.1.0-extension.zip">Download</a></td>
+          </tr>
+          <tr>
+            <td>iPhone and iPad</td>
+            <td>On its way to the App Store.</td>
+            <td></td>
+            <td><span class="soon">Coming soon</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="support" aria-labelledby="support-h">
+    <div class="container">
+      <div>
+        <h2 id="support-h">Free, because of you</h2>
+        <p>Tanooki Studios makes free privacy apps. Donations keep them that way.</p>
+      </div>
+      <a class="btn" href="https://tanookistudios.com/SupportMe">Donate to Tanooki Studios</a>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="container">
+    <p class="mast">Tanooki Auth</p>
+    <nav aria-label="Footer">
+      <ul>
+        <li><a href="https://tanooki-auth-premium.kirbymail.workers.dev/privacy">Privacy policy</a></li>
+        <li><a href="https://tanookistudios.com">Tanooki Studios</a></li>
+        <li><a href="https://tanookistudios.com/SupportMe">Donate</a></li>
+      </ul>
+    </nav>
+    <small>© 2026 Maddie</small>
+  </div>
+</footer>
+
+<script>
+  // Theme switcher: without script every theme shows in order.
+  const tabs = [...document.querySelectorAll('.seg [role="tab"]')];
+  const show = (tab) => tabs.forEach((t) => {
+    const on = t === tab;
+    t.setAttribute('aria-selected', on);
+    t.tabIndex = on ? 0 : -1;
+    document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+  });
+  document.querySelector('.seg').hidden = false;
+  show(tabs[0]);
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => show(t));
+    t.addEventListener('keydown', (e) => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!d) return;
+      const next = tabs[(i + d + tabs.length) % tabs.length];
+      show(next); next.focus();
+    });
+  });
+</script>
+<script>window.hallmarkSlots = (m) => { for (const [k, v] of Object.entries(m)) { const s = document.querySelector(`[data-slot="${k}"]`); if (!s) continue; const im = new Image(); im.src = typeof v === 'string' ? v : v.src; im.alt = (typeof v === 'object' && v.alt) || s.dataset.alt || ''; s.querySelectorAll(':scope > img').forEach((o) => o.remove()); s.prepend(im); } };
+document.querySelectorAll('[data-slot] img').forEach((i) => { if (i.complete && !i.naturalWidth) i.remove(); else i.addEventListener('error', () => i.remove(), { once: true }); });</script>
+</body>
+</html>
