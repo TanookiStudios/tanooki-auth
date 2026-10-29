@@ -59,7 +59,8 @@ a.text:active { opacity: 0.8; }
 
 /* The promise: rows beside the head */
 .promise .container { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: var(--gap-columns); align-items: start; }
-.promise h2 { position: sticky; top: 120px; }
+.promise-head { position: sticky; top: 120px; }
+.promise-head p { margin-top: var(--space-lg); color: var(--color-ink-2); }
 .rows { margin: 0; border-top: 1px solid var(--color-ink); }
 .rows > div { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--gap-columns); padding-block: var(--space-xl); border-bottom: 1px solid var(--color-rule); }
 .rows dt { font-size: var(--text-title); font-weight: 650; letter-spacing: -0.02em; line-height: 1.2; }
@@ -124,7 +125,7 @@ a.text:active { opacity: 0.8; }
   .pill ul { display: none; }
   .hero .container, .promise .container, .stage, .themes .container, .support .container { grid-template-columns: minmax(0, 1fr); gap: var(--space-xl); }
   .hero .container { min-height: 0; }
-  .promise h2 { position: static; }
+  .promise-head { position: static; }
   .rows > div { grid-template-columns: minmax(0, 1fr); gap: var(--space-xs); }
   .support .btn { justify-self: start; }
   .download thead { display: none; }
