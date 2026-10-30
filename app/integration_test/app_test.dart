@@ -91,7 +91,9 @@ void main() {
     expect(find.text('GitHub'), findsNothing);
     await t.tap(find.byTooltip('Settings').evaluate().isNotEmpty ? find.byTooltip('Settings') : find.text('Settings'));
     await settle(t);
-    await t.ensureVisible(find.text('Trash (1)'));
+    // The Settings list builds lazily, so on a short window Trash isn't built yet: scroll the vertical list to it.
+    await t.scrollUntilVisible(find.text('Trash (1)'), 300,
+        scrollable: find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).first);
     await settle(t);
     await t.tap(find.text('Trash (1)'));
     await settle(t);
