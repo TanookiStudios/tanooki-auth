@@ -260,7 +260,12 @@ async function linkTests() {
   check('wrong-direction key cannot decrypt', tamperRejected);
 
   r = await room('POST', `${R}/push`, phoneToken, { platform: 'apns', token: 'a'.repeat(64), environment: 'sandbox' });
-  if (process.env.EXPECT_PUSH) check('push token registers (200)', r.status === 200, JSON.stringify(r));
+  if (process.env.EXPECT_PUSH) {
+    check('push token registers (200)', r.status === 200, JSON.stringify(r));
+    // Apple only says "bad device token" after it has accepted our signing key; a bad key gives failed:apns-403.
+    r = await room('POST', `${R}/messages`, extToken, { ciphertext: await seal(extKeys.e2p, { t: 'fill-request', id: b64u(rand(16)), ts: Date.now(), host: 'github.com' }, aad('e2p')), notify: true });
+    check('Apple accepts the push key (fake device -> token-dead)', r.status === 201 && r.body.push === 'token-dead', JSON.stringify(r));
+  }
   else check('push token without secrets: 503 "push not configured"', r.status === 503 && r.body?.error === 'push not configured', JSON.stringify(r));
   r = await room('POST', `${R}/push`, phoneToken, { platform: 'fcm', token: 'f'.repeat(64) });
   if (!process.env.EXPECT_PUSH) check('FCM token without secrets: 503 too', r.status === 503, JSON.stringify(r));

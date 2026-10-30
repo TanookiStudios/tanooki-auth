@@ -7,6 +7,19 @@
 	<string>development</string>
 	<!-- The app's own group MUST stay first: it is where new keychain items go by default, so the vault
 	     key stays private to the app. The second group holds only the favorites copy for the widgets. -->
+	<!-- iCloud sync (lib/core/sync): the Tanooki Auth iCloud Drive container, registered 2026-10-30. -->
+	<key>com.apple.developer.icloud-container-identifiers</key>
+	<array>
+		<string>iCloud.com.tanookistudios.auth</string>
+	</array>
+	<key>com.apple.developer.icloud-services</key>
+	<array>
+		<string>CloudDocuments</string>
+	</array>
+	<key>com.apple.developer.ubiquity-container-identifiers</key>
+	<array>
+		<string>iCloud.com.tanookistudios.auth</string>
+	</array>
 	<key>keychain-access-groups</key>
 	<array>
 		<string>$(AppIdentifierPrefix)com.tanookistudios.auth</string>
