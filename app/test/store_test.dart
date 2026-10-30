@@ -147,7 +147,16 @@ void main() {
     });
     tearDown(() => store.dispose());
 
-    Future<void> settle() => Future.delayed(const Duration(milliseconds: 50));
+    // Waits for the store to finish handling the update (a slow CI runner takes well over 50 ms to verify and save
+    // a key): every path sets a message, and only "pending" leaves busy on. Then a moment for completePurchase.
+    Future<void> settle() async {
+      for (var i = 0; i < 250; i++) {
+        final m = store.message.value;
+        if (m != null && (!store.busy.value || m.startsWith('Waiting'))) break;
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+    }
 
     test('an App Store purchase unlocks Premium and gets a license key for desktop from the worker', () async {
       String? sent;
