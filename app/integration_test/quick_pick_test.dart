@@ -40,6 +40,13 @@ void main() {
   }
 
   testWidgets('menu bar / tray icon opens Quick pick, click copies, Type types', (t) async {
+    // Progress goes to a file too: CI only prints test output at the end, so a hang would otherwise show nothing.
+    final log = File('${(await getTemporaryDirectory()).path}${Platform.pathSeparator}ta_quickpick_log.txt')..writeAsStringSync('');
+    void step(String s) {
+      debugPrint(s);
+      log.writeAsStringSync('${DateTime.now().toIso8601String()} $s\n', mode: FileMode.append, flush: true);
+    }
+
     expect(storageName, isNotEmpty, reason: 'refusing to run against the real vault; pass --dart-define=TA_STORAGE=itest');
     final vault = await openVault();
     await vault.resetToEmpty();
@@ -50,18 +57,21 @@ void main() {
     await t.pumpWidget(const TanookiAuthApp(key: ValueKey('quickpick')));
     await waitFor(t, find.text('GitHub'));
 
+    step('app up; checking tray');
     expect(await window.invokeMethod<bool>('trayStatus'), isTrue, reason: 'menu bar / tray icon is not there');
+    step('tray ok; clicking it');
     await window.invokeMethod<void>('trayClick'); // native click handler -> trayClicked -> Quick pick
     await waitFor(t, find.text('Quick pick'));
     await pumpFor(t, const Duration(milliseconds: 500));
 
+    step('quick pick open; copying');
     await Clipboard.setData(const ClipboardData(text: 'before'));
     await awayFromRollover(t);
     final copied = code();
     await t.tap(find.text('GitHub'));
     await pumpFor(t, const Duration(milliseconds: 500));
     expect((await Clipboard.getData(Clipboard.kTextPlain))?.text, copied);
-    debugPrint('PROOF tray=ok quickpick-copy=$copied platform=${Platform.operatingSystem}');
+    step('PROOF tray=ok quickpick-copy=$copied platform=${Platform.operatingSystem}');
 
     if (Platform.isMacOS) {
       final plan = (await window.invokeMapMethod<String, Object?>('typePlan', '048213'))!;
@@ -73,7 +83,7 @@ void main() {
       ]);
       if (plan['trusted'] == true) {
         // This build may press keys: tapping Type would type into whatever is in front on this Mac, so stop here.
-        debugPrint('PROOF mac-type-plan=ok denied-path=SKIPPED (this build already has Accessibility) ax=${plan['axTrusted']}');
+        step('PROOF mac-type-plan=ok denied-path=SKIPPED (this build already has Accessibility) ax=${plan['axTrusted']}');
         return;
       }
       await t.tap(find.text('Type'));
@@ -82,7 +92,7 @@ void main() {
       await t.tap(find.text('Not now'));
       await pumpFor(t, const Duration(milliseconds: 500));
       expect(find.text('Quick pick'), findsOneWidget);
-      debugPrint('PROOF mac-type-plan=ok denied-path=explained ax=${plan['axTrusted']}');
+      step('PROOF mac-type-plan=ok denied-path=explained ax=${plan['axTrusted']}');
     }
 
     if (Platform.isWindows) {
@@ -100,21 +110,24 @@ void main() {
         for (var i = 0; i < 150 && !ready.existsSync(); i++) {
           await t.pump(const Duration(milliseconds: 100));
         }
+        step('target ready=${ready.existsSync()}');
         expect(ready.existsSync(), isTrue, reason: 'the target text box never came to the front');
         await awayFromRollover(t);
         final typed = code();
+        step('tapping Type');
         await t.tap(find.text('Type'));
         for (var i = 0; i < 100 && (!out.existsSync() || out.readAsStringSync().length < typed.length); i++) {
           await t.pump(const Duration(milliseconds: 100));
         }
+        step('typed: ${out.existsSync() ? out.readAsStringSync() : '<none>'}');
         expect(out.existsSync() ? out.readAsStringSync() : '<nothing typed>', typed);
-        debugPrint('PROOF windows-type=$typed');
+        step('PROOF windows-type=$typed');
       } finally {
         target.kill();
         await window.invokeMethod<void>('focus');
       }
     }
-  }, skip: !(Platform.isMacOS || Platform.isWindows));
+  }, skip: !(Platform.isMacOS || Platform.isWindows), timeout: const Timeout(Duration(minutes: 4)));
 }
 
 const _targetScript = r'''
