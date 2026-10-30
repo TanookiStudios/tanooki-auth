@@ -41,7 +41,9 @@ void main() {
 
   testWidgets('menu bar / tray icon opens Quick pick, click copies, Type types', (t) async {
     // Progress goes to a file too: CI only prints test output at the end, so a hang would otherwise show nothing.
-    final log = File('${(await getTemporaryDirectory()).path}${Platform.pathSeparator}ta_quickpick_log.txt')..writeAsStringSync('');
+    final log = File('${(await getTemporaryDirectory()).path}${Platform.pathSeparator}ta_quickpick_log.txt')
+      ..createSync(recursive: true)
+      ..writeAsStringSync('');
     void step(String s) {
       debugPrint(s);
       log.writeAsStringSync('${DateTime.now().toIso8601String()} $s\n', mode: FileMode.append, flush: true);
