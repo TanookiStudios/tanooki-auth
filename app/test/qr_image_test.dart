@@ -36,4 +36,15 @@ void main() {
     expect(() => decodeQrImage(img.encodePng(img.Image(width: 50, height: 50))), throwsFormatException);
     expect(() => decodeQrImage(Uint8List.fromList([1, 2, 3])), throwsFormatException);
   });
+
+  test('finds a small QR code on a big screen capture (fast path and full-size fallback)', () {
+    final screen = img.Image(width: 3840, height: 2160)..clear(img.ColorRgb8(240, 240, 240));
+    img.compositeImage(screen, renderQr(uri), dstX: 2900, dstY: 1500);
+    expect(decodeQr(screen), uri);
+    // Too small to survive shrinking: only the full-size pass can read it.
+    final tiny = img.copyResize(renderQr(uri), width: 120, interpolation: img.Interpolation.nearest);
+    final screen2 = img.Image(width: 5120, height: 2880)..clear(img.ColorRgb8(255, 255, 255));
+    img.compositeImage(screen2, tiny, dstX: 4000, dstY: 2000);
+    expect(decodeQr(screen2), uri);
+  });
 }

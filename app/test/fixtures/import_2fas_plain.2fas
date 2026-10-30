@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 4,
+  "appVersionCode": 5000000,
+  "appOrigin": "android",
+  "groups": [],
+  "services": [
+    {
+      "name": "GitHub",
+      "secret": "JBSWY3DPEHPK3PXP",
+      "updatedAt": 1700000000000,
+      "otp": {
+        "label": "GitHub:octo@example.com",
+        "account": "octo@example.com",
+        "issuer": "GitHub",
+        "digits": 6,
+        "period": 30,
+        "algorithm": "SHA1",
+        "tokenType": "TOTP",
+        "source": "Link"
+      },
+      "order": {
+        "position": 0
+      },
+      "icon": {
+        "selected": "Label"
+      }
+    },
+    {
+      "name": "Dropbox",
+      "secret": "KRUGKIDROVUWG2ZA",
+      "updatedAt": 1700000000000,
+      "otp": {
+        "account": "demo@example.com",
+        "issuer": "Dropbox",
+        "digits": 6,
+        "period": 30,
+        "algorithm": "SHA1",
+        "tokenType": "TOTP",
+        "source": "Manual"
+      },
+      "order": {
+        "position": 1
+      }
+    },
+    {
+      "name": "Steam",
+      "secret": "MFRGGZDFMZTWQ2LK",
+      "updatedAt": 1700000000000,
+      "otp": {
+        "account": "gamer",
+        "issuer": "Steam",
+        "digits": 5,
+        "period": 30,
+        "algorithm": "SHA1",
+        "tokenType": "STEAM"
+      },
+      "order": {
+        "position": 2
+      }
+    }
+  ]
+}

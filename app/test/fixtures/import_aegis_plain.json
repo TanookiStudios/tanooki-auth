@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "header": {
+    "slots": null,
+    "params": null
+  },
+  "db": {
+    "version": 3,
+    "entries": [
+      {
+        "type": "totp",
+        "uuid": "905e7fe6-91e2-440b-b34a-4f8a5f6a650a",
+        "name": "octo@example.com",
+        "issuer": "GitHub",
+        "note": "work laptop",
+        "favorite": true,
+        "icon": null,
+        "info": {
+          "secret": "JBSWY3DPEHPK3PXP",
+          "algo": "SHA1",
+          "digits": 6,
+          "period": 30
+        },
+        "groups": []
+      },
+      {
+        "type": "totp",
+        "uuid": "14e1ffe3-0478-4ddb-8bbd-eeaa42fe9fd0",
+        "name": "me@example.com",
+        "issuer": "Proton",
+        "note": "",
+        "favorite": false,
+        "icon": null,
+        "info": {
+          "secret": "GEZDGNBVGY3TQOJQ",
+          "algo": "SHA256",
+          "digits": 8,
+          "period": 60
+        },
+        "groups": []
+      },
+      {
+        "type": "hotp",
+        "uuid": "5097076f-7c48-4235-84c0-701a74b99397",
+        "name": "card",
+        "issuer": "Bank",
+        "note": "",
+        "favorite": false,
+        "icon": null,
+        "info": {
+          "secret": "NBSWY3DPO5XXE3DE",
+          "algo": "SHA1",
+          "digits": 6,
+          "counter": 7
+        },
+        "groups": []
+      },
+      {
+        "type": "steam",
+        "uuid": "06213d8c-d524-4bed-91f6-18e9d9ad4627",
+        "name": "gamer",
+        "issuer": "Steam",
+        "note": "",
+        "favorite": false,
+        "icon": null,
+        "info": {
+          "secret": "MFRGGZDFMZTWQ2LK",
+          "algo": "SHA1",
+          "digits": 5,
+          "period": 30
+        },
+        "groups": []
+      }
+    ],
+    "groups": []
+  }
+}

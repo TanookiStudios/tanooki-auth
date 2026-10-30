@@ -33,6 +33,8 @@ class FlutterWindow : public Win32Window {
 
   // Lets the app come to the front when the browser extension asks for a confirmation.
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> window_channel_;
+  // Whether the user asked to keep the window out of screenshots (Settings).
+  bool secure_ = false;
 };
 
 #endif  // RUNNER_FLUTTER_WINDOW_H_

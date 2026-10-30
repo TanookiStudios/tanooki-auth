@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -7,22 +8,18 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../core/account.dart';
 import '../core/otpauth_uri.dart';
+import '../core/importers.dart';
 import '../core/qr_image.dart';
+import '../core/screen_capture.dart';
 import '../core/totp.dart';
 import '../core/vault.dart';
 import 'backup_ui.dart';
 import 'home.dart';
+import 'import_ui.dart';
 
 bool get hasCamera => Platform.isIOS || Platform.isAndroid || Platform.isMacOS;
-
-/// "https://www.GitHub.com/login" -> "github.com".
-String normalizeDomain(String s) {
-  var d = s.trim().toLowerCase();
-  d = d.replaceFirst(RegExp(r'^[a-z]+://'), '');
-  d = d.split(RegExp(r'[/?#:]')).first;
-  if (d.startsWith('www.')) d = d.substring(4);
-  return d;
-}
+bool get isPhone => Platform.isIOS || Platform.isAndroid;
+bool get canScanScreen => Platform.isMacOS || Platform.isWindows;
 
 /// Lets the user check and edit issuer, name and websites. Edits [a] in place when confirmed.
 Future<bool> showAccountDialog(BuildContext context, Account a,
@@ -159,12 +156,66 @@ class _AddScreenState extends State<AddScreen> {
   Future<void> _image() async {
     final files = await FilePicker.pickFiles(type: FileType.image);
     if (files.isEmpty) return;
+    final bytes = await files.first.readAsBytes();
+    final String text;
     try {
-      await _fromText(decodeQrImage(await files.first.readAsBytes()));
+      text = await Isolate.run(() => decodeQrImage(bytes));
     } on FormatException catch (e) {
       _say(e.message);
+      return;
     }
+    await _fromText(text);
   }
+
+  Future<void> _fromOtherApp() async {
+    final before = widget.vault.live.length;
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => ImportFromAppScreen(vault: widget.vault)));
+    if (mounted && widget.vault.live.length > before) Navigator.pop(context);
+  }
+
+  Future<void> _scanScreen() async {
+    _say('Looking for a QR code on your screen…');
+    final String text;
+    try {
+      text = await scanScreenForQr();
+    } on ScreenScanException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      if (e.failure == ScreenScanFailure.denied) {
+        await _explainScreenPermission();
+      } else {
+        _say(switch (e.failure) {
+          ScreenScanFailure.noQr =>
+            'No QR code found on your screen. Make sure the whole code is showing and not covered by another window, then try again.',
+          ScreenScanFailure.unsupported => 'Scanning the screen needs macOS 14 (Sonoma) or newer. Take a screenshot and use "Open a picture" instead.',
+          _ => 'Couldn\'t take a picture of the screen. Take a screenshot and use "Open a picture" instead.',
+        });
+      }
+      return;
+    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    if (!text.startsWith('otpauth://') && !text.startsWith('otpauth-migration://')) {
+      _say('Found a QR code on your screen, but it isn\'t a two-factor setup code.');
+      return;
+    }
+    await _fromText(text);
+  }
+
+  Future<void> _explainScreenPermission() => showDialog<void>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: const Text('Let Tanooki Auth see your screen'),
+          content: const Text(
+              'To read a QR code off your screen, your Mac needs to let Tanooki Auth take a picture of it. Tanooki Auth only looks when you press "Scan my screen", and the picture never leaves this Mac.\n\n'
+              '1. Open System Settings (the gear icon in the Dock, or Apple menu > System Settings).\n'
+              '2. Click "Privacy & Security" in the left column.\n'
+              '3. Click "Screen & System Audio Recording".\n'
+              '4. Turn on the switch next to Tanooki Auth. If it isn\'t in the list, click +, pick Tanooki Auth from Applications, and turn it on.\n'
+              '5. Your Mac will ask to quit Tanooki Auth. Click "Quit & Reopen", then press "Scan my screen" again.'),
+          actions: [FilledButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
+        ),
+      );
 
   Future<void> _paste() async {
     final field = TextEditingController(text: (await Clipboard.getData(Clipboard.kTextPlain))?.text?.trim() ?? '');
@@ -172,12 +223,14 @@ class _AddScreenState extends State<AddScreen> {
     final text = await showDialog<String>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Paste setup link'),
+        title: const Text('Paste setup links'),
         content: TextField(
           controller: field,
           autofocus: true,
-          maxLines: 3,
-          decoration: const InputDecoration(hintText: 'otpauth://totp/...'),
+          minLines: 3,
+          maxLines: 10,
+          keyboardType: TextInputType.multiline,
+          decoration: const InputDecoration(hintText: 'otpauth://totp/...\nOne link per line. You can paste many at once.'),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
@@ -185,7 +238,23 @@ class _AddScreenState extends State<AddScreen> {
         ],
       ),
     );
-    if (text != null && text.isNotEmpty) await _fromText(text);
+    if (text == null || text.isEmpty || !mounted) return;
+    if (text.split('\n').where((l) => l.trim().isNotEmpty).length == 1) return _fromText(text);
+    await _pasteMany(text);
+  }
+
+  /// Many links at once: adds every good one, then lists each skipped line and why.
+  Future<void> _pasteMany(String text) async {
+    final r = parseOtpauthLines(text);
+    if (r.accounts.isNotEmpty &&
+        !await confirmImport(context, 'Add ${r.accounts.length} accounts?', r.accounts,
+            note: r.problems.isEmpty ? null : '${r.problems.length} line(s) can\'t be used; you\'ll see which after.')) {
+      return;
+    }
+    if (!mounted) return;
+    final before = widget.vault.live.length;
+    await mergeAndReport(context, widget.vault, r.accounts, problems: r.problems, verb: 'Added');
+    if (mounted && widget.vault.live.length > before) Navigator.pop(context);
   }
 
   Future<void> _manual() async {
@@ -232,16 +301,23 @@ class _AddScreenState extends State<AddScreen> {
           subtitle: Text(hasCamera ? 'Point the camera at the code the website shows' : 'No camera support on Windows'),
           onTap: _scan,
         ),
+        if (canScanScreen)
+          ListTile(
+            leading: const Icon(Icons.screenshot_monitor),
+            title: const Text('Scan my screen'),
+            subtitle: const Text('Reads a QR code showing anywhere on your screen'),
+            onTap: _scanScreen,
+          ),
         ListTile(
           leading: const Icon(Icons.image_outlined),
-          title: const Text('Open a picture of a QR code'),
-          subtitle: const Text('A screenshot of the setup page works'),
+          title: Text(isPhone ? 'Scan a QR code from your photos' : 'Open a picture of a QR code'),
+          subtitle: Text(isPhone ? 'Pick a screenshot of the setup page' : 'A screenshot of the setup page works'),
           onTap: _image,
         ),
         ListTile(
           leading: const Icon(Icons.link),
           title: const Text('Paste setup link'),
-          subtitle: const Text('A link starting with otpauth://'),
+          subtitle: const Text('Links starting with otpauth://, one or many'),
           onTap: _paste,
         ),
         ListTile(
@@ -249,6 +325,12 @@ class _AddScreenState extends State<AddScreen> {
           title: const Text('Move from Google Authenticator'),
           subtitle: const Text('Bring all your accounts across at once'),
           onTap: _fromGoogle,
+        ),
+        ListTile(
+          leading: const Icon(Icons.move_down),
+          title: const Text('Move from another app'),
+          subtitle: const Text('Aegis, 2FAS, Authy, Bitwarden, 1Password, Microsoft'),
+          onTap: _fromOtherApp,
         ),
         ListTile(
           leading: const Icon(Icons.keyboard_outlined),

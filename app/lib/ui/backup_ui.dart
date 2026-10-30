@@ -18,7 +18,7 @@ void _say(BuildContext context, String msg) => ScaffoldMessenger.of(context)
   ..showSnackBar(SnackBar(content: Text(msg)));
 
 /// Runs [work] behind a "please wait" dialog the user can't dismiss.
-Future<T> _busy<T>(BuildContext context, String text, Future<T> Function() work) async {
+Future<T> busy<T>(BuildContext context, String text, Future<T> Function() work) async {
   showDialog<void>(
     context: context,
     barrierDismissible: false,
@@ -86,7 +86,7 @@ Future<String?> _askPassphrase(BuildContext context, {required bool forExport}) 
 }
 
 /// Phones: share sheet (AirDrop, Files, email). Computers: a Save dialog.
-Future<bool> _deliver(BuildContext context, String fileName, Uint8List bytes, String mime) async {
+Future<bool> deliverFile(BuildContext context, String fileName, Uint8List bytes, String mime) async {
   if (Platform.isIOS || Platform.isAndroid) {
     final box = context.findRenderObject() as RenderBox?;
     final result = await SharePlus.instance.share(ShareParams(
@@ -108,9 +108,9 @@ Future<void> exportBackupFlow(BuildContext context, Vault vault) async {
   }
   final pass = await _askPassphrase(context, forExport: true);
   if (pass == null || !context.mounted) return;
-  final text = await _busy(context, 'Encrypting backup…', () => exportBackup(vault.live, pass));
+  final text = await busy(context, 'Encrypting backup…', () => exportBackup(vault.live, pass));
   if (!context.mounted) return;
-  final saved = await _deliver(context, 'Tanooki Auth backup ${_today()}.$backupExtension',
+  final saved = await deliverFile(context, 'Tanooki Auth backup ${_today()}.$backupExtension',
       Uint8List.fromList(utf8.encode(text)), 'application/octet-stream');
   if (saved && context.mounted) _say(context, 'Backup of ${vault.live.length} accounts saved.');
 }
@@ -131,7 +131,7 @@ Future<List<Account>?> pickAndOpenBackup(BuildContext context) async {
     final pass = await _askPassphrase(context, forExport: false);
     if (pass == null || !context.mounted) return null;
     try {
-      return await _busy(context, 'Unlocking backup…', () => importBackup(text, pass));
+      return await busy(context, 'Unlocking backup…', () => importBackup(text, pass));
     } on BackupException catch (e) {
       if (!context.mounted) return null;
       _say(context, e.message);
@@ -143,15 +143,59 @@ Future<List<Account>?> pickAndOpenBackup(BuildContext context) async {
 Future<void> importBackupFlow(BuildContext context, Vault vault) async {
   final incoming = await pickAndOpenBackup(context);
   if (incoming == null || !context.mounted) return;
-  await _mergeAndReport(context, vault, incoming);
+  await mergeAndReport(context, vault, incoming);
 }
 
-Future<void> _mergeAndReport(BuildContext context, Vault vault, List<Account> incoming) async {
-  final (added, skipped) = mergeAccounts(vault.accounts, incoming);
-  await vault.save();
-  if (context.mounted) {
-    _say(context, skipped == 0 ? 'Imported $added.' : 'Imported $added, skipped $skipped already in your list.');
+/// Adds [incoming], then says how many came in and how many were left out. [problems] are things the
+/// importer couldn't read; they're listed in a dialog so nothing disappears without a reason.
+Future<void> mergeAndReport(BuildContext context, Vault vault, List<Account> incoming,
+    {List<String> problems = const [], String verb = 'Imported'}) async {
+  final (added, already) = mergeAccounts(vault.accounts, incoming);
+  if (added > 0) await vault.save();
+  if (!context.mounted) return;
+  final skipped = already + problems.length;
+  final summary = skipped == 0 ? '$verb $added.' : '$verb $added, skipped $skipped.';
+  if (problems.isEmpty) {
+    _say(context, already == 0 ? summary : '$verb $added, skipped $already already in your list.');
+    return;
   }
+  await showDialog<void>(
+    context: context,
+    builder: (c) => AlertDialog(
+      title: Text(summary),
+      content: SingleChildScrollView(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          if (already > 0) Text('• $already already in your list'),
+          for (final p in problems) Text('• $p'),
+        ]),
+      ),
+      actions: [FilledButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
+    ),
+  );
+}
+
+/// Shows what's about to come in and asks before adding anything.
+Future<bool> confirmImport(BuildContext context, String title, List<Account> incoming, {String? note}) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (c) => AlertDialog(
+      title: Text(title),
+      content: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final a in incoming) Text('• ${accountTitle(a)}${a.issuer.isNotEmpty && a.label.isNotEmpty ? ' (${a.label})' : ''}'),
+            if (note != null) ...[const SizedBox(height: 12), Text(note)],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+        FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Import')),
+      ],
+    ),
+  );
+  return ok == true;
 }
 
 Future<void> importGoogleFlow(BuildContext context, Vault vault, String uri) async {
@@ -162,27 +206,11 @@ Future<void> importGoogleFlow(BuildContext context, Vault vault, String uri) asy
     _say(context, e.message);
     return;
   }
-  final ok = await showDialog<bool>(
-    context: context,
-    builder: (c) => AlertDialog(
-      title: Text('Import ${incoming.length} from Google Authenticator?'),
-      content: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (final a in incoming) Text('• ${accountTitle(a)}${a.issuer.isNotEmpty && a.label.isNotEmpty ? ' (${a.label})' : ''}'),
-            const SizedBox(height: 12),
-            const Text('If Google Authenticator showed more than one QR code, scan each of them.'),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-        FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Import')),
-      ],
-    ),
-  );
-  if (ok == true && context.mounted) await _mergeAndReport(context, vault, incoming);
+  if (await confirmImport(context, 'Import ${incoming.length} from Google Authenticator?', incoming,
+          note: 'If Google Authenticator showed more than one QR code, scan each of them.') &&
+      context.mounted) {
+    await mergeAndReport(context, vault, incoming);
+  }
 }
 
 Future<void> exportPlainFlow(BuildContext context, Vault vault) async {
@@ -209,5 +237,5 @@ Future<void> exportPlainFlow(BuildContext context, Vault vault) async {
   );
   if (ok != true || !context.mounted) return;
   final text = '${vault.live.map(toOtpauthUri).join('\n')}\n';
-  await _deliver(context, 'Tanooki Auth setup links ${_today()}.txt', Uint8List.fromList(utf8.encode(text)), 'text/plain');
+  await deliverFile(context, 'Tanooki Auth setup links ${_today()}.txt', Uint8List.fromList(utf8.encode(text)), 'text/plain');
 }

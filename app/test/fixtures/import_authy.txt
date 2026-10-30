@@ -1,0 +1,2 @@
+otpauth://totp/GitHub:octo%40example.com?secret=JBSWY3DPEHPK3PXP&issuer=GitHub
+otpauth://totp/Discord:tanooki?secret=MFRGGZDFMZTWQ2LK&issuer=Discord

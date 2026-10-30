@@ -3,6 +3,15 @@ import 'dart:math';
 import 'account.dart';
 import 'totp.dart';
 
+/// "https://www.GitHub.com/login" -> "github.com".
+String normalizeDomain(String s) {
+  var d = s.trim().toLowerCase();
+  d = d.replaceFirst(RegExp(r'^[a-z]+://'), '');
+  d = d.split(RegExp(r'[/?#:]')).first;
+  if (d.startsWith('www.')) d = d.substring(4);
+  return d;
+}
+
 String newId() {
   final r = Random.secure();
   return List.generate(16, (_) => r.nextInt(256).toRadixString(16).padLeft(2, '0')).join();

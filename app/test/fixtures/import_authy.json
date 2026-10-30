@@ -1,0 +1,21 @@
+[
+  {
+    "name": "GitHub: octo@example.com",
+    "secret": "JBSWY3DPEHPK3PXP",
+    "uri": "otpauth://totp/GitHub:octo%40example.com?secret=JBSWY3DPEHPK3PXP&digits=6&period=30&issuer=GitHub"
+  },
+  {
+    "name": "Discord",
+    "decryptedSeed": "MFRGGZDFMZTWQ2LK",
+    "digits": 6,
+    "original_name": "Discord"
+  },
+  {
+    "name": "Twitch",
+    "secret_seed": "48656c6c6f21deadbeef",
+    "digits": 7
+  },
+  {
+    "name": "Broken"
+  }
+]

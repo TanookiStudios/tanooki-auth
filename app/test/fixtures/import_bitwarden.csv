@@ -1,0 +1,6 @@
+folder,favorite,type,name,notes,fields,reprompt,login_uri,login_username,login_password,login_totp
+,,login,GitHub,,,0,https://github.com/login,octo@example.com,hunter2,otpauth://totp/GitHub:octo%40example.com?secret=JBSWY3DPEHPK3PXP&issuer=GitHub
+Work,1,login,"Dropbox, Inc","multi
+line note",,0,https://www.dropbox.com,demo@example.com,pw,KRUGKIDROVUWG2ZA
+,,login,Plain login,,,0,https://example.com,me,pw,
+,,login,Bad secret,,,0,,me,pw,not*base32!

@@ -1,0 +1,67 @@
+{
+  "encrypted": false,
+  "folders": [],
+  "items": [
+    {
+      "id": "48762642-409e-4c3a-9d73-5729ea6ceeda",
+      "type": 1,
+      "name": "GitHub",
+      "favorite": false,
+      "notes": null,
+      "login": {
+        "username": "octo@example.com",
+        "password": "hunter2",
+        "uris": [
+          {
+            "match": null,
+            "uri": "https://github.com/login"
+          }
+        ],
+        "totp": "otpauth://totp/GitHub:octo%40example.com?secret=JBSWY3DPEHPK3PXP&issuer=GitHub"
+      }
+    },
+    {
+      "id": "3905eac9-793d-4b0b-afde-247de076b5d2",
+      "type": 1,
+      "name": "AWS",
+      "favorite": false,
+      "login": {
+        "username": "root",
+        "password": "x",
+        "uris": [
+          {
+            "uri": "https://console.aws.amazon.com"
+          }
+        ],
+        "totp": "ONSW G4TF OQYT EMZU"
+      }
+    },
+    {
+      "id": "a5b7b754-538b-4f69-b8d4-fbd3eb851207",
+      "type": 1,
+      "name": "No 2FA here",
+      "login": {
+        "username": "a",
+        "password": "b",
+        "uris": [],
+        "totp": null
+      }
+    },
+    {
+      "id": "5c0fdbbd-5c0d-4cca-8666-76715e1f79aa",
+      "type": 1,
+      "name": "Steam",
+      "login": {
+        "username": "gamer",
+        "password": "c",
+        "uris": [],
+        "totp": "steam://MFRGGZDFMZTWQ2LK"
+      }
+    },
+    {
+      "id": "bc724665-ba92-476b-a093-4948503ef621",
+      "type": 2,
+      "name": "A secure note"
+    }
+  ]
+}
