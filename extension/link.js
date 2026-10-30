@@ -95,6 +95,33 @@
 
     const save = (st) => { const { _keys, ...plain } = st; return storage.set(plain); };
 
+    // Sends [out] to the phone and waits for its answer: [accept] turns a reply into a result (or null to keep
+    // waiting); 'deny' always ends it.
+    async function ask(out, accept, { timeoutMs, onSent, timeoutMessage }) {
+      const st = await storage.get();
+      if (!st?.paired) throw new LinkError('notLinked', 'No phone is paired with this browser.');
+      await poll(st).catch(() => {}); // skip anything old, so only answers to this request count
+      const { ciphertext, id } = await seal(st, out);
+      const sent = await api(st, 'POST', `/v1/link/rooms/${st.roomId}/messages`, { ciphertext, ttl: 120, notify: true });
+      onSent?.(sent.push);
+      const until = Date.now() + timeoutMs;
+      try {
+        while (Date.now() < until) {
+          await sleep(pollMs);
+          for (const { msg, relayId } of await poll(st)) {
+            if (msg.re !== id) continue; // ignore answers to requests we didn't make
+            api(st, 'DELETE', `/v1/link/rooms/${st.roomId}/messages/${relayId}`).catch(() => {});
+            if (msg.t === 'deny') throw new LinkError('denied', 'You tapped Deny on your phone.');
+            const result = accept(msg);
+            if (result) return result;
+          }
+        }
+        throw new LinkError('timeout', timeoutMessage);
+      } finally {
+        await save(st);
+      }
+    }
+
     return {
       /** Makes a room and returns the QR text for the phone to scan (PROTOCOL.md 2.1). */
       async startPairing(relay = DEFAULT_RELAY) {
@@ -141,29 +168,23 @@
        * { code, domain, issuer, expiresIn }. [onSent] gets the relay's push result ('sent', 'not-configured', ...).
        */
       async requestCode(host, { timeoutMs = 110000, onSent } = {}) {
-        const st = await storage.get();
-        if (!st?.paired) throw new LinkError('notLinked', 'No phone is paired with this browser.');
-        await poll(st).catch(() => {}); // skip anything old, so only answers to this request count
-        const { ciphertext, id } = await seal(st, { t: 'fill-request', host });
-        const sent = await api(st, 'POST', `/v1/link/rooms/${st.roomId}/messages`, { ciphertext, ttl: 120, notify: true });
-        onSent?.(sent.push);
-        const until = Date.now() + timeoutMs;
-        try {
-          while (Date.now() < until) {
-            await sleep(pollMs);
-            for (const { msg, relayId } of await poll(st)) {
-              if (msg.re !== id) continue; // ignore answers to requests we didn't make
-              api(st, 'DELETE', `/v1/link/rooms/${st.roomId}/messages/${relayId}`).catch(() => {});
-              if (msg.t === 'deny') throw new LinkError('denied', 'You tapped Deny on your phone.');
-              if (msg.t === 'code' && /^[0-9A-Z]{5,10}$/.test(msg.code)) {
-                return { code: msg.code, domain: String(msg.domain || ''), issuer: String(msg.issuer || ''), expiresIn: msg.expiresIn };
-              }
-            }
-          }
-          throw new LinkError('timeout', 'Your phone didn\'t answer in time. Open Tanooki Auth on your phone and try again.');
-        } finally {
-          await save(st);
-        }
+        return ask({ t: 'fill-request', host }, (msg) => (msg.t === 'code' && /^[0-9A-Z]{5,10}$/.test(msg.code)
+          ? { code: msg.code, domain: String(msg.domain || ''), issuer: String(msg.issuer || ''), expiresIn: msg.expiresIn }
+          : null), { timeoutMs, onSent, timeoutMessage: 'Your phone didn\'t answer in time. Open Tanooki Auth on your phone and try again.' });
+      },
+
+      /**
+       * Asks the phone to add the account in an otpauth:// (or otpauth-migration://) [uri]. The phone always
+       * asks the user to confirm. Resolves with { accepted, reason }. Inner messages: add-request { uri } out,
+       * add-result { re, accepted, reason } back (to be added to relay/PROTOCOL.md 2.4).
+       */
+      async requestAdd(uri, { timeoutMs = 90000 } = {}) {
+        return ask({ t: 'add-request', uri }, (msg) => (msg.t === 'add-result'
+          ? { accepted: msg.accepted === true, reason: String(msg.reason || '') }
+          : null), {
+          timeoutMs,
+          timeoutMessage: 'Your phone didn\'t answer. Open Tanooki Auth on your phone. If it never asked you, update the app on your phone: older versions can\'t add accounts from the browser yet.',
+        });
       },
 
       async unpair() {

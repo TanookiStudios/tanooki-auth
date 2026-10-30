@@ -1,0 +1,60 @@
+name: PowerToys
+
+# The Tanooki Auth extension for PowerToys Command Palette (integrations/powertoys), on real Windows:
+# unit tests against the shared fake app, a Release build, and a check that Windows can install it and
+# start it the way Command Palette does. Runs on every branch that touches it.
+on:
+  push:
+    paths:
+      - 'integrations/powertoys/**'
+      - 'integrations/test/fake-bridge.mjs'
+      - '.github/workflows/powertoys.yml'
+  workflow_dispatch:
+
+jobs:
+  powertoys:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: integrations/powertoys
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Unit tests (against the fake Tanooki Auth app)
+        run: dotnet test TanookiBridge.Tests --logger "console;verbosity=normal"
+      - name: Build the Command Palette extension
+        run: |
+          dotnet build TanookiAuthCommandPalette -c Release -p:Platform=x64 -r win-x64 --self-contained `
+            -p:GenerateAppxPackageOnBuild=true -p:AppxPackageSigningEnabled=false
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          Get-ChildItem -Recurse TanookiAuthCommandPalette -Include AppxManifest.xml,*.msix | ForEach-Object FullName
+      - name: Install it the way the README says, and start it the way Command Palette does
+        run: |
+          # Developer Mode, which install.ps1 asks Maddie to turn on.
+          reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" /t REG_DWORD /f /v AllowDevelopmentWithoutDevLicense /d 1
+          ./make-folder.ps1 -Out "$env:RUNNER_TEMP\TanookiAuthPowerToys"
+          & "$env:RUNNER_TEMP\TanookiAuthPowerToys\install.ps1"
+          if ($LASTEXITCODE) { exit 1 }
+          $pkg = Get-AppxPackage TanookiStudios.TanookiAuthCommandPalette
+          if (!$pkg) { Write-Error 'package did not install'; exit 1 }
+          Write-Host "Installed $($pkg.PackageFullName)"
+          # Command Palette finds extensions through this app extension and starts them through COM.
+          [xml]$m = Get-Content (Join-Path $pkg.InstallLocation AppxManifest.xml)
+          if ($m.OuterXml -notmatch 'com\.microsoft\.commandpalette') { Write-Error 'no Command Palette app extension in the installed manifest'; exit 1 }
+          $type = [type]::GetTypeFromCLSID([guid]'1D0E5F63-B7E0-461F-ABDA-5891887818C5')
+          $ext = [Activator]::CreateInstance($type)
+          if (!$ext) { Write-Error 'COM activation returned nothing'; exit 1 }
+          $proc = Get-Process TanookiAuthCommandPalette -ErrorAction SilentlyContinue
+          if (!$proc) { Write-Error 'the extension process did not start'; exit 1 }
+          Write-Host "Started by COM: process $($proc.Id)"
+          $proc | Stop-Process
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tanooki-auth-powertoys
+          path: ${{ runner.temp }}/TanookiAuthPowerToys

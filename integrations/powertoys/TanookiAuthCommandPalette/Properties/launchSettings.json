@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TanookiAuthCommandPalette (Package)": {
+      "commandName": "MsixPackage",
+      "doNotLaunchApp": true
+    }
+  }
+}

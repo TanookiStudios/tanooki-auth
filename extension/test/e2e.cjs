@@ -38,7 +38,22 @@ function totp(b32, t = Date.now() / 1000) {
   const o = mac[mac.length - 1] & 15;
   return String((mac.readUInt32BE(o) & 0x7fffffff) % 1e6).padStart(6, '0');
 }
-const currentCodes = () => [totp(SECRET, Date.now() / 1000 - 1), totp(SECRET), totp(SECRET, Date.now() / 1000 + 1)];
+const codesFor = (secret) => [totp(secret, Date.now() / 1000 - 1), totp(secret), totp(secret, Date.now() / 1000 + 1)];
+const currentCodes = () => codesFor(SECRET);
+// Two accounts saved for one site (multi.test), told apart by the email the page shows.
+const ALICE = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
+const BOB = 'MFRGGZDFMZTWQ2LKNNWG23TPOBYXE43U';
+const multiUri = (who, secret) => `otpauth://totp/Multi:${who}%40example.com?secret=${secret}&issuer=Multi`;
+// Right-click QR images, drawn here with the extension's own QR library.
+const qrcode = require(path.join(root, 'extension', 'qrcode.js'));
+const qrImage = (text, svg) => { const q = qrcode(0, 'M'); q.addData(text); q.make(); return svg ? q.createSvgTag(6, 4) : Buffer.from(q.createDataURL(6, 4).split(',')[1], 'base64'); };
+const RC_SECRET = 'ONSWG4TFORZWK3DFMNZGK5DTMVRXEZLU';
+const qrImages = {
+  '/rc-cross.gif': qrImage(`otpauth://totp/Rightclick:cross?secret=${RC_SECRET}&issuer=Rightclick`),
+  '/rc.svg': qrImage('otpauth://totp/SvgSite:svg?secret=OBQXG43XN5ZGIZLTMVRXEZLUONSWG4TF&issuer=SvgSite', true),
+  '/rc-migration.gif': qrImage('otpauth-migration://offline?data=CjEKCkhlbGxvId6tvu8SEnRlc3RAZXhhbXBsZS5jb20aBVRlc3QgASgBMAJCEzE2NTgyNjEyMTQ5NzIwNjI4MjMQAhgBIAA%3D'),
+  '/rc-web.gif': qrImage('https://example.com/not-a-setup-code'),
+};
 
 const pages = {
   '/setup.html': '<h1>Set up two-factor authentication</h1><p>Scan this QR code with your authenticator app.</p><img id="qr" src="/setup-qr.png" width="240">',
@@ -47,6 +62,10 @@ const pages = {
   '/frame.html': '<h1>Totally legit</h1><iframe id="f" src="http://github.test:PORT/login.html" width="400" height="200"></iframe>',
   '/setup2.html': '<h1>Two-factor setup</h1><div style="width:240px;height:240px;background:url(/setup2-qr.png) 0 0/240px 240px"></div>',
   '/signin.html': '<h1>Sign in</h1><form><input name="login"><input type="password" name="password"></form>',
+  '/multi.html': '<h1>Enter your verification code</h1><p>We sent a code for bob@example.com.</p><input id="otp" autocomplete="one-time-code">',
+  '/multi-field.html': '<h1>Two-factor code</h1><input type="email" name="email" value="alice@example.com" readonly><input id="otp" name="otp">',
+  '/multi-ask.html': '<h1>Enter your verification code</h1><input id="otp" autocomplete="one-time-code">',
+  '/rightclick.html': '<h1>Some page</h1><img id="cross" src="http://cdn.test:PORT/rc-cross.gif" width="200"><img id="svg" src="/rc.svg" width="200"><img id="mig" src="/rc-migration.gif" width="200"><img id="web" src="/rc-web.gif" width="200"><img id="plain" src="/setup-qr.png" width="200">',
   '/ws.html': '<script>window.result="pending";const w=new WebSocket("ws://127.0.0.1:BRIDGE");w.onopen=()=>window.result="open";w.onerror=()=>window.result="refused";</script>',
 };
 
@@ -66,6 +85,7 @@ async function main() {
   // 2. Fake websites.
   const server = http.createServer((req, res) => {
     const p = new URL(req.url, 'http://x').pathname; // Firefox reaches us as a proxy, with full URLs
+    if (qrImages[p]) { res.setHeader('content-type', p.endsWith('.svg') ? 'image/svg+xml' : 'image/gif'); return res.end(qrImages[p]); }
     if (p.endsWith('-qr.png')) { res.setHeader('content-type', 'image/png'); return res.end(fs.readFileSync(path.join(work, p.slice(1)))); }
     res.setHeader('content-type', 'text/html');
     res.end(pages[p] ? `<!doctype html><title>t</title>${pages[p].replace('PORT', server.address().port).replace('BRIDGE', bridgePort)}` : 'not found');
@@ -100,6 +120,8 @@ async function main() {
       ],
     });
   }
+  const consoleText = [];
+  ctx.on('console', (m) => consoleText.push(m.text()));
   console.log(`browser: ${isFirefox ? 'Firefox' : 'Chromium'} ${ctx.browser()?.version() ?? ''}`.trim());
   try {
     if (!isFirefox) {
@@ -179,6 +201,20 @@ async function main() {
     await login.waitForFunction(() => document.getElementById('otp').value.length === 6, null, { timeout: 10000 }).catch(() => {});
     const filled = await login.inputValue('#otp');
     check(currentCodes().includes(filled), `code filled on github.test (${filled})`);
+
+    // Toolbar countdown for the tab with the filled code, ticking without the popup open.
+    const badgeOf = (url) => bg(async (u) => {
+      const t = (await chrome.tabs.query({})).find((x) => x.url === u);
+      return t ? chrome.action.getBadgeText({ tabId: t.id }) : 'no tab';
+    }, url);
+    const loginUrl = site('github.test', '/login.html');
+    const b1 = await badgeOf(loginUrl);
+    await login.waitForTimeout(2200);
+    const b2 = await badgeOf(loginUrl);
+    const secs = Math.ceil(30 - (Date.now() / 1000) % 30);
+    const off = Math.abs(+b2 - secs) % 30;
+    check(/^\d+$/.test(b1) && +b1 >= 1 && +b1 <= 30 && /^\d+$/.test(b2) && b1 !== b2 && Math.min(off, 30 - off) <= 2,
+      `badge counts down the seconds left (${b1} then ${b2}, expected about ${secs})`);
 
     // One-box-per-digit login.
     const six = await ctx.newPage();
@@ -274,6 +310,55 @@ async function main() {
     }, site('other.test', '/setup2.html'));
     check(scan.accepted === true, `"Scan page" added the QR from the screen (${JSON.stringify(scan)})`);
     await waitFor(/CONFIRM OtherSite other\.test/, 5000);
+
+    // Two accounts for one site: the email on the page picks which code to fill.
+    for (const [who, secret] of [['alice', ALICE], ['bob', BOB]]) {
+      await bg((uri) => call({ type: 'add', uri, domain: 'multi.test' }), multiUri(who, secret));
+    }
+    const fillOf = async (p) => {
+      const page = await ctx.newPage();
+      await page.goto(site('multi.test', p));
+      await page.waitForFunction(() => document.getElementById('otp').value.length === 6, null, { timeout: 6000 }).catch(() => {});
+      return { page, value: await page.inputValue('#otp') };
+    };
+    const shownEmail = await fillOf('/multi.html');
+    check(codesFor(BOB).includes(shownEmail.value), `two accounts on multi.test: bob's code filled from the email in the text (${shownEmail.value})`);
+    const field = await fillOf('/multi-field.html');
+    check(codesFor(ALICE).includes(field.value), `two accounts on multi.test: alice's code filled from the email field (${field.value})`);
+    const ask = await fillOf('/multi-ask.html');
+    const askBadge = await badgeOf(site('multi.test', '/multi-ask.html'));
+    check(ask.value === '' && askBadge === '2', `no email on the page: nothing filled, badge says 2 to choose from (${JSON.stringify([ask.value, askBadge])})`);
+    // Same tab moves on to a page with no matching account: the countdown badge goes away.
+    await field.page.goto(site('gitlab.test', '/login.html'));
+    await field.page.waitForTimeout(1500);
+    check(await badgeOf(site('gitlab.test', '/login.html')) === '', 'badge cleared after the tab moved to a site with no account');
+    for (const x of [shownEmail, field, ask]) await x.page.close();
+
+    // Right-click "Add to Tanooki Auth" on images (the menu's click handler, called directly).
+    const rc = await ctx.newPage();
+    await rc.goto(site('qr.test', '/rightclick.html'));
+    await rc.waitForFunction(() => [...document.images].every((i) => i.complete), null, { timeout: 5000 });
+    const rightClick = (id) => bg(async ([u, srcUrl]) => {
+      const tab = (await chrome.tabs.query({})).find((x) => x.url === u);
+      return self.handlersForTest.addImage({ srcUrl, frameId: 0 }, { tab }).then((r) => r, (e) => ({ error: e.code, message: e.message }));
+    }, [site('qr.test', '/rightclick.html'), id.startsWith('http') ? id : site('qr.test', id)]);
+    const cross = await rightClick(site('cdn.test', '/rc-cross.gif'));
+    check(cross.accepted === true, `right-click on an image from another site: added (${JSON.stringify(cross)})`);
+    await waitFor(/CONFIRM Rightclick qr\.test/, 5000);
+    const svg = await rightClick('/rc.svg');
+    check(svg.accepted === true, `right-click on an SVG image: added (${JSON.stringify(svg)})`);
+    await waitFor(/CONFIRM SvgSite qr\.test/, 5000);
+    const again = await rightClick('/setup-qr.png');
+    check(again.accepted === false && again.reason === 'duplicate', `right-click on a QR already saved: "already in" (${JSON.stringify(again)})`);
+    const mig = await rightClick('/rc-migration.gif');
+    check(mig.error === 'oldApp' && /can't add Google Authenticator transfer codes from the browser yet/.test(mig.message),
+      `Google Authenticator transfer QR with an app that can't take it yet: clear message (${mig.message})`);
+    const web = await rightClick('/rc-web.gif');
+    check(web.error === 'notSetup', `right-click on a QR that's just a web link: refused (${web.message})`);
+    const none = await rightClick(site('qr.test', '/rightclick.html'));
+    check(none.error === 'noQr', `right-click on something with no QR code: says so (${none.message})`);
+    check(!consoleText.some((t) => t.includes(RC_SECRET) || t.includes('otpauth')), 'right-click: nothing about the setup code in any console');
+    await rc.close();
 
     // Secrets never reach the extension's storage.
     const stored = await bg(() => chrome.storage.local.get(null));

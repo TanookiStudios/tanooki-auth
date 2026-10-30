@@ -18,11 +18,69 @@
   let lastAsk = 0;
   let siteChecked = false;
 
+  // On screen at all, even if read-only (2FA pages often show the email in a locked box).
+  const shown = (el) => {
+    const r = el.getBoundingClientRect();
+    return el.type !== 'hidden' && r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden';
+  };
   const visible = (el) => {
     if (el.disabled || el.readOnly || el.type === 'hidden') return false;
     const r = el.getBoundingClientRect();
     return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden';
   };
+
+  // --- Which login is this? Emails and usernames the page shows, so sw.js can pick between accounts. ---
+
+  const EMAIL = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g;
+  const LOGIN_KEY = 'tanookiAuthLogin';
+  const isLoginField = (el) => el instanceof HTMLInputElement && el.type !== 'password' &&
+    (el.type === 'email' || /\b(username|email)\b/.test(el.getAttribute('autocomplete') || '') || /user|email|login/i.test(`${el.name} ${el.id}`));
+
+  function loginHints() {
+    const hints = [...document.querySelectorAll('input')].filter((el) => isLoginField(el) && el.value.trim() && shown(el)).map((el) => el.value.trim());
+    hints.push(...(document.body?.innerText.match(EMAIL) || []).slice(0, 5));
+    // Typed on the previous page of this sign-in (kept in the site's own session storage, for this tab only).
+    if (!hints.length) try { hints.push(sessionStorage.getItem(LOGIN_KEY) || ''); } catch { /* storage blocked */ }
+    return hints.filter(Boolean);
+  }
+  document.addEventListener('change', (e) => {
+    if (isLoginField(e.target) && e.target.value.trim()) try { sessionStorage.setItem(LOGIN_KEY, e.target.value.trim()); } catch { /* storage blocked */ }
+  }, true);
+
+  // --- Toolbar countdown: seconds left on the filled code, while this page stays put. ---
+
+  let countdown = null;
+  function stopCountdown() {
+    if (!countdown) return;
+    clearInterval(countdown);
+    countdown = null;
+    chrome.runtime.sendMessage({ type: 'badge', text: '' }).catch(() => {});
+  }
+  function startCountdown(secondsLeft, accountId) {
+    stopCountdown();
+    if (!(secondsLeft > 0)) return; // counter-based codes don't expire on a clock
+    const href = location.href;
+    let until = Date.now() + secondsLeft * 1000;
+    let busy = false;
+    const tick = async () => {
+      if (busy) return;
+      if (location.href !== href) return stopCountdown(); // the page moved on (sites that never reload)
+      let left = Math.ceil((until - Date.now()) / 1000);
+      if (left <= 0) {
+        if (!accountId) return stopCountdown(); // a phone code: nothing to ask for the next one
+        busy = true;
+        const r = await chrome.runtime.sendMessage({ type: 'secondsLeft', accountId }).catch(() => null);
+        busy = false;
+        if (!(r?.secondsLeft > 0)) return stopCountdown();
+        until = Date.now() + r.secondsLeft * 1000;
+        left = r.secondsLeft;
+      }
+      chrome.runtime.sendMessage({ type: 'badge', text: String(left) }).catch(stopCountdown);
+    };
+    countdown = setInterval(tick, 1000);
+    tick();
+  }
+  addEventListener('pagehide', stopCountdown);
 
   /** Returns arrays of inputs: [single box] or [box1..box6] for the one-box-per-digit pattern. */
   function findOtpTargets() {
@@ -52,12 +110,13 @@
     el.dispatchEvent(new Event('change', { bubbles: true }));
   };
 
-  function fill(target, code, issuer) {
+  function fill(target, code, issuer, secondsLeft, accountId) {
     const before = target.map((el) => el.value);
     log('filling', target.length, 'box(es)');
     if (target.length === 1) setValue(target[0], code);
     else target.forEach((el, i) => setValue(el, code[i] || ''));
     target.forEach((el) => handledFields.add(el));
+    startCountdown(secondsLeft, accountId);
     toast(`Filled ${issuer ? issuer + ' ' : ''}code from Tanooki Auth`, () => target.forEach((el, i) => setValue(el, before[i])));
   }
 
@@ -105,7 +164,7 @@
     if (!targets.length) siteChecked = true; // one lookalike check per page for password-only pages
     let reply;
     try {
-      reply = await chrome.runtime.sendMessage(targets.length ? { type: 'fillPage', ancestorHosts } : { type: 'checkSite' });
+      reply = await chrome.runtime.sendMessage(targets.length ? { type: 'fillPage', ancestorHosts, logins: loginHints() } : { type: 'checkSite' });
     } catch (e) { log('extension unreachable (reload the page)', e?.message); return; }
     if (reply?.lookalike) {
       log('lookalike of', reply.lookalike, '- not filling');
@@ -118,11 +177,22 @@
     const target = findOtpTargets()[0];
     if (!target) { log('code box disappeared before filling'); return; }
     filledOnce = true;
-    fill(target, reply.code, reply.account.issuer);
+    fill(target, reply.code, reply.account.issuer, reply.secondsLeft, reply.account.id);
   }
 
-  // The popup asks to fill a code the user picked; double-check this frame is on that site.
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+    // Right-click "Add to Tanooki Auth" on an image the background couldn't read (SVG, blob: images).
+    if (msg.type === 'decodeImage') {
+      const img = [...document.images].find((i) => i.currentSrc === msg.srcUrl || i.src === msg.srcUrl);
+      if (!img) return;
+      decodeElement(img).then((text) => sendResponse({ text }));
+      return true;
+    }
+    if (msg.type === 'notice') {
+      if (window === top) toast(msg.text);
+      return;
+    }
+    // The popup asks to fill a code the user picked; double-check this frame is on that site.
     if (msg.type !== 'fill') return;
     const on = (h) => h === msg.domain || h.endsWith('.' + msg.domain);
     if (!on(host) || !ancestorHosts.every((h) => on(h.replace(/^www\./, '')))) return;
@@ -130,7 +200,7 @@
     const focused = document.activeElement instanceof HTMLInputElement && visible(document.activeElement) ? [document.activeElement] : null;
     const target = findOtpTargets()[0] || focused;
     if (!target) { log('popup fill: no code box in this frame'); return; } // another frame may have it
-    fill(target, msg.code, msg.issuer);
+    fill(target, msg.code, msg.issuer, msg.secondsLeft, msg.accountId);
     sendResponse({ filled: true });
   });
 

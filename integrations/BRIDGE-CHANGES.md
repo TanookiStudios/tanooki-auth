@@ -1,4 +1,10 @@
-# Bridge changes needed for Raycast and Alfred
+# Bridge changes needed for Raycast, Alfred and PowerToys
+
+**PowerToys (added later):** the Command Palette extension in `powertoys/` uses the same protocol with the
+Origin `tanooki-integration://powertoys`. Add it to `integrationOrigins`, name it `'PowerToys'` in
+`bridgeClientName`, and title its pairing dialog "Pair with PowerToys" / "Type this code into PowerToys
+Command Palette:" / "Only do this if you just started pairing in PowerToys yourself." Until then the
+extension says "Tanooki Auth is running but doesn't accept PowerToys yet. Update Tanooki Auth".
 
 The Raycast extension and Alfred workflow in this folder speak the bridge protocol in
 `app/lib/bridge/server.dart` unchanged (same ports, `ping`/`pair`/`accounts`/`codes`/`code`,
