@@ -5,6 +5,7 @@ import '../core/tidy.dart';
 import '../core/vault.dart';
 import 'brand_icon.dart';
 import 'theme.dart';
+import '../l10n/l10n.dart';
 
 /// Settings > "Tidy account names": shows every name tidyName would change, old and new, with a tick box
 /// each, and changes nothing until "Apply".
@@ -24,7 +25,7 @@ class _TidyNamesScreenState extends State<TidyNamesScreen> {
   late final Set<String> _on = {for (final (a, _) in _changes) a.id};
 
   String _show(String issuer, String label) =>
-      [issuer, label].where((s) => s.isNotEmpty).join(' · ').ifEmpty('(no name)');
+      [issuer, label].where((s) => s.isNotEmpty).join(' · ').ifEmpty(l10n.tidyNoName);
 
   Future<void> _apply() async {
     var n = 0;
@@ -37,24 +38,24 @@ class _TidyNamesScreenState extends State<TidyNamesScreen> {
     }
     await widget.vault.save();
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(n == 1 ? 'Tidied 1 name.' : 'Tidied $n names.')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.tidyDone(n))));
     Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Tidy account names')),
+      appBar: AppBar(title: Text(l10n.tidyTitle)),
       body: _changes.isEmpty
           ? Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: Text('All your account names are already tidy.', textAlign: TextAlign.center, style: TextStyle(color: Palette.muted)),
+                child: Text(l10n.tidyNothing, textAlign: TextAlign.center, style: TextStyle(color: Palette.muted)),
               ),
             )
           : ListView(padding: const EdgeInsets.fromLTRB(16, 12, 16, 96), children: [
               Text(
-                'These names have website addresses or extra bits in them. Untick any you want to keep as they are, then tap Apply. Your codes don\'t change.',
+                l10n.tidyIntro,
                 style: TextStyle(color: Palette.muted, height: 1.4),
               ),
               const SizedBox(height: 12),
@@ -64,7 +65,7 @@ class _TidyNamesScreenState extends State<TidyNamesScreen> {
                     value: _on.contains(a.id),
                     onChanged: (v) => setState(() => v == true ? _on.add(a.id) : _on.remove(a.id)),
                     title: Text(_show(t.issuer, t.label), style: const TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text('Was: ${_show(a.issuer, a.label)}'),
+                    subtitle: Text(l10n.tidyWas(_show(a.issuer, a.label))),
                   ),
                 ),
             ]),
@@ -73,7 +74,7 @@ class _TidyNamesScreenState extends State<TidyNamesScreen> {
           : FloatingActionButton.extended(
               onPressed: _on.isEmpty ? null : _apply,
               icon: const Icon(Icons.auto_fix_high),
-              label: Text(_on.isEmpty ? 'Nothing ticked' : 'Apply ${_on.length}'),
+              label: Text(_on.isEmpty ? l10n.tidyNothingTicked : l10n.tidyApply(_on.length)),
             ),
     );
   }

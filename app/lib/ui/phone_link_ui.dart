@@ -17,6 +17,7 @@ import 'home.dart' show accountTitle;
 import 'premium.dart';
 import 'security_ui.dart' show confirmItsYou;
 import 'theme.dart';
+import '../l10n/l10n.dart';
 
 // ---------------------------------------------------------------- push notifications
 
@@ -27,19 +28,19 @@ Future<(String, String)> pushToken() async {
   if (Platform.isAndroid) {
     // deferred(firebase): Android push needs a Firebase project and its google-services.json, which only
     // Maddie's Google account can create. Until then, requests arrive while the app is open.
-    throw 'Notifications on Android aren\'t set up yet, so requests show up while Tanooki Auth is open.';
+    throw l10n.phoneUiPushAndroid;
   }
-  if (!Platform.isIOS) throw 'This device gets requests while Tanooki Auth is open.';
+  if (!Platform.isIOS) throw l10n.phoneUiPushThisDevice;
   try {
     final token = await _push.invokeMethod<String>('register');
-    if (token == null || token.isEmpty) throw 'iPhone didn\'t give the app a notification token.';
+    if (token == null || token.isEmpty) throw l10n.phoneUiPushNoToken;
     return ('apns', token);
   } on PlatformException catch (e) {
     throw e.code == 'denied'
-        ? 'Notifications are turned off for Tanooki Auth. Turn them on in the iPhone Settings app, under Notifications, to get requests when the app is closed.'
-        : 'Couldn\'t turn on notifications: ${e.message ?? e.code}. Requests still show up while Tanooki Auth is open.';
+        ? l10n.phoneUiPushDenied
+        : l10n.phoneUiPushFailed(e.message ?? e.code);
   } on MissingPluginException {
-    throw 'Notifications aren\'t available in this build. Requests show up while Tanooki Auth is open.';
+    throw l10n.phoneUiPushNotInBuild;
   }
 }
 
@@ -51,7 +52,7 @@ class LinkService {
   static final instance = LinkService._();
 
   /// What happens with notifications, in plain words (null = working).
-  final pushStatus = ValueNotifier<String?>('Checking whether notifications work…');
+  final pushStatus = ValueNotifier<String?>(l10n.phoneUiPushChecking);
 
   Vault? _vault;
   Future<Account?> Function(FillRequest)? _ask;
@@ -196,14 +197,14 @@ Future<Account?> askToApprove(BuildContext context, Vault vault, FillRequest r) 
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text('Sign-in code request', style: TextStyle(color: Palette.muted, fontSize: 13)),
+          Text(l10n.phoneUiRequest, style: TextStyle(color: Palette.muted, fontSize: 13)),
           const SizedBox(height: 4),
           Text(r.host, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
           Text(
             offered.isEmpty
-                ? 'No account is saved for this website, so there\'s nothing to send. If you expected one, this might be a fake site pretending to be a real one.'
-                : 'Your paired browser wants the code for this website. Only approve if you\'re signing in right now.',
+                ? l10n.phoneUiNoAccount
+                : l10n.phoneUiWantsCode,
             style: TextStyle(color: Palette.muted, height: 1.4),
           ),
           const SizedBox(height: 16),
@@ -213,13 +214,13 @@ Future<Account?> askToApprove(BuildContext context, Vault vault, FillRequest r) 
               child: FilledButton(
                 onPressed: () => Navigator.pop(c, a),
                 style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
-                child: Text(offered.length == 1 ? 'Approve' : 'Approve: ${accountTitle(a)}'),
+                child: Text(offered.length == 1 ? l10n.phoneUiApprove : l10n.phoneUiApproveAccount(accountTitle(a))),
               ),
             ),
           OutlinedButton(
             onPressed: () => Navigator.pop(c),
             style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
-            child: const Text('Deny'),
+            child: Text(l10n.commonDeny),
           ),
         ]),
       ),
@@ -271,10 +272,10 @@ class _BrowserLinkScreenState extends State<BrowserLinkScreen> {
       qr = await Navigator.push<String>(
         context,
         MaterialPageRoute(
-          builder: (_) => const ScanScreen(
-            prefixes: ['tanookiauth://link?'],
-            title: 'Scan the browser\'s code',
-            wrongCode: 'That isn\'t a browser pairing code. In the browser, click the Tanooki Auth extension, then "Use my phone instead".',
+          builder: (_) => ScanScreen(
+            prefixes: const ['tanookiauth://link?'],
+            title: l10n.phoneUiScanTitle,
+            wrongCode: l10n.phoneUiScanWrong,
           ),
         ),
       );
@@ -283,11 +284,11 @@ class _BrowserLinkScreenState extends State<BrowserLinkScreen> {
       qr = await showDialog<String>(
         context: context,
         builder: (c) => AlertDialog(
-          title: const Text('Paste the pairing link'),
+          title: Text(l10n.phoneUiPasteTitle),
           content: TextField(controller: field, autofocus: true, maxLines: 3),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
-            FilledButton(onPressed: () => Navigator.pop(c, field.text.trim()), child: const Text('Pair')),
+            TextButton(onPressed: () => Navigator.pop(c), child: Text(l10n.commonCancel)),
+            FilledButton(onPressed: () => Navigator.pop(c, field.text.trim()), child: Text(l10n.phoneUiPair)),
           ],
         ),
       );
@@ -296,11 +297,11 @@ class _BrowserLinkScreenState extends State<BrowserLinkScreen> {
     setState(() => _working = true);
     try {
       await _service.pair(widget.vault, qr);
-      _say('Paired. When that browser asks for a code, you\'ll see it here.');
+      _say(l10n.phoneUiPaired);
     } on FormatException catch (e) {
       _say(e.message);
     } on RelayException catch (e) {
-      _say(e.status == 410 ? 'That code has expired. In the browser, make a new one and scan it again.' : e.message);
+      _say(e.status == 410 ? l10n.phoneUiExpired : e.message);
     } finally {
       if (mounted) setState(() => _working = false);
     }
@@ -321,14 +322,14 @@ class _BrowserLinkScreenState extends State<BrowserLinkScreen> {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Using your phone with a browser is part of Premium', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+            Text(l10n.phoneUiPremium, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
             const SizedBox(height: 12),
             FilledButton(
               onPressed: () async {
                 await Navigator.push(context, MaterialPageRoute(builder: (_) => PremiumScreen(vault: widget.vault)));
                 setState(() {});
               },
-              child: const Text('See Premium'),
+              child: Text(l10n.commonSeePremium),
             ),
           ]),
         ),
@@ -336,35 +337,35 @@ class _BrowserLinkScreenState extends State<BrowserLinkScreen> {
     } else {
       body = Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text(
-          'Fill codes in a browser on any computer, even one without the Tanooki Auth app. The browser extension asks, and you tap Approve here. Codes travel end-to-end encrypted, and only for the website each account is saved for.',
+          l10n.phoneUiIntro,
           style: TextStyle(color: Palette.muted, height: 1.4),
         ),
         const SizedBox(height: 16),
         FilledButton.icon(
           onPressed: _working ? null : _pair,
           icon: const Icon(Icons.qr_code_scanner),
-          label: const Text('Pair a browser'),
+          label: Text(l10n.phoneUiPairBrowser),
         ),
         const SizedBox(height: 6),
-        Text('In the browser, click the Tanooki Auth extension, then "Use my phone instead" to show the code.',
+        Text(l10n.phoneUiPairHelp,
             style: TextStyle(color: Palette.muted, fontSize: 12)),
-        const Padding(padding: EdgeInsets.fromLTRB(4, 20, 4, 8), child: CapsLabel('Paired browsers')),
+        Padding(padding: const EdgeInsets.fromLTRB(4, 20, 4, 8), child: CapsLabel(l10n.phoneUiPairedBrowsers)),
         Card(
           child: Column(children: [
-            if (links.isEmpty) const ListTile(title: Text('None yet')),
+            if (links.isEmpty) ListTile(title: Text(l10n.phoneUiNoneYet)),
             for (final l in links)
               ListTile(
                 leading: const Icon(Icons.web_outlined),
-                title: const Text('Browser'),
-                subtitle: Text('Paired ${l.pairedAt.toLocal().month}/${l.pairedAt.toLocal().day}/${l.pairedAt.toLocal().year}'),
-                trailing: TextButton(onPressed: _working ? null : () => _unpair(l), child: const Text('Unpair')),
+                title: Text(l10n.phoneUiBrowser),
+                subtitle: Text(l10n.phoneUiPairedOn(l.pairedAt.toLocal())),
+                trailing: TextButton(onPressed: _working ? null : () => _unpair(l), child: Text(l10n.phoneUiUnpair)),
               ),
             if (links.isNotEmpty) ...[
               const Divider(),
               ListTile(
                 leading: Icon(_service.pushStatus.value == null ? Icons.notifications_active_outlined : Icons.notifications_off_outlined),
-                title: Text(_service.pushStatus.value == null ? 'Notifications on' : 'Requests show while the app is open'),
-                subtitle: Text(_service.pushStatus.value ?? 'You\'ll get a notification for each request, even when Tanooki Auth is closed.'),
+                title: Text(_service.pushStatus.value == null ? l10n.phoneUiPushOn : l10n.phoneUiPushOff),
+                subtitle: Text(_service.pushStatus.value ?? l10n.phoneUiPushOnHelp),
               ),
             ],
           ]),
@@ -372,7 +373,7 @@ class _BrowserLinkScreenState extends State<BrowserLinkScreen> {
       ]);
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('Use with a browser')),
+      appBar: AppBar(title: Text(l10n.syncUiBrowser)),
       body: Stack(children: [
         ListView(padding: const EdgeInsets.all(16), children: [
           Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 560), child: body)),
@@ -394,8 +395,8 @@ void startSyncAndLink(BuildContext context, Vault v, Future<void> Function() bri
     final a = await askToApprove(context, v, r);
     if (a == null || !context.mounted) return null;
     // "Ask first" accounts: Face ID / passcode here before the code goes to the browser.
-    if (a.requireAuth && !await confirmItsYou(context, v, 'Send the code for ${accountTitle(a)}')) return null;
-    logActivity(v, ActivityKind.filled, accountId: a.id, where: 'Browser, through this phone');
+    if (a.requireAuth && !await confirmItsYou(context, v, l10n.phoneUiSendCodeFor(accountTitle(a)))) return null;
+    logActivity(v, ActivityKind.filled, accountId: a.id, where: l10n.phoneUiActivityWhere);
     await v.save();
     return a;
   }, (accounts) async {

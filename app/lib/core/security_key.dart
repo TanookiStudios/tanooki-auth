@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 
 import 'sync/relay_crypto.dart';
 import 'vault.dart';
+import '../l10n/l10n.dart';
 
 /// Settings keys: the added keys, and the PRF input every key on this device is asked with.
 const securityKeysKey = 'securityKeys', securityKeySaltKey = 'securityKeySalt';
@@ -33,7 +34,7 @@ typedef SecurityKeyEntry = ({String id, String name, String wrapped, DateTime ad
 List<SecurityKeyEntry> securityKeysOf(Map<String, dynamic> s) => [
       for (final j in (s[securityKeysKey] as List?) ?? const [])
         if (j is Map)
-          (id: j['id'] as String, name: j['name'] as String? ?? 'Security key', wrapped: j['wrapped'] as String, added: DateTime.parse(j['added'] as String)),
+          (id: j['id'] as String, name: j['name'] as String? ?? l10n.securityKeyDefaultName, wrapped: j['wrapped'] as String, added: DateTime.parse(j['added'] as String)),
     ];
 
 Future<List<int>> _wrapKey(List<int> prf) => hkdf(prf, const [], _info, 32);
@@ -47,7 +48,7 @@ Future<List<int>> unwrapVaultKey(String wrapped, List<int> prf, String id) async
   try {
     return unb64u((await open(await _wrapKey(prf), wrapped, '$_info|$id'))['k'] as String);
   } catch (_) {
-    throw SecurityKeyException('That security key isn\'t one you added to Tanooki Auth on this device.');
+    throw SecurityKeyException(l10n.securityKeyNotYours);
   }
 }
 
@@ -69,17 +70,19 @@ class ChannelSecurityKeyPlatform implements SecurityKeyPlatform {
 
   @override
   Future<String?> unavailable() async {
-    if (Platform.isAndroid || Platform.isLinux) return 'Not available on this device yet.';
+    if (Platform.isAndroid || Platform.isLinux) return l10n.securityKeyNotAvailable;
     try {
       return switch (await _channel.invokeMethod<String>('available')) {
         'ok' => null,
         'osTooOld' => Platform.isWindows
-            ? 'Not available on this version of Windows yet. Install the latest Windows 11 updates.'
-            : 'Needs ${Platform.isIOS ? 'iOS' : 'macOS'} 26.4 or newer. Update in the Settings app, then try again.',
-        _ => 'Not available on this device yet.',
+            ? l10n.securityKeyWindowsTooOld
+            : Platform.isIOS
+                ? l10n.securityKeyIosTooOld
+                : l10n.securityKeyMacTooOld,
+        _ => l10n.securityKeyNotAvailable,
       };
     } on MissingPluginException {
-      return 'Not available on this device yet.';
+      return l10n.securityKeyNotAvailable;
     }
   }
 
@@ -93,7 +96,7 @@ class ChannelSecurityKeyPlatform implements SecurityKeyPlatform {
   Future<KeyTouch> touch({required List<String> ids, required List<int> salt}) async {
     final r = await _run('assert', {'rp': securityKeyRp, 'ids': [for (final i in ids) unb64u(i)], 'salt': Uint8List.fromList(salt)});
     final prf = r['prf'] as Uint8List?;
-    if (prf == null) throw SecurityKeyException(_messages['noPrf']!);
+    if (prf == null) throw SecurityKeyException(_messages['noPrf']!());
     return (id: b64u(r['id'] as Uint8List), prf: prf);
   }
 
@@ -101,24 +104,21 @@ class ChannelSecurityKeyPlatform implements SecurityKeyPlatform {
     try {
       return (await _channel.invokeMethod<Map>(method, args))!;
     } on PlatformException catch (e) {
-      throw SecurityKeyException(_messages[e.code] ?? 'The security key didn\'t work${e.message == null ? '' : ' (${e.message})'}. Try again.');
+      throw SecurityKeyException(_messages[e.code]?.call() ?? (e.message == null ? l10n.securityKeyDidntWork : l10n.securityKeyDidntWorkWhy(e.message!)));
     } on MissingPluginException {
-      throw SecurityKeyException('Not available on this device yet.');
+      throw SecurityKeyException(l10n.securityKeyNotAvailable);
     }
   }
 }
 
 // One plain sentence per way it can fail (the native halves send these codes).
-const _messages = {
-  'canceled': 'Canceled. Nothing changed.',
-  'noPrf':
-      'This security key can\'t unlock apps this way (it doesn\'t have the "hmac-secret" feature). YubiKey 5 series and most FIDO2 keys from the last few years do.',
-  'notAllowed':
-      'The security key didn\'t answer, or it isn\'t one added here. Plug it in (or hold it to the top of your phone) and touch it when it blinks.',
-  'notAssociated':
-      'This copy of Tanooki Auth isn\'t allowed to use security keys yet: Apple needs the app linked to auth.tanookistudios.com first. That\'s on our side, not yours.',
-  'exists': 'This security key is already added.',
-  'pin': 'The security key needs its PIN, and it wasn\'t entered. Try again and type the key\'s PIN when asked.',
+final _messages = <String, String Function()>{
+  'canceled': () => l10n.securityKeyCanceled,
+  'noPrf': () => l10n.securityKeyNoPrf,
+  'notAllowed': () => l10n.securityKeyNotAllowed,
+  'notAssociated': () => l10n.securityKeyNotAssociated,
+  'exists': () => l10n.securityKeyExists,
+  'pin': () => l10n.securityKeyPin,
 };
 
 class SecurityKeys {
@@ -134,7 +134,7 @@ class SecurityKeys {
 
   static Future<List<int>> _vaultKey(Vault v) async {
     final k = await v.keyStore.read();
-    if (k == null) throw SecurityKeyException('The key that unlocks your accounts is missing, so a security key can\'t be added.');
+    if (k == null) throw SecurityKeyException(l10n.securityKeyVaultKeyMissing);
     return base64.decode(k);
   }
 
@@ -146,7 +146,7 @@ class SecurityKeys {
     final made = await platform.register(userId: randomBytes(16), name: name, salt: salt);
     // Most keys only give a PRF output when asked to sign in, so ask once more right away.
     final prf = made.prf ?? (await platform.touch(ids: [made.id], salt: salt)).prf;
-    final entry = (id: made.id, name: name.trim().isEmpty ? 'Security key' : name.trim(), wrapped: await wrapVaultKey(await _vaultKey(v), prf, made.id), added: DateTime.now().toUtc());
+    final entry = (id: made.id, name: name.trim().isEmpty ? l10n.securityKeyDefaultName : name.trim(), wrapped: await wrapVaultKey(await _vaultKey(v), prf, made.id), added: DateTime.now().toUtc());
     v.settings[securityKeysKey] = [
       for (final e in securityKeysOf(v.settings)) _json(e),
       _json(entry),
@@ -168,13 +168,13 @@ class SecurityKeys {
   /// Asks for one of the added keys and checks it opens this vault. Throws [SecurityKeyException] otherwise.
   static Future<void> unlock(Vault v) async {
     final keys = securityKeysOf(v.settings);
-    if (keys.isEmpty) throw SecurityKeyException('No security key is added on this device.');
+    if (keys.isEmpty) throw SecurityKeyException(l10n.securityKeyNoneAdded);
     final touched = await platform.touch(ids: [for (final k in keys) k.id], salt: _salt(v));
     final entry = keys.where((k) => k.id == touched.id).firstOrNull;
-    if (entry == null) throw SecurityKeyException('That security key isn\'t one you added to Tanooki Auth on this device.');
+    if (entry == null) throw SecurityKeyException(l10n.securityKeyNotYours);
     if (!_same(await unwrapVaultKey(entry.wrapped, touched.prf, entry.id), await _vaultKey(v))) {
       // Sealed for an older vault key (the vault was reset since): it can't open this one.
-      throw SecurityKeyException('That security key was added before your accounts were reset, so it can\'t open them. Remove it and add it again.');
+      throw SecurityKeyException(l10n.securityKeyBeforeReset);
     }
   }
 

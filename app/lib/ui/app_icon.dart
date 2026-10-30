@@ -4,24 +4,25 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import '../core/vault.dart';
+import '../l10n/l10n.dart';
 
 /// Premium alternate app icons, in picker order: the blue shield, the shield recolored per theme, then the
 /// seasonal ones.
 /// Images come from tool/make_app_icons.cjs. Each non-default id needs an iOS `AppIcon-<id>` icon set and an
 /// Android `.AppIcon_<id>` activity-alias; test/app_icon_test.dart checks they all exist.
-const appIcons = <String, String>{
-  'default': 'Classic',
-  'pink': 'Pastel Pink',
-  'blue': 'Pastel Blue',
-  'lavender': 'Lavender',
-  'mint': 'Mint',
-  'midnight': 'Midnight',
-  'sunset': 'Sunset',
-  // Seasonal: the same shield with a touch of the season.
-  'spooky': 'Spooky (fall)',
-  'cozy': 'Cozy (winter)',
-  'spring': 'Spring',
-};
+Map<String, String> get appIcons => {
+      'default': l10n.appIconClassic,
+      'pink': l10n.appIconPink,
+      'blue': l10n.appIconBlue,
+      'lavender': l10n.appIconLavender,
+      'mint': l10n.appIconMint,
+      'midnight': l10n.appIconMidnight,
+      'sunset': l10n.appIconSunset,
+      // Seasonal: the same shield with a touch of the season.
+      'spooky': l10n.appIconSpooky,
+      'cozy': l10n.appIconCozy,
+      'spring': l10n.appIconSpring,
+    };
 
 /// Settings key for the Mac Dock icon (macOS forgets it when the app quits, so it is set again at launch).
 /// Phones remember the icon themselves; there the system is asked instead.

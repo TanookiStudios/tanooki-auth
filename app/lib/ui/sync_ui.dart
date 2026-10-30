@@ -11,6 +11,7 @@ import 'add.dart' show ScanScreen, hasCamera;
 import 'phone_link_ui.dart' show BrowserLinkScreen;
 import 'premium.dart';
 import 'theme.dart';
+import '../l10n/l10n.dart';
 
 /// A QR code drawn on screen (black on white, with a quiet zone so cameras find it).
 class QrView extends StatelessWidget {
@@ -20,7 +21,7 @@ class QrView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-        label: 'QR code',
+        label: l10n.syncUiQrCode,
         child: Container(
           color: Colors.white,
           padding: const EdgeInsets.all(12),
@@ -46,12 +47,12 @@ class _QrPainter extends CustomPainter {
 }
 
 String agoText(DateTime? t) {
-  if (t == null) return 'Not yet';
+  if (t == null) return l10n.syncUiNotYet;
   final d = DateTime.now().difference(t);
-  if (d.inSeconds < 60) return 'Just now';
-  if (d.inMinutes < 60) return '${d.inMinutes} min ago';
-  if (d.inHours < 24) return '${d.inHours} h ago';
-  return '${t.month}/${t.day}/${t.year}';
+  if (d.inSeconds < 60) return l10n.syncUiJustNow;
+  if (d.inMinutes < 60) return l10n.syncUiMinutesAgo(d.inMinutes);
+  if (d.inHours < 24) return l10n.syncUiHoursAgo(d.inHours);
+  return l10n.syncUiDate(t);
 }
 
 /// Settings > Sync (Premium).
@@ -98,11 +99,11 @@ class _SyncScreenState extends State<SyncScreen> {
       final list = syncTransport(v) == 'relay'
           ? [
               for (final d in await (await RelaySync(v).relay()).devices())
-                _Device(d.key, d.key == syncState(v)['devicePub'] ? 'This device' : 'Another device', 'Added ${agoText(d.added)}', d.key == syncState(v)['devicePub']),
+                _Device(d.key, d.key == syncState(v)['devicePub'] ? l10n.syncUiThisDevice : l10n.syncUiAnotherDevice, l10n.syncUiAdded(agoText(d.added)), d.key == syncState(v)['devicePub']),
             ]
           : [
               for (final d in await FolderSync(v, _service.folder).devices())
-                _Device(d.id, d.id == syncState(v)['device'] ? 'This device (${d.name})' : d.name, 'Last synced ${agoText(d.updated)}', d.id == syncState(v)['device']),
+                _Device(d.id, d.id == syncState(v)['device'] ? l10n.syncUiThisDeviceNamed(d.name) : d.name, l10n.syncUiLastSyncedAgo(agoText(d.updated)), d.id == syncState(v)['device']),
             ];
       if (mounted) {
         setState(() {
@@ -143,22 +144,22 @@ class _SyncScreenState extends State<SyncScreen> {
       if (!mounted) return;
       final choice = await showDialog<String>(
         context: context,
-        builder: (c) => SimpleDialog(title: const Text('Where should your devices sync?'), children: [
+        builder: (c) => SimpleDialog(title: Text(l10n.syncUiWhere), children: [
           SimpleDialogOption(
             onPressed: icloud ? () => Navigator.pop(c, 'icloud') : null,
             child: ListTile(
               leading: const Icon(Icons.cloud_outlined),
               title: const Text('iCloud'),
-              subtitle: Text(icloudProblem ?? 'For iPhone, iPad and Mac only. Uses your own iCloud Drive.'),
+              subtitle: Text(icloudProblem ?? l10n.syncUiICloudHelp),
               enabled: icloud,
             ),
           ),
           SimpleDialogOption(
             onPressed: () => Navigator.pop(c, 'relay'),
-            child: const ListTile(
-              leading: Icon(Icons.devices_outlined),
-              title: Text('Tanooki relay'),
-              subtitle: Text('Works with every device, including Android and Windows. The server only stores scrambled data.'),
+            child: ListTile(
+              leading: const Icon(Icons.devices_outlined),
+              title: Text(l10n.syncUiRelay),
+              subtitle: Text(l10n.syncUiRelayHelp),
             ),
           ),
         ]),
@@ -175,12 +176,11 @@ class _SyncScreenState extends State<SyncScreen> {
       final fresh = await showDialog<bool>(
         context: context,
         builder: (c) => AlertDialog(
-          title: const Text('Start fresh?'),
-          content: const Text(
-              'If you\'ve forgotten the passphrase your other Apple devices use, you can start a new sync with this one. Your other devices then need to turn sync off and on again with the new passphrase.'),
+          title: Text(l10n.syncUiStartFreshTitle),
+          content: Text(l10n.syncUiStartFreshBody),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-            FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Start fresh')),
+            TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
+            FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(l10n.syncUiStartFresh)),
           ],
         ),
       );
@@ -190,7 +190,7 @@ class _SyncScreenState extends State<SyncScreen> {
     _service.attach(v);
     await _service.syncNow();
     await _loadDevices();
-    _say('Sync is on.');
+    _say(l10n.syncUiOn);
   }
 
   Future<void> _join() async {
@@ -199,10 +199,10 @@ class _SyncScreenState extends State<SyncScreen> {
       link = await Navigator.push<String>(
         context,
         MaterialPageRoute(
-          builder: (_) => const ScanScreen(
-            prefixes: ['tanookiauth://sync?'],
-            title: 'Scan the sync code',
-            wrongCode: 'That isn\'t a sync code. On your other device, open Settings, Sync, Add a device.',
+          builder: (_) => ScanScreen(
+            prefixes: const ['tanookiauth://sync?'],
+            title: l10n.syncUiScanTitle,
+            wrongCode: l10n.syncUiScanWrong,
           ),
         ),
       );
@@ -216,7 +216,7 @@ class _SyncScreenState extends State<SyncScreen> {
     _service.attach(v);
     await _service.syncNow();
     await _loadDevices();
-    _say('This device is now syncing.');
+    _say(l10n.syncUiNowSyncing);
   }
 
   Future<String?> _pasteDialog() {
@@ -224,16 +224,16 @@ class _SyncScreenState extends State<SyncScreen> {
     return showDialog<String>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Paste the sync link'),
+        title: Text(l10n.syncUiPasteTitle),
         content: TextField(
           controller: field,
           autofocus: true,
           maxLines: 3,
-          decoration: const InputDecoration(hintText: 'tanookiauth://sync?…  (from Add a device on your other device)'),
+          decoration: InputDecoration(hintText: l10n.syncUiPasteHint),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(c, field.text.trim()), child: const Text('Next')),
+          TextButton(onPressed: () => Navigator.pop(c), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(c, field.text.trim()), child: Text(l10n.commonNext)),
         ],
       ),
     );
@@ -244,10 +244,9 @@ class _SyncScreenState extends State<SyncScreen> {
       await showDialog<void>(
         context: context,
         builder: (c) => AlertDialog(
-          title: const Text('Add an Apple device'),
-          content: const Text(
-              'On your other iPhone, iPad or Mac (signed in to the same Apple ID, with iCloud Drive on), open Tanooki Auth, go to Settings, then Sync, tap "Turn on sync", pick iCloud and type the same sync passphrase.\n\nWant to add an Android phone or a Windows PC? Turn sync off on every device, then turn it on again with the Tanooki relay.'),
-          actions: [FilledButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
+          title: Text(l10n.syncUiAddApple),
+          content: Text(l10n.syncUiAddAppleBody),
+          actions: [FilledButton(onPressed: () => Navigator.pop(c), child: Text(l10n.commonOk))],
         ),
       );
       return;
@@ -257,14 +256,14 @@ class _SyncScreenState extends State<SyncScreen> {
     await showDialog<void>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Add a device'),
+        title: Text(l10n.syncUiAddDevice),
         content: SingleChildScrollView(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Text('On the new device, open Tanooki Auth, go to Settings, then Sync, and tap "Join from another device". Scan this code, then type your sync passphrase there.'),
+            Text(l10n.syncUiAddDeviceBody),
             const SizedBox(height: 16),
             QrView(link!),
             const SizedBox(height: 12),
-            Text('Works once, for 24 hours. Someone with only this code can\'t read anything without your passphrase.',
+            Text(l10n.syncUiAddDeviceNote,
                 style: TextStyle(color: Palette.muted, fontSize: 12)),
           ]),
         ),
@@ -273,11 +272,11 @@ class _SyncScreenState extends State<SyncScreen> {
             onPressed: () async {
               await Clipboard.setData(ClipboardData(text: link!));
               if (c.mounted) Navigator.pop(c);
-              _say('Link copied. Paste it on the new device.');
+              _say(l10n.syncUiLinkCopied);
             },
-            child: const Text('Copy link instead'),
+            child: Text(l10n.syncUiCopyLink),
           ),
-          FilledButton(onPressed: () => Navigator.pop(c), child: const Text('Done')),
+          FilledButton(onPressed: () => Navigator.pop(c), child: Text(l10n.commonDone)),
         ],
       ),
     );
@@ -288,12 +287,11 @@ class _SyncScreenState extends State<SyncScreen> {
     final sure = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Remove this device from sync?'),
-        content: const Text(
-            'It stops getting changes. If the device was lost or stolen, also change your sync passphrase: turn sync off on every device, then on again with a new passphrase, because the lost device still knows the old one.'),
+        title: Text(l10n.syncUiRemoveTitle),
+        content: Text(l10n.syncUiRemoveBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Remove')),
+          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(l10n.commonRemove)),
         ],
       ),
     );
@@ -308,11 +306,11 @@ class _SyncScreenState extends State<SyncScreen> {
     final sure = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Turn off sync on this device?'),
-        content: const Text('Your accounts stay on this device. It just stops sending and getting changes. Your other devices keep syncing with each other.'),
+        title: Text(l10n.syncUiTurnOffTitle),
+        content: Text(l10n.syncUiTurnOffBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Turn off')),
+          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(l10n.commonTurnOff)),
         ],
       ),
     );
@@ -320,7 +318,7 @@ class _SyncScreenState extends State<SyncScreen> {
     _service.detach();
     await _busy(() => SyncSetup.turnOff(v, folder: _service.folder));
     setState(() => _devices = null);
-    _say('Sync is off on this device.');
+    _say(l10n.syncUiOff);
   }
 
   @override
@@ -332,9 +330,9 @@ class _SyncScreenState extends State<SyncScreen> {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Sync is part of Premium', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+            Text(l10n.syncUiPremium, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
             const SizedBox(height: 8),
-            Text('Add an account on one device and it shows up on all of them, end-to-end encrypted. $payOnce, no subscription.',
+            Text(l10n.syncUiPremiumBody(payOnce),
                 style: TextStyle(color: Palette.muted, height: 1.4)),
             const SizedBox(height: 12),
             FilledButton(
@@ -342,7 +340,7 @@ class _SyncScreenState extends State<SyncScreen> {
                 await Navigator.push(context, MaterialPageRoute(builder: (_) => PremiumScreen(vault: v)));
                 setState(() {});
               },
-              child: const Text('See Premium'),
+              child: Text(l10n.commonSeePremium),
             ),
           ]),
         ),
@@ -350,19 +348,19 @@ class _SyncScreenState extends State<SyncScreen> {
     } else if (!syncOn(v)) {
       body = Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text(
-          'Sync keeps your accounts the same on all your devices. Before anything leaves this device it\'s locked with your sync passphrase, so iCloud or our server only ever stores scrambled data. Nobody else can read it, including us.',
+          l10n.syncUiIntro,
           style: TextStyle(color: Palette.muted, height: 1.4),
         ),
         const SizedBox(height: 16),
-        FilledButton.icon(onPressed: _working ? null : _turnOn, icon: const Icon(Icons.sync), label: const Text('Turn on sync')),
+        FilledButton.icon(onPressed: _working ? null : _turnOn, icon: const Icon(Icons.sync), label: Text(l10n.syncUiTurnOn)),
         const SizedBox(height: 8),
         OutlinedButton.icon(
           onPressed: _working ? null : _join,
           icon: const Icon(Icons.qr_code_scanner),
-          label: const Text('Join from another device'),
+          label: Text(l10n.syncUiJoin),
         ),
         const SizedBox(height: 6),
-        Text('Use "Join" when another device already syncs with the Tanooki relay.', style: TextStyle(color: Palette.muted, fontSize: 12)),
+        Text(l10n.syncUiJoinHelp, style: TextStyle(color: Palette.muted, fontSize: 12)),
       ]);
     } else {
       final relay = syncTransport(v) == 'relay';
@@ -371,58 +369,58 @@ class _SyncScreenState extends State<SyncScreen> {
           child: Column(children: [
             ListTile(
               leading: Icon(st.error != null ? Icons.sync_problem : Icons.cloud_done_outlined, color: st.error != null ? Palette.red : Palette.green),
-              title: Text(relay ? 'Syncing with the Tanooki relay' : 'Syncing with iCloud'),
-              subtitle: Text(st.busy ? 'Syncing now…' : st.error ?? 'Last synced: ${agoText(st.lastSync)}'),
+              title: Text(relay ? l10n.syncUiSyncingRelay : l10n.syncUiSyncingICloud),
+              subtitle: Text(st.busy ? l10n.syncUiSyncingNow : st.error ?? l10n.teamUiLastSynced(agoText(st.lastSync))),
               trailing: st.busy
                   ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  : TextButton(onPressed: _service.syncNow, child: const Text('Sync now')),
+                  : TextButton(onPressed: _service.syncNow, child: Text(l10n.teamUiSyncNow)),
             ),
             if (st.skipped > 0) ...[
               const Divider(),
               ListTile(
                 leading: Icon(Icons.warning_amber_rounded, color: Palette.red),
-                title: Text('${st.skipped} synced item${st.skipped == 1 ? '' : 's'} couldn\'t be read'),
-                subtitle: const Text('They may have been changed by someone else or made with another passphrase. Nothing was deleted because of them.'),
+                title: Text(l10n.syncUiSkipped(st.skipped)),
+                subtitle: Text(l10n.syncUiSkippedHelp),
               ),
             ],
           ]),
         ),
-        const Padding(padding: EdgeInsets.fromLTRB(4, 20, 4, 8), child: CapsLabel('Devices')),
+        Padding(padding: const EdgeInsets.fromLTRB(4, 20, 4, 8), child: CapsLabel(l10n.syncUiDevices)),
         Card(
           child: Column(children: [
             if (_devicesError != null) ListTile(title: Text(_devicesError!)),
             if (_devices == null && _devicesError == null)
-              const ListTile(title: Text('Loading…')),
+              ListTile(title: Text(l10n.syncUiLoading)),
             for (final d in _devices ?? const <_Device>[]) ...[
               ListTile(
                 leading: Icon(d.me ? Icons.smartphone : Icons.devices_other),
                 title: Text(d.name),
                 subtitle: Text(d.detail),
-                trailing: d.me ? null : TextButton(onPressed: () => _removeDevice(d), child: const Text('Remove')),
+                trailing: d.me ? null : TextButton(onPressed: () => _removeDevice(d), child: Text(l10n.commonRemove)),
               ),
               const Divider(),
             ],
             ListTile(
               leading: const Icon(Icons.add),
-              title: const Text('Add a device'),
-              subtitle: Text(relay ? 'Shows a code to scan on the new device' : 'Another iPhone, iPad or Mac'),
+              title: Text(l10n.syncUiAddDevice),
+              subtitle: Text(relay ? l10n.syncUiAddDeviceRelay : l10n.syncUiAddDeviceApple),
               onTap: _working ? null : _addDevice,
             ),
           ]),
         ),
         const SizedBox(height: 20),
-        OutlinedButton(onPressed: _working ? null : _turnOff, child: const Text('Turn off sync on this device')),
+        OutlinedButton(onPressed: _working ? null : _turnOff, child: Text(l10n.syncUiTurnOffButton)),
         const SizedBox(height: 10),
         Text(
           relay
-              ? 'Your sync passphrase can\'t be recovered. If you forget it, turn sync off on every device and start again with a new one. Your accounts stay put.'
-              : 'Sync uses your iCloud Drive. Your sync passphrase can\'t be recovered; if you forget it, start fresh with a new one. Your accounts stay put.',
+              ? l10n.syncUiPassphraseNoteRelay
+              : l10n.syncUiPassphraseNoteICloud,
           style: TextStyle(color: Palette.muted, fontSize: 12, height: 1.4),
         ),
       ]);
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('Sync')),
+      appBar: AppBar(title: Text(l10n.syncUiTitle)),
       body: Stack(children: [
         ListView(padding: const EdgeInsets.all(16), children: [
           Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 560), child: body)),
@@ -457,8 +455,8 @@ class _PassphraseDialogState extends State<_PassphraseDialog> {
   void _submit() {
     final p = _a.text;
     if (widget.newOne) {
-      if (p.length < 10) return setState(() => _error = 'Use at least 10 characters. A few random words works well.');
-      if (p != _b.text) return setState(() => _error = 'The two passphrases don\'t match.');
+      if (p.length < 10) return setState(() => _error = l10n.syncUiTooShort);
+      if (p != _b.text) return setState(() => _error = l10n.syncUiMismatch);
     } else if (p.isEmpty) {
       return;
     }
@@ -467,19 +465,19 @@ class _PassphraseDialogState extends State<_PassphraseDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-        title: Text(widget.newOne ? 'Choose a sync passphrase' : 'Type your sync passphrase'),
+        title: Text(widget.newOne ? l10n.syncUiChoosePassphrase : l10n.syncUiTypePassphrase),
         content: SingleChildScrollView(
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(widget.newOne
-                ? 'You\'ll type this once on each device you add. It locks your accounts before they leave this device.\n\nWrite it down somewhere safe. It can\'t be recovered or reset, by you or by us.'
-                : 'The same passphrase you chose when you turned on sync on your first device.'),
+                ? l10n.syncUiChooseHelp
+                : l10n.syncUiTypeHelp),
             const SizedBox(height: 12),
             TextField(
               controller: _a,
               autofocus: true,
               obscureText: true,
               autocorrect: false,
-              decoration: const InputDecoration(labelText: 'Sync passphrase'),
+              decoration: InputDecoration(labelText: l10n.syncUiPassphrase),
               onSubmitted: widget.newOne ? null : (_) => _submit(),
             ),
             if (widget.newOne)
@@ -487,15 +485,15 @@ class _PassphraseDialogState extends State<_PassphraseDialog> {
                 controller: _b,
                 obscureText: true,
                 autocorrect: false,
-                decoration: const InputDecoration(labelText: 'Type it again'),
+                decoration: InputDecoration(labelText: l10n.syncUiTypeAgain),
                 onSubmitted: (_) => _submit(),
               ),
             if (_error != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(_error!, style: TextStyle(color: Palette.red))),
           ]),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          FilledButton(onPressed: _submit, child: Text(widget.newOne ? 'Turn on sync' : 'Join')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: _submit, child: Text(widget.newOne ? l10n.syncUiTurnOn : l10n.teamUiJoinButton)),
         ],
       );
 }
@@ -510,15 +508,15 @@ List<Widget> syncAndLinkSection(BuildContext context, Vault v, VoidCallback refr
   }
 
   return [
-    const Padding(padding: EdgeInsets.fromLTRB(4, 0, 4, 8), child: CapsLabel('Sync and phone')),
+    Padding(padding: const EdgeInsets.fromLTRB(4, 0, 4, 8), child: CapsLabel(l10n.syncUiSectionTitle)),
     Card(
       child: Column(children: [
         ListTile(
           leading: const Icon(Icons.sync),
-          title: Text(premium.value ? 'Sync' : 'Sync (Premium)'),
+          title: Text(premium.value ? l10n.syncUiTitle : l10n.syncUiTitlePremium),
           subtitle: Text(syncOn(v)
-              ? 'On, with ${syncTransport(v) == 'relay' ? 'the Tanooki relay' : 'iCloud'}'
-              : 'Keep your accounts the same on all your devices'),
+              ? (syncTransport(v) == 'relay' ? l10n.syncUiOnRelay : l10n.syncUiOnICloud)
+              : l10n.syncUiOffHelp),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => open(SyncScreen(vault: v)),
         ),
@@ -526,8 +524,8 @@ List<Widget> syncAndLinkSection(BuildContext context, Vault v, VoidCallback refr
           const Divider(),
           ListTile(
             leading: const Icon(Icons.phonelink_lock_outlined),
-            title: Text(premium.value ? 'Use with a browser' : 'Use with a browser (Premium)'),
-            subtitle: const Text('Approve codes on this phone for a browser on any computer'),
+            title: Text(premium.value ? l10n.syncUiBrowser : l10n.syncUiBrowserPremium),
+            subtitle: Text(l10n.syncUiBrowserHelp),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => open(BrowserLinkScreen(vault: v)),
           ),

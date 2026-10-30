@@ -14,6 +14,7 @@ import 'account.dart';
 import 'sync/relay_client.dart';
 import 'sync/relay_crypto.dart';
 import 'vault.dart';
+import '../l10n/l10n.dart';
 
 const contactPrefix = 'tanookiauth-contact:';
 const grantPrefix = 'tanookiauth-emergency:';
@@ -70,7 +71,7 @@ ContactCode parseContactCode(String text) {
   final j = _unpack(contactPrefix, text);
   final k = j?['k'], x = j?['x'];
   if (k is! String || x is! String || k.length != 43 || x.length != 43) {
-    throw EmergencyException('That isn\'t a Tanooki Auth contact code. Ask them to open Tanooki Auth, go to Settings > Emergency access, and share their contact code.');
+    throw EmergencyException(l10n.emergencyNotContactCode);
   }
   return (signKey: k, boxKey: x, name: (j!['n'] as String? ?? '').trim());
 }
@@ -96,7 +97,7 @@ Future<List<Account>> openSnapshot(String blob, SimpleKeyPair box) async {
     final body = await open(key, b64u(all.sublist(32)), _aad);
     return [for (final j in body['accounts'] as List) Account.fromJson(j as Map<String, dynamic>)];
   } catch (_) {
-    throw EmergencyException('The emergency copy couldn\'t be opened with this device\'s key. It was made for a different device, or it is damaged.');
+    throw EmergencyException(l10n.emergencyCopyWontOpen);
   }
 }
 
@@ -127,14 +128,14 @@ class EmergencyRelay {
     if (ok.contains(r.status)) return r.body;
     final said = r.body['error'] as String? ?? '';
     throw EmergencyException(switch ((r.status, said)) {
-      (404, _) => 'This emergency copy doesn\'t exist any more. The owner removed it.',
-      (403, 'the waiting period has not ended') => 'The 7-day wait isn\'t over yet.',
-      (403, _) => 'This device isn\'t the owner or the contact for that emergency copy.',
-      (409, 'there is no request to deny') => 'There is no request to deny any more.',
-      (409, _) => 'Ask for access first.',
-      (413, _) => 'Your accounts are too big to leave as an emergency copy (the limit is about 500 KB).',
-      (429, _) => 'Too many tries in a minute. Wait a minute and try again.',
-      _ => 'The sync server said no (HTTP ${r.status}${said.isEmpty ? '' : ': $said'}).',
+      (404, _) => l10n.emergencyGone,
+      (403, 'the waiting period has not ended') => l10n.emergencyWaitNotOver,
+      (403, _) => l10n.emergencyNotOwnerOrContact,
+      (409, 'there is no request to deny') => l10n.emergencyNoRequestToDeny,
+      (409, _) => l10n.emergencyAskFirst,
+      (413, _) => l10n.emergencyTooBig,
+      (429, _) => l10n.emergencyTooManyTries,
+      _ => said.isEmpty ? l10n.emergencyServerSaidNo('${r.status}') : l10n.emergencyServerSaidNoWhy('${r.status}', said),
     });
   }
 
@@ -276,7 +277,7 @@ Future<EmergencyFrom> addGrantCode(Vault v, String text) async {
   final j = _unpack(grantPrefix, text);
   final g = j?['g'];
   if (g is! String || g.length != 43) {
-    throw EmergencyException('That isn\'t a Tanooki Auth emergency code. Ask the person who chose you to send it again from Settings > Emergency access.');
+    throw EmergencyException(l10n.emergencyNotEmergencyCode);
   }
   final from = (grantId: g, ownerName: (j!['n'] as String? ?? '').trim());
   v.settings[fromKey] = [
@@ -310,9 +311,8 @@ Future<List<Account>> fetchEmergencyCopy(Vault v, String grantId, {String base =
 /// "6 days 4 hours", "3 hours", "less than a minute": what's left of the wait.
 String waitLeft(DateTime releaseAt, DateTime now) {
   final d = releaseAt.difference(now);
-  if (d.inMinutes < 1) return 'less than a minute';
-  String n(int x, String unit) => '$x $unit${x == 1 ? '' : 's'}';
-  if (d.inDays >= 1) return d.inHours % 24 == 0 ? n(d.inDays, 'day') : '${n(d.inDays, 'day')} ${n(d.inHours % 24, 'hour')}';
-  if (d.inHours >= 1) return n(d.inHours, 'hour');
-  return n(d.inMinutes, 'minute');
+  if (d.inMinutes < 1) return l10n.emergencyLessThanMinute;
+  if (d.inDays >= 1) return d.inHours % 24 == 0 ? l10n.emergencyDays(d.inDays) : l10n.emergencyDaysHours(d.inDays, d.inHours % 24);
+  if (d.inHours >= 1) return l10n.emergencyHours(d.inHours);
+  return l10n.emergencyMinutes(d.inMinutes);
 }

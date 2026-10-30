@@ -16,12 +16,9 @@ import 'premium.dart';
 import 'security_extras.dart' show needPremium;
 import 'sync_ui.dart' show QrView;
 import 'theme.dart';
+import '../l10n/l10n.dart';
 
-const emergencyExplainer =
-    'Pick one person you trust. If something happens to you, they can ask for your accounts. Your devices get a notification '
-    'and you have 7 days to say no. If nobody says no, they get a copy.\n\n'
-    'The Tanooki Auth server only enforces the 7-day wait. The copy is locked with a key that only their device has, so the '
-    'server can\'t read it, and neither can anyone who breaks into the server.';
+String get emergencyExplainer => l10n.emergencyUiExplainer;
 
 class EmergencyScreen extends StatefulWidget {
   const EmergencyScreen({super.key, required this.vault});
@@ -93,7 +90,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
       _pushProblem = why;
     } on EmergencyException catch (e) {
       // 503 "push not configured" lands here until the relay has push keys.
-      _pushProblem = 'Notifications aren\'t working yet (${e.message}). Tanooki Auth checks for requests each time you open it.';
+      _pushProblem = l10n.emergencyUiPushNotWorking(e.message);
     } on RelayException catch (e) {
       _pushProblem = e.message;
     }
@@ -119,14 +116,14 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
       final how = await showDialog<String>(
         context: context,
         builder: (c) => SimpleDialog(title: Text(title), children: [
-          SimpleDialogOption(onPressed: () => Navigator.pop(c, 'scan'), child: const Text('Scan their QR code')),
-          SimpleDialogOption(onPressed: () => Navigator.pop(c, 'paste'), child: const Text('Paste a code they sent')),
+          SimpleDialogOption(onPressed: () => Navigator.pop(c, 'scan'), child: Text(l10n.emergencyUiScanTheirQr)),
+          SimpleDialogOption(onPressed: () => Navigator.pop(c, 'paste'), child: Text(l10n.emergencyUiPasteCode)),
         ]),
       );
       if (how == null || !mounted) return null;
       if (how == 'scan') {
         return Navigator.push<String>(
-            context, MaterialPageRoute(builder: (_) => ScanScreen(prefixes: scanPrefixes, title: title, wrongCode: scanWrong ?? 'That isn\'t the right code.')));
+            context, MaterialPageRoute(builder: (_) => ScanScreen(prefixes: scanPrefixes, title: title, wrongCode: scanWrong ?? l10n.emergencyUiWrongCode)));
       }
     }
     final field = TextEditingController();
@@ -136,8 +133,8 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
         title: Text(title),
         content: TextField(controller: field, autofocus: true, maxLines: 3, decoration: InputDecoration(hintText: hint)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(c, field.text.trim()), child: const Text('OK')),
+          TextButton(onPressed: () => Navigator.pop(c), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(c, field.text.trim()), child: Text(l10n.commonOk)),
         ],
       ),
     );
@@ -153,10 +150,10 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
             TextButton.icon(
               onPressed: () async {
                 await Clipboard.setData(ClipboardData(text: code));
-                _say('Copied. Send it to them however you like: it holds no secrets.');
+                _say(l10n.emergencyUiCopiedCode);
               },
               icon: const Icon(Icons.copy, size: 18),
-              label: const Text('Copy as text'),
+              label: Text(l10n.emergencyUiCopyAsText),
             ),
           ]),
         ),
@@ -166,8 +163,8 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
 
   Future<void> _choose() async {
     if (!await needPremium(context, _v) || !mounted) return _refresh();
-    final text = await _askText('Their contact code', 'tanookiauth-contact:…',
-        scanPrefixes: const [contactPrefix], scanWrong: 'That isn\'t a Tanooki Auth contact code.');
+    final text = await _askText(l10n.emergencyUiTheirContactCode, 'tanookiauth-contact:…',
+        scanPrefixes: const [contactPrefix], scanWrong: l10n.emergencyUiNotContactCodeShort);
     if (text == null || text.isEmpty || !mounted) return;
     final ContactCode contact;
     try {
@@ -179,21 +176,21 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
     final go = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: Text('Make ${contact.name.isEmpty ? 'them' : contact.name} your emergency contact?'),
+        title: Text(contact.name.isEmpty ? l10n.emergencyUiMakeThemContact : l10n.emergencyUiMakeNamedContact(contact.name)),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Text('A copy of all your accounts is locked to their device and left on the Tanooki Auth server. It updates when you change your accounts.'),
-          TextField(controller: name, decoration: const InputDecoration(labelText: 'Your name (so they know whose copy it is)')),
+          Text(l10n.emergencyUiCopyLeftOnServer),
+          TextField(controller: name, decoration: InputDecoration(labelText: l10n.emergencyUiYourNameWhose)),
         ]),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Continue')),
+          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(l10n.commonContinueLabel)),
         ],
       ),
     );
     if (go != true || !mounted) return;
     await _try(() async {
       await _service.setUp(_v, contact, name.text);
-      _say('Done. Now give them the code on this screen.');
+      _say(l10n.emergencyUiDoneGiveCode);
       await _registerPush();
     });
   }
@@ -202,11 +199,11 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
     final sure = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Stop emergency access?'),
-        content: const Text('The copy is deleted from the server, and they can\'t ask for it any more.'),
+        title: Text(l10n.emergencyUiStopTitle),
+        content: Text(l10n.emergencyUiStopBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Stop')),
+          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(l10n.commonStop)),
         ],
       ),
     );
@@ -221,25 +218,25 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
         Card(
           child: ListTile(
             leading: const Icon(Icons.person_add_alt),
-            title: Text(premium.value ? 'Choose an emergency contact' : 'Choose an emergency contact (Premium)'),
-            subtitle: const Text('They open Tanooki Auth on their device, go to Settings > Emergency access, and show you their contact code.'),
+            title: Text(premium.value ? l10n.emergencyUiChooseContact : l10n.emergencyUiChooseContactPremium),
+            subtitle: Text(l10n.emergencyUiChooseContactHow),
             onTap: _working ? null : _choose,
           ),
         ),
       ];
     }
-    final who = (g['contactName'] as String? ?? '').isEmpty ? 'Your contact' : g['contactName'] as String;
+    final who = (g['contactName'] as String? ?? '').isEmpty ? l10n.emergencyUiYourContact : g['contactName'] as String;
     final now = DateTime.now();
     final state = switch (st?.state) {
-      null => 'Checking with the server…',
-      'idle' => 'Nobody has asked. Copy last updated ${st!.updatedAt == null ? 'just now' : dayText(st.updatedAt!)}.',
-      'waiting' => '$who asked on ${dayText(st!.requestedAt!)}. They can open the copy in ${waitLeft(st.releaseAt!, now)} unless you deny it.',
-      _ => '$who asked and the wait is over: they can open the copy now. Deny to stop that.',
+      null => l10n.emergencyUiChecking,
+      'idle' => st!.updatedAt == null ? l10n.emergencyUiIdleJustNow : l10n.emergencyUiIdleUpdated(dayText(st.updatedAt!)),
+      'waiting' => l10n.emergencyUiWaiting(who, dayText(st!.requestedAt!), waitLeft(st.releaseAt!, now)),
+      _ => l10n.emergencyUiReleased(who),
     };
     return [
       Card(
         child: Column(children: [
-          ListTile(leading: const Icon(Icons.shield_outlined), title: Text('Emergency contact: $who'), subtitle: Text(state)),
+          ListTile(leading: const Icon(Icons.shield_outlined), title: Text(l10n.emergencyUiContactIs(who)), subtitle: Text(state)),
           if (_service.problem.value != null)
             ListTile(leading: Icon(Icons.error_outline, color: Palette.red), title: Text(_service.problem.value!)),
           if (_pushProblem != null) ListTile(leading: const Icon(Icons.notifications_off_outlined), subtitle: Text(_pushProblem!)),
@@ -248,9 +245,9 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
               FilledButton(
                 onPressed: _working ? null : () => _try(() async {
                   await _service.deny(_v);
-                  _say('Denied. They can\'t open your accounts. They can ask again later.');
+                  _say(l10n.emergencyUiDenied);
                 }),
-                child: const Text('Deny'),
+                child: Text(l10n.commonDeny),
               ),
             TextButton(
               onPressed: _working
@@ -258,19 +255,19 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
                   : () => _try(() async {
                         if (await _service.updateNow(_v)) {
                           await _v.save();
-                          _say('Copy updated.');
+                          _say(l10n.emergencyUiCopyUpdated);
                         } else {
-                          _say(_service.problem.value ?? 'Couldn\'t update the copy.');
+                          _say(_service.problem.value ?? l10n.emergencyUiCouldntUpdate);
                         }
                       }),
-              child: const Text('Update copy now'),
+              child: Text(l10n.emergencyUiUpdateNow),
             ),
-            TextButton(onPressed: _working ? null : _removeGrant, child: const Text('Stop')),
+            TextButton(onPressed: _working ? null : _removeGrant, child: Text(l10n.commonStop)),
           ]),
         ]),
       ),
       _codeBox(grantCode(g['id'] as String, g['ownerName'] as String? ?? ''),
-          'Give $who this code. In Tanooki Auth they go to Settings > Emergency access > "Add a code someone gave you".'),
+          l10n.emergencyUiGiveCode(who)),
     ];
   }
 
@@ -283,33 +280,33 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
   }
 
   Future<void> _addTheirCode() async {
-    final text = await _askText('Code they gave you', 'tanookiauth-emergency:…',
-        scanPrefixes: const [grantPrefix], scanWrong: 'That isn\'t a Tanooki Auth emergency code.');
+    final text = await _askText(l10n.emergencyUiCodeTheyGave, 'tanookiauth-emergency:…',
+        scanPrefixes: const [grantPrefix], scanWrong: l10n.emergencyUiNotEmergencyCodeShort);
     if (text == null || text.isEmpty || !mounted) return;
     await _try(() async {
       final f = await addGrantCode(_v, text);
-      _say('Added. You can ask for ${f.ownerName.isEmpty ? 'their' : '${f.ownerName}\'s'} accounts here if you ever need to.');
+      _say(f.ownerName.isEmpty ? l10n.emergencyUiAddedTheir : l10n.emergencyUiAddedNamed(f.ownerName));
       await _checkTheirs();
     });
   }
 
   Future<void> _request(EmergencyFrom f) async {
-    final who = f.ownerName.isEmpty ? 'the owner' : f.ownerName;
+    final who = f.ownerName.isEmpty ? l10n.emergencyUiTheOwner : f.ownerName;
     final sure = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Ask for emergency access?'),
-        content: Text('$who gets a notification and has 7 days to say no. If they don\'t, you can open a copy of their accounts here. Only ask if you really need it.'),
+        title: Text(l10n.emergencyUiAskTitle),
+        content: Text(l10n.emergencyUiAskBody(who)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Ask')),
+          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(l10n.emergencyUiAsk)),
         ],
       ),
     );
     if (sure != true) return;
     await _try(() async {
       _theirs[f.grantId] = await (await contactRelay(_v, f.grantId)).request();
-      _say('Asked. The 7-day wait has started.');
+      _say(l10n.emergencyUiAsked);
     });
   }
 
@@ -317,8 +314,8 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
     await _try(() async {
       final accounts = await fetchEmergencyCopy(_v, f.grantId);
       if (!mounted) return;
-      final who = f.ownerName.isEmpty ? 'their' : '${f.ownerName}\'s';
-      if (await confirmImport(context, 'Add $who ${accounts.length} accounts?', accounts) && mounted) {
+      final title = f.ownerName.isEmpty ? l10n.emergencyUiAddTheirAccounts(accounts.length) : l10n.emergencyUiAddNamedAccounts(accounts.length, f.ownerName);
+      if (await confirmImport(context, title, accounts) && mounted) {
         await mergeAndReport(context, _v, accounts, verb: 'Added');
       }
     });
@@ -326,24 +323,24 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
 
   Widget _copyTile(EmergencyFrom f) {
     final st = _theirs[f.grantId], problem = _theirProblem[f.grantId], now = DateTime.now();
-    final who = f.ownerName.isEmpty ? 'Someone' : f.ownerName;
+    final who = f.ownerName.isEmpty ? l10n.emergencyUiSomeone : f.ownerName;
     final String text;
     Widget? action;
     if (problem != null) {
       text = problem;
     } else if (st == null) {
-      text = 'Checking…';
+      text = l10n.emergencyUiCheckingShort;
     } else if (st.state == 'idle') {
-      text = 'You haven\'t asked.';
-      action = FilledButton(onPressed: _working ? null : () => _request(f), child: const Text('Request access'));
+      text = l10n.emergencyUiNotAsked;
+      action = FilledButton(onPressed: _working ? null : () => _request(f), child: Text(l10n.emergencyUiRequestAccess));
     } else if (st.state == 'waiting' && st.releaseAt!.isAfter(now)) {
-      text = 'You asked. Opens in ${waitLeft(st.releaseAt!, now)} (${dayText(st.releaseAt!)}), unless they say no.';
+      text = l10n.emergencyUiOpensIn(waitLeft(st.releaseAt!, now), dayText(st.releaseAt!));
     } else {
-      text = 'The wait is over.';
-      action = FilledButton(onPressed: _working ? null : () => _openCopy(f), child: const Text('Open emergency copy'));
+      text = l10n.emergencyUiWaitOver;
+      action = FilledButton(onPressed: _working ? null : () => _openCopy(f), child: Text(l10n.emergencyUiOpenCopy));
     }
     return Column(children: [
-      ListTile(leading: const Icon(Icons.person_outline), title: Text('$who\'s accounts'), subtitle: Text(text)),
+      ListTile(leading: const Icon(Icons.person_outline), title: Text(l10n.emergencyUiPersonAccounts(who)), subtitle: Text(text)),
       OverflowBar(alignment: MainAxisAlignment.end, children: [
         ?action,
         TextButton(
@@ -351,7 +348,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
             await forgetGrant(_v, f.grantId);
             _refresh();
           },
-          child: const Text('Remove'),
+          child: Text(l10n.commonRemove),
         ),
       ]),
     ]);
@@ -362,23 +359,23 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              const Text('Your contact code', style: TextStyle(fontWeight: FontWeight.w600)),
+              Text(l10n.emergencyUiYourContactCode, style: const TextStyle(fontWeight: FontWeight.w600)),
               const SizedBox(height: 4),
-              Text('If someone wants you as their emergency contact, show them this. It holds no secrets.', style: TextStyle(color: Palette.muted)),
-              TextField(controller: _myName, decoration: const InputDecoration(labelText: 'Your name (so they know it\'s you)')),
+              Text(l10n.emergencyUiShowThis, style: TextStyle(color: Palette.muted)),
+              TextField(controller: _myName, decoration: InputDecoration(labelText: l10n.emergencyUiYourNameItsYou)),
               const SizedBox(height: 8),
-              Align(alignment: Alignment.centerRight, child: FilledButton(onPressed: _showMyCode, child: const Text('Show my contact code'))),
+              Align(alignment: Alignment.centerRight, child: FilledButton(onPressed: _showMyCode, child: Text(l10n.emergencyUiShowMyCode))),
             ]),
           ),
         ),
-        if (_myCode != null) _codeBox(_myCode!, 'Let them scan this in Tanooki Auth, or copy it and send it to them.'),
+        if (_myCode != null) _codeBox(_myCode!, l10n.emergencyUiLetThemScan),
         Card(
           child: Column(children: [
             for (final f in copiesForMe(_v)) ...[_copyTile(f), const Divider()],
             ListTile(
               leading: const Icon(Icons.add),
-              title: const Text('Add a code someone gave you'),
-              subtitle: const Text('After they chose you, their app shows a code for you'),
+              title: Text(l10n.emergencyUiAddCodeGiven),
+              subtitle: Text(l10n.emergencyUiAddCodeGivenHow),
               onTap: _working ? null : _addTheirCode,
             ),
           ]),
@@ -387,12 +384,12 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Emergency access')),
+        appBar: AppBar(title: Text(l10n.emergencyUiTitle)),
         body: ListView(padding: const EdgeInsets.all(16), children: [
           Text(emergencyExplainer, style: TextStyle(color: Palette.muted, height: 1.4)),
-          const Padding(padding: EdgeInsets.fromLTRB(4, 20, 4, 8), child: CapsLabel('Your emergency contact')),
+          Padding(padding: EdgeInsets.fromLTRB(4, 20, 4, 8), child: CapsLabel(l10n.emergencyUiYourEmergencyContact)),
           ..._ownerSection(),
-          const Padding(padding: EdgeInsets.fromLTRB(4, 20, 4, 8), child: CapsLabel('People who chose you')),
+          Padding(padding: EdgeInsets.fromLTRB(4, 20, 4, 8), child: CapsLabel(l10n.emergencyUiPeopleWhoChoseYou)),
           ..._contactSection(),
         ]),
       );

@@ -8,6 +8,7 @@ import '../core/vault.dart';
 import 'backup_ui.dart' show askPassphrase, busy;
 import 'premium.dart';
 import 'theme.dart';
+import '../l10n/l10n.dart';
 
 /// Lets the user pick a folder the app can keep writing to after a restart. Null if they cancel.
 Future<({String ref, String name})?> pickBackupFolder() async {
@@ -15,18 +16,20 @@ Future<({String ref, String name})?> pickBackupFolder() async {
     final r = await folderCall<Map>('pick');
     return r == null ? null : (ref: r['ref'] as String, name: r['name'] as String);
   }
-  final p = await FilePicker.getDirectoryPath(dialogTitle: 'Choose a folder for automatic backups');
+  final p = await FilePicker.getDirectoryPath(dialogTitle: l10n.autoBackupUiChooseFolderDialog);
   return p == null ? null : (ref: p, name: p.split(RegExp(r'[\\/]')).lastWhere((x) => x.isNotEmpty, orElse: () => p));
 }
 
 String _when(DateTime t) {
   final now = DateTime.now();
   String two(int n) => n.toString().padLeft(2, '0');
-  final time = '${t.hour % 12 == 0 ? 12 : t.hour % 12}:${two(t.minute)} ${t.hour < 12 ? 'AM' : 'PM'}';
+  final time = appLocale().languageCode == 'en'
+      ? '${t.hour % 12 == 0 ? 12 : t.hour % 12}:${two(t.minute)} ${t.hour < 12 ? 'AM' : 'PM'}'
+      : '${t.hour}:${two(t.minute)}'; // 24-hour clock outside English
   final today = DateTime(now.year, now.month, now.day), day = DateTime(t.year, t.month, t.day);
-  if (day == today) return 'Today at $time';
-  if (day == today.subtract(const Duration(days: 1))) return 'Yesterday at $time';
-  return '${t.year}-${two(t.month)}-${two(t.day)} at $time';
+  if (day == today) return l10n.autoBackupUiToday(time);
+  if (day == today.subtract(const Duration(days: 1))) return l10n.autoBackupUiYesterday(time);
+  return l10n.autoBackupUiOnDay('${t.year}-${two(t.month)}-${two(t.day)}', time);
 }
 
 /// Settings > Backup > Automatic backups (Premium).
@@ -62,10 +65,10 @@ class _AutoBackupScreenState extends State<AutoBackupScreen> {
   }
 
   Future<void> _backUpNow() async {
-    final ok = await busy(context, 'Backing up…', () => autoBackup.runNow(_v));
+    final ok = await busy(context, l10n.autoBackupUiBackingUp, () => autoBackup.runNow(_v));
     if (!mounted) return;
     setState(() {});
-    _say(ok ? 'Backed up ${_v.live.length} accounts.' : autoBackup.failure.value!.message);
+    _say(ok ? l10n.autoBackupUiBackedUp(_v.live.length) : autoBackup.failure.value!.message);
   }
 
   /// Turning on: folder, then passphrase (only the first time), then a first backup straight away.
@@ -74,7 +77,7 @@ class _AutoBackupScreenState extends State<AutoBackupScreen> {
     try {
       picked = await pickBackupFolder();
     } on AutoBackupException catch (e) {
-      return _say('Couldn\'t use that folder. ${e.detail ?? ''}'.trim());
+      return _say((e.detail ?? '').trim().isEmpty ? l10n.autoBackupUiCouldntUseFolder : l10n.autoBackupUiCouldntUseFolderWhy(e.detail!.trim()));
     }
     if (picked == null || !mounted) return;
     final current = autoBackupSettings(_v);
@@ -97,11 +100,11 @@ class _AutoBackupScreenState extends State<AutoBackupScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Turn off automatic backups?'),
-        content: const Text('Backups already in the folder stay there. The backup passphrase is forgotten, so you\'ll choose a new one if you turn this on again.'),
+        title: Text(l10n.autoBackupUiTurnOffTitle),
+        content: Text(l10n.autoBackupUiTurnOffBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Turn off')),
+          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(l10n.commonTurnOff)),
         ],
       ),
     );
@@ -120,11 +123,10 @@ class _AutoBackupScreenState extends State<AutoBackupScreen> {
     final last = lastAutoBackup(_v);
     final problem = autoBackup.failure.value;
     return Scaffold(
-      appBar: AppBar(title: const Text('Automatic backups')),
+      appBar: AppBar(title: Text(l10n.autoBackupUiTitle)),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         Text(
-          'Once a day, Tanooki Auth saves an encrypted backup to a folder you choose. Pick your iCloud Drive, Google Drive or Dropbox folder and your backups are off this device too. The newest $autoBackupsKept are kept; older ones are deleted.\n\n'
-          'Restore one with Settings > Import backup and your backup passphrase.',
+          l10n.autoBackupUiIntro(autoBackupsKept),
           style: TextStyle(color: Palette.muted, height: 1.4),
         ),
         const SizedBox(height: 16),
@@ -132,26 +134,26 @@ class _AutoBackupScreenState extends State<AutoBackupScreen> {
           Card(
             child: ListTile(
               leading: Icon(Icons.error_outline, color: Palette.red),
-              title: const Text('The last automatic backup failed'),
+              title: Text(l10n.autoBackupUiLastFailed),
               subtitle: Text(problem.message),
             ),
           ),
         if (!on)
-          FilledButton.icon(onPressed: _chooseFolder, icon: const Icon(Icons.folder_open), label: const Text('Choose a folder'))
+          FilledButton.icon(onPressed: _chooseFolder, icon: const Icon(Icons.folder_open), label: Text(l10n.autoBackupUiChooseFolder))
         else
           Card(
             child: Column(children: [
               ListTile(
                 leading: const Icon(Icons.folder_outlined),
-                title: Text(s!['folderName'] as String? ?? 'Backup folder'),
-                subtitle: Text(last == null ? 'No backup yet' : 'Last backup: ${_when(last)}'),
+                title: Text(s!['folderName'] as String? ?? l10n.autoBackupUiBackupFolder),
+                subtitle: Text(last == null ? l10n.autoBackupUiNoBackupYet : l10n.autoBackupUiLastBackup(_when(last))),
               ),
               const Divider(),
-              ListTile(leading: const Icon(Icons.backup_outlined), title: const Text('Back up now'), onTap: _backUpNow),
+              ListTile(leading: const Icon(Icons.backup_outlined), title: Text(l10n.autoBackupUiBackUpNow), onTap: _backUpNow),
               const Divider(),
-              ListTile(leading: const Icon(Icons.drive_file_move_outline), title: const Text('Change folder'), onTap: _chooseFolder),
+              ListTile(leading: const Icon(Icons.drive_file_move_outline), title: Text(l10n.autoBackupUiChangeFolder), onTap: _chooseFolder),
               const Divider(),
-              ListTile(leading: const Icon(Icons.cloud_off_outlined), title: const Text('Turn off'), onTap: _turnOff),
+              ListTile(leading: const Icon(Icons.cloud_off_outlined), title: Text(l10n.commonTurnOff), onTap: _turnOff),
             ]),
           ),
       ]),
@@ -167,12 +169,14 @@ Widget autoBackupTile(BuildContext context, Vault vault, VoidCallback refresh) {
   final on = s?['folder'] is String;
   return ListTile(
     leading: Icon(problem != null && on ? Icons.error_outline : Icons.cloud_upload_outlined, color: problem != null && on ? Palette.red : null),
-    title: Text(premium.value ? 'Automatic backups' : 'Automatic backups (Premium)'),
+    title: Text(premium.value ? l10n.autoBackupUiTitle : l10n.autoBackupUiTitlePremium),
     subtitle: Text(!on
-        ? 'Off. A daily encrypted backup to iCloud Drive, Google Drive, Dropbox or any folder.'
+        ? l10n.autoBackupUiOffSubtitle
         : problem != null
             ? problem.message
-            : 'On, to ${s!['folderName']}. ${last == null ? 'No backup yet.' : 'Last backup: ${_when(last)}.'}'),
+            : last == null
+                ? l10n.autoBackupUiOnNoBackup('${s!['folderName']}')
+                : l10n.autoBackupUiOnLast('${s!['folderName']}', _when(last))),
     trailing: const Icon(Icons.chevron_right),
     onTap: () async {
       if (!premium.value) {

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'totp.dart';
+import '../l10n/l10n.dart';
 
 /// steam: Steam Guard's 5-character codes (time-based, own alphabet).
 enum OtpType { totp, hotp, steam }
@@ -175,7 +176,7 @@ class RecoveryCode {
 
 /// Ways to sort the home list (settings key [sortKey]). Custom is the user's own drag order.
 const sortKey = 'sort';
-const sortChoices = {'custom': 'Custom (drag to arrange)', 'recent': 'Recently used', 'name': 'A to Z'};
+Map<String, String> get sortChoices => {'custom': l10n.accountSortCustom, 'recent': l10n.accountSortRecent, 'name': l10n.accountSortName};
 
 /// The chosen sort, falling back to the old "Recently used first" switch from before the sort setting.
 String sortOf(Map<String, dynamic> settings) =>

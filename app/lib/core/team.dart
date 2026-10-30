@@ -13,6 +13,7 @@ import 'otpauth_uri.dart' show newId;
 import 'sync/relay_client.dart';
 import 'sync/relay_crypto.dart';
 import 'vault.dart';
+import '../l10n/l10n.dart';
 
 const teamStateKey = 'team';
 const teamLinkPrefix = 'tanookiauth://team?';
@@ -53,7 +54,7 @@ Future<Uint8List> unwrapTeamKey(String wrapped, SimpleKeyPair box) async {
     );
     return Uint8List.fromList(clear);
   } catch (_) {
-    throw TeamException('The team key sent to this device couldn\'t be opened. Ask the team admin to remove this device and invite it again.');
+    throw TeamException(l10n.teamKeyUnopenable);
   }
 }
 
@@ -128,7 +129,7 @@ TeamInvite parseTeamInvite(String link) {
   final relay = q['relay'], team = q['team'], invite = q['invite'];
   if (q['v'] != '1' || relay == null || !relay.startsWith('https://') && !relay.startsWith('http://') ||
       team == null || team.length != 43 || invite == null || invite.isEmpty) {
-    throw TeamException('That isn\'t a Tanooki Auth team invite. Ask the team admin for a new invite link or QR code.');
+    throw TeamException(l10n.teamNotAnInvite);
   }
   return (relay: relay, teamId: team, invite: invite);
 }
@@ -170,7 +171,7 @@ class TeamClient {
   final Vault vault;
   final TeamLicenseRefresher? refreshLicense;
 
-  Map<String, dynamic> get _s => teamState(vault) ?? (throw TeamException('This device isn\'t in a team.'));
+  Map<String, dynamic> get _s => teamState(vault) ?? (throw TeamException(l10n.teamNotInTeam));
   String get teamId => _s['teamId'] as String;
   String get _path => '/v1/team/$teamId';
 
@@ -182,18 +183,18 @@ class TeamClient {
     final r = await (await _relay()).call(method, path, body);
     if (r.status == 403 && r.body['error'] == 'device is not in this team' || r.status == 404 && r.body['error'] == 'team not found') {
       throw TeamGoneException(r.status == 404
-          ? 'This team was deleted by its admin.'
-          : 'This device was removed from the team.');
+          ? l10n.teamDeletedByAdmin
+          : l10n.teamDeviceRemoved);
     }
     return expectStatus(r, ok);
   }
 
   /// Makes a team with this device as admin. [license] is the TT1 team license from the purchase page.
   static Future<void> create(Vault v, String license, {String relay = relayUrl}) async {
-    if (inTeam(v)) throw TeamException('This device is already in a team.');
+    if (inTeam(v)) throw TeamException(l10n.teamAlreadyInTeam);
     final lic = license.trim();
     if (!lic.startsWith('TT1.')) {
-      throw TeamException('That isn\'t a team license. It starts with TT1. and comes from the page Stripe shows after you subscribe.');
+      throw TeamException(l10n.teamNotALicense);
     }
     final teamId = b64u(randomBytes(32)), device = randomBytes(32), box = randomBytes(32);
     final key = randomBytes(32);
@@ -221,16 +222,16 @@ class TeamClient {
 
   /// Joins the team in an invite link. The team key arrives once the admin's app next syncs.
   static Future<void> join(Vault v, String link) async {
-    if (inTeam(v)) throw TeamException('This device is already in a team. Leave it first.');
+    if (inTeam(v)) throw TeamException(l10n.teamAlreadyInTeamLeaveFirst);
     final inv = parseTeamInvite(link);
     final device = randomBytes(32), box = randomBytes(32);
     final me = await DeviceKey.fromSeed(device);
     final boxPub = b64u((await (await X25519().newKeyPairFromSeed(box)).extractPublicKey()).bytes);
     final r = await SyncRelay(inv.relay, inv.teamId, me)
         .call('POST', '/v1/team/${inv.teamId}/join', {'invite': inv.invite, 'boxKey': boxPub});
-    if (r.status == 404) throw TeamException('That team doesn\'t exist any more. Ask the team admin for a new invite.');
-    if (r.status == 403) throw TeamException('That invite has already been used or has expired (they last 7 days and work once). Ask the team admin for a new one.');
-    if (r.status == 507) throw TeamException('That team is full (10 people). The admin has to remove someone first.');
+    if (r.status == 404) throw TeamException(l10n.teamGone);
+    if (r.status == 403) throw TeamException(l10n.teamInviteUsed);
+    if (r.status == 507) throw TeamException(l10n.teamFull);
     expectStatus(r, [201]);
     v.settings[teamStateKey] = {
       'relay': inv.relay,

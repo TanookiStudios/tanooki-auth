@@ -34,7 +34,7 @@ jobs:
         run: |
           dbus-run-session -- bash -euo pipefail -c '
             echo -n itest | gnome-keyring-daemon --unlock --components=secrets
-            xvfb-run -a flutter test integration_test/app_test.dart -d linux --dart-define=TA_STORAGE=itest
+            xvfb-run -a flutter test integration_test/app_test.dart -d linux --dart-define=TA_STORAGE=itest --dart-define=TA_LANG=en
             # Proof the vault key went into the real keyring, not somewhere else.
             secret-tool search --all account com.tanookistudios.auth.secureStorage > /tmp/keyring.txt 2>&1
             grep "^label = " /tmp/keyring.txt || { echo "No Tanooki Auth item in the keyring" >&2; exit 1; }

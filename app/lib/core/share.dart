@@ -6,6 +6,7 @@ import 'package:cryptography/cryptography.dart';
 import 'account.dart';
 import 'otpauth_uri.dart';
 import 'sync/relay_crypto.dart' show deriveSyncRoot;
+import '../l10n/l10n.dart';
 
 /// One account shared with someone else, no server involved: the account's otpauth link, encrypted with
 /// AES-256-GCM under a key stretched (Argon2id, 64 MiB) from a random 6-digit one-time code. The expiry
@@ -45,12 +46,12 @@ Future<Account> openShare(String text, String code, {DateTime? now}) async {
     j = jsonDecode(utf8.decode(_d(text.trim().substring(sharePrefix.length)))) as Map<String, dynamic>;
     if (!text.trim().startsWith(sharePrefix) || j['v'] != 1) throw const FormatException();
   } catch (_) {
-    throw ShareException('That isn\'t a Tanooki Auth shared account.');
+    throw ShareException(l10n.shareNotAShare);
   }
   final exp = j['exp'];
-  if (exp is! int) throw ShareException('That isn\'t a Tanooki Auth shared account.');
+  if (exp is! int) throw ShareException(l10n.shareNotAShare);
   if ((now ?? DateTime.now()).millisecondsSinceEpoch ~/ 1000 > exp) {
-    throw ShareException('This share has expired (they only last 24 hours). Ask for a new one.');
+    throw ShareException(l10n.shareExpired);
   }
   final String uri;
   try {
@@ -63,7 +64,7 @@ Future<Account> openShare(String text, String code, {DateTime? now}) async {
     );
     uri = utf8.decode(clear);
   } catch (_) {
-    throw ShareException('Wrong code, or the share is damaged. Check the 6 digits and try again.');
+    throw ShareException(l10n.shareWrongCode);
   }
   return parseOtpauthUri(uri);
 }

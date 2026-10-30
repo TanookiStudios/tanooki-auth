@@ -7,7 +7,7 @@ set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 dist="$here/../dist"
 version="$(node -p "require('$here/manifest.json').version")"
-files=(manifest.json sw.js content.js popup.html popup.js lookalike.js login.js link.js qrcode.js qrcode.LICENSE jsqr.js jsqr.LICENSE icons)
+files=(manifest.json _locales sw.js content.js popup.html popup.js lookalike.js login.js link.js qrcode.js qrcode.LICENSE jsqr.js jsqr.LICENSE icons)
 mkdir -p "$dist"
 
 pack() { # pack <name> <node expression that edits manifest m>

@@ -11,6 +11,7 @@ import 'home.dart' show accountTitle;
 import 'premium.dart';
 import 'sync_ui.dart' show QrView;
 import 'theme.dart';
+import '../l10n/l10n.dart';
 
 /// "Share securely" from an account's menu. Premium only; free users are sent to the Premium screen.
 Future<void> shareAccountFlow(BuildContext context, Vault vault, Account a) async {
@@ -22,19 +23,16 @@ Future<void> shareAccountFlow(BuildContext context, Vault vault, Account a) asyn
   final go = await showDialog<bool>(
     context: context,
     builder: (c) => AlertDialog(
-      title: Text('Share ${accountTitle(a)}?'),
-      content: const Text(
-          'The person you share this with gets full access: their phone will make the same codes as yours, for as long as they keep it. '
-          'Only share with someone you trust completely, like family.\n\n'
-          'Removing it from your list later does not take it back from them. To cut them off, turn two-factor off and on again on the website.'),
+      title: Text(l10n.shareUiConfirmTitle(accountTitle(a))),
+      content: Text(l10n.shareUiConfirmBody),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-        FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('I understand, share it')),
+        TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
+        FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(l10n.shareUiConfirmButton)),
       ],
     ),
   );
   if (go != true || !context.mounted) return;
-  final s = await busy(context, 'Locking the share…', () => createShare(a));
+  final s = await busy(context, l10n.shareUiLocking, () => createShare(a));
   if (!context.mounted) return;
   await Navigator.push(context, MaterialPageRoute(builder: (_) => _ShareScreen(account: a, text: s.text, code: s.code)));
 }
@@ -46,10 +44,9 @@ class _ShareScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: Text('Share ${accountTitle(account)}')),
+        appBar: AppBar(title: Text(l10n.shareUiTitle(accountTitle(account)))),
         body: ListView(padding: const EdgeInsets.all(20), children: [
-          Text('On their device: open Tanooki Auth, tap Add account, then "Scan QR code" (or "Open a shared account" for the file). '
-              'Then they type this code:',
+          Text(l10n.shareUiInstructions,
               style: TextStyle(color: Palette.muted, height: 1.4)),
           const SizedBox(height: 12),
           Center(
@@ -58,30 +55,30 @@ class _ShareScreen extends StatelessWidget {
                 style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w700, letterSpacing: 4)),
           ),
           const SizedBox(height: 4),
-          Center(child: Text('Tell them the code yourself, out loud or in a different app from the file.', style: TextStyle(color: Palette.muted, fontSize: 13))),
+          Center(child: Text(l10n.shareUiTellCode, style: TextStyle(color: Palette.muted, fontSize: 13))),
           const SizedBox(height: 20),
           Center(child: QrView(text, size: 240)),
           const SizedBox(height: 16),
           Builder(
             builder: (c) => OutlinedButton.icon(
               icon: const Icon(Icons.ios_share),
-              label: const Text('Send as a file instead'),
+              label: Text(l10n.shareUiSendFile),
               onPressed: () => deliverFile(c, '${accountTitle(account).replaceAll(RegExp(r'[^\w .-]'), '')}.$shareExtension', utf8.encode(text), 'application/octet-stream'),
             ),
           ),
           const SizedBox(height: 8),
           TextButton.icon(
             icon: const Icon(Icons.copy),
-            label: const Text('Copy as a link'),
+            label: Text(l10n.shareUiCopyLink),
             onPressed: () async {
               await Clipboard.setData(ClipboardData(text: text));
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied. They paste it with "Paste setup link".')));
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.shareUiCopied)));
               }
             },
           ),
           const SizedBox(height: 12),
-          Text('Works for 24 hours, and only with the code. Nothing goes through a server.',
+          Text(l10n.shareUiWorksFor,
               textAlign: TextAlign.center, style: TextStyle(color: Palette.muted, fontSize: 13)),
         ]),
       );
@@ -94,9 +91,9 @@ Future<Account?> openShareFlow(BuildContext context, String text) async {
     final code = await showDialog<String>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Shared account'),
+        title: Text(l10n.shareUiOpenTitle),
         content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Type the 6-digit code the person who shared it gave you.'),
+          Text(l10n.shareUiOpenBody),
           const SizedBox(height: 12),
           TextField(
             controller: field,
@@ -108,20 +105,20 @@ Future<Account?> openShareFlow(BuildContext context, String text) async {
           ),
         ]),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(c, field.text), child: const Text('Open')),
+          TextButton(onPressed: () => Navigator.pop(c), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(c, field.text), child: Text(l10n.commonOpen)),
         ],
       ),
     );
     if (code == null || !context.mounted) return null;
     try {
-      return await busy(context, 'Unlocking…', () => openShare(text, code.replaceAll(' ', '')));
+      return await busy(context, l10n.shareUiUnlocking, () => openShare(text, code.replaceAll(' ', '')));
     } on ShareException catch (e) {
       if (!context.mounted) return null;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(SnackBar(content: Text(e.message)));
-      if (!e.message.startsWith('Wrong code')) return null; // only a mistyped code is worth retrying
+      if (e.message != l10n.shareWrongCode) return null; // only a mistyped code is worth retrying
     }
   }
   return null;

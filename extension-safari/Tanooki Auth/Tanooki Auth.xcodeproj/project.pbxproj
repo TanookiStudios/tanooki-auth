@@ -39,6 +39,7 @@
 		4C6B528F30942B0900469615 /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528430942B0900469615 /* popup.html */; };
 		4C6B529030942B0900469615 /* jsqr.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528530942B0900469615 /* jsqr.js */; };
 		4C6B529230942B0900469615 /* icons in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528730942B0900469615 /* icons */; };
+		B600000000000000000000B6 /* _locales in Resources */ = {isa = PBXBuildFile; fileRef = B500000000000000000000B5 /* _locales */; };
 		4C6B529330942B0900469615 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528830942B0900469615 /* manifest.json */; };
 		4C6B529430942B0900469615 /* content.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528930942B0900469615 /* content.js */; };
 		4C6B529530942B0900469615 /* sw.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528A30942B0900469615 /* sw.js */; };
@@ -52,6 +53,7 @@
 		4C6B529A30942B0900469615 /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528430942B0900469615 /* popup.html */; };
 		4C6B529B30942B0900469615 /* jsqr.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528530942B0900469615 /* jsqr.js */; };
 		4C6B529D30942B0900469615 /* icons in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528730942B0900469615 /* icons */; };
+		B700000000000000000000B7 /* _locales in Resources */ = {isa = PBXBuildFile; fileRef = B500000000000000000000B5 /* _locales */; };
 		4C6B529E30942B0900469615 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528830942B0900469615 /* manifest.json */; };
 		4C6B529F30942B0900469615 /* content.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528930942B0900469615 /* content.js */; };
 		4C6B52A030942B0900469615 /* sw.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528A30942B0900469615 /* sw.js */; };
@@ -127,6 +129,7 @@
 		4C6B528430942B0900469615 /* popup.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = popup.html; path = ../../../extension/popup.html; sourceTree = "<group>"; };
 		4C6B528530942B0900469615 /* jsqr.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = jsqr.js; path = ../../../extension/jsqr.js; sourceTree = "<group>"; };
 		4C6B528730942B0900469615 /* icons */ = {isa = PBXFileReference; lastKnownFileType = folder; name = icons; path = ../../../extension/icons; sourceTree = "<group>"; };
+		B500000000000000000000B5 /* _locales */ = {isa = PBXFileReference; lastKnownFileType = folder; name = _locales; path = ../../../extension/_locales; sourceTree = "<group>"; };
 		4C6B528830942B0900469615 /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = ../../../extension/manifest.json; sourceTree = "<group>"; };
 		4C6B528930942B0900469615 /* content.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = content.js; path = ../../../extension/content.js; sourceTree = "<group>"; };
 		4C6B528A30942B0900469615 /* sw.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = sw.js; path = ../../../extension/sw.js; sourceTree = "<group>"; };
@@ -261,6 +264,7 @@
 				4C6B528430942B0900469615 /* popup.html */,
 				4C6B528530942B0900469615 /* jsqr.js */,
 				4C6B528730942B0900469615 /* icons */,
+				B500000000000000000000B5 /* _locales */,
 				4C6B528830942B0900469615 /* manifest.json */,
 				4C6B528930942B0900469615 /* content.js */,
 				4C6B528A30942B0900469615 /* sw.js */,
@@ -416,6 +420,7 @@
 				4C6B52A030942B0900469615 /* sw.js in Resources */,
 				4C6B529B30942B0900469615 /* jsqr.js in Resources */,
 				4C6B529D30942B0900469615 /* icons in Resources */,
+				B700000000000000000000B7 /* _locales in Resources */,
 				4C6B529630942B0900469615 /* jsqr.LICENSE in Resources */,
 				4C6B529A30942B0900469615 /* popup.html in Resources */,
 				4C6B529F30942B0900469615 /* content.js in Resources */,
@@ -434,6 +439,7 @@
 				4C6B529530942B0900469615 /* sw.js in Resources */,
 				4C6B529030942B0900469615 /* jsqr.js in Resources */,
 				4C6B529230942B0900469615 /* icons in Resources */,
+				B600000000000000000000B6 /* _locales in Resources */,
 				4C6B528B30942B0900469615 /* jsqr.LICENSE in Resources */,
 				4C6B528F30942B0900469615 /* popup.html in Resources */,
 				4C6B529430942B0900469615 /* content.js in Resources */,

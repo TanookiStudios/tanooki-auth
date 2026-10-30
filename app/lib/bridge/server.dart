@@ -11,6 +11,7 @@ import '../core/google_migration.dart';
 import '../core/otpauth_uri.dart';
 import '../core/totp.dart';
 import '../core/vault.dart';
+import '../l10n/l10n.dart';
 
 /// The running bridge (desktop only), started by the app once the vault is open.
 BridgeServer? activeBridge;
@@ -61,7 +62,7 @@ String bridgeClientName(String origin) => switch (origin) {
       'tanooki-integration://raycast' => 'Raycast',
       'tanooki-integration://alfred' => 'Alfred',
       'tanooki-integration://powertoys' => 'PowerToys',
-      _ => 'Browser extension',
+      _ => l10n.serverBrowserExtension,
     };
 
 String _hostOf(String domain) => domain.toLowerCase().replaceFirst(RegExp(r'^www\.'), '');
@@ -140,7 +141,7 @@ class BridgeServer {
       } on _BridgeError catch (e) {
         reply = {'type': 'error', 'error': e.code, 'message': e.message};
       } catch (_) {
-        reply = {'type': 'error', 'error': 'badRequest', 'message': 'Tanooki Auth didn\'t understand that request.'};
+        reply = {'type': 'error', 'error': 'badRequest', 'message': l10n.serverBadRequest};
       }
       ws.add(jsonEncode({'id': id, ...reply}));
     });
@@ -148,19 +149,19 @@ class BridgeServer {
 
   Future<Map<String, dynamic>> _handle(Map<String, dynamic> msg, String origin, List<DateTime> codeTimes) async {
     final type = msg['type'];
-    if (host.locked) throw _BridgeError('locked', 'Tanooki Auth is locked. Unlock it, then try again.');
+    if (host.locked) throw _BridgeError('locked', l10n.serverLocked);
     if (type == 'ping') return {'ok': true};
     if (type == 'pair') return _pair(msg, origin);
 
     final token = msg['token'];
     final paired = token is String &&
         _pairings.any((p) => p['origin'] == origin && constantTimeEquals(p['token'] as String, token));
-    if (!paired) throw _BridgeError('notPaired', 'This app isn\'t paired with Tanooki Auth.');
+    if (!paired) throw _BridgeError('notPaired', l10n.serverNotPaired);
 
     // Trashed accounts, and those travel mode hides, are invisible to the extension.
     final accounts = host.vault.visible;
     Account find() => accounts.firstWhere((a) => a.id == msg['accountId'],
-        orElse: () => throw _BridgeError('notFound', 'That account isn\'t in Tanooki Auth any more.'));
+        orElse: () => throw _BridgeError('notFound', l10n.serverNotFound));
 
     switch (type) {
       case 'accounts':
@@ -173,7 +174,7 @@ class BridgeServer {
       case 'code' || 'codes':
         final now = DateTime.now();
         codeTimes.removeWhere((t) => now.difference(t) > const Duration(seconds: 1));
-        if (codeTimes.length >= _maxCodesPerSecond) throw _BridgeError('rateLimited', 'Too many requests.');
+        if (codeTimes.length >= _maxCodesPerSecond) throw _BridgeError('rateLimited', l10n.serverRateLimited);
         codeTimes.add(now);
         if (type == 'codes') {
           // Popup list: TOTP only. HOTP codes are single-use and must be asked for one at a time, and "ask first"
@@ -189,7 +190,7 @@ class BridgeServer {
         }
         final a = find();
         if (a.requireAuth && !await host.confirmReveal(a, bridgeClientName(origin))) {
-          throw _BridgeError('denied', 'Not allowed: this account asks first, and Tanooki Auth wasn\'t unlocked for it.');
+          throw _BridgeError('denied', l10n.serverDenied);
         }
         logActivity(host.vault, ActivityKind.filled, accountId: a.id, where: bridgeClientName(origin));
         if (activityPremium() && a.type != OtpType.hotp) await host.vault.save();
@@ -205,13 +206,13 @@ class BridgeServer {
         return {'code': a.codeAt(at), 'secondsLeft': secondsLeft(at.millisecondsSinceEpoch ~/ 1000, period: a.period)};
       case 'open':
         final screen = msg['screen'];
-        if (screen != 'add' && screen != 'settings') throw _BridgeError('badRequest', 'Unknown screen.');
+        if (screen != 'add' && screen != 'settings') throw _BridgeError('badRequest', l10n.serverUnknownScreen);
         host.openScreen(screen as String);
         return {'ok': true};
       case 'setDomain':
         final a = find();
         final d = _hostOf(msg['domain'] as String);
-        if (d.isEmpty) throw _BridgeError('badRequest', 'No website given.');
+        if (d.isEmpty) throw _BridgeError('badRequest', l10n.serverNoWebsite);
         if (!a.domains.contains(d)) {
           a.domains.add(d);
           await host.vault.save();
@@ -223,7 +224,7 @@ class BridgeServer {
         if (reply['type'] == 'added') host.vaultChanged();
         return reply;
       default:
-        throw _BridgeError('badRequest', 'Unknown request "$type".');
+        throw _BridgeError('badRequest', l10n.serverUnknownRequest('$type'));
     }
   }
 
@@ -239,15 +240,15 @@ class BridgeServer {
       return {'pending': true};
     }
     if (_pairCode == null || _pairOrigin != origin) {
-      throw _BridgeError('pairing', 'Pairing timed out or was closed. Start pairing again.');
+      throw _BridgeError('pairing', l10n.serverPairingTimedOut);
     }
     if (!constantTimeEquals(_pairCode!, '$code')) {
       if (++_pairMisses >= 3) {
         cancelPairing();
         host.hidePairingCode();
-        throw _BridgeError('pairing', 'Three wrong codes. Start pairing again.');
+        throw _BridgeError('pairing', l10n.serverThreeWrongCodes);
       }
-      throw _BridgeError('wrongCode', 'That code doesn\'t match. Check the code shown in Tanooki Auth.');
+      throw _BridgeError('wrongCode', l10n.serverWrongCode);
     }
     cancelPairing();
     host.hidePairingCode();
@@ -270,7 +271,7 @@ class BridgeServer {
 Future<Map<String, dynamic>> addFromUri(Vault vault, Object? uri, Future<bool> Function(List<Account>) confirm, {String domain = ''}) async {
   List<Account> found;
   try {
-    if (uri is! String) throw const FormatException('No otpauth:// link was sent.');
+    if (uri is! String) throw FormatException(l10n.serverNoLink);
     final migration = uri.trim().toLowerCase().startsWith('otpauth-migration://');
     found = migration ? parseGoogleMigration(uri) : [parseOtpauthUri(uri)];
     if (!migration && domain.isNotEmpty) found.single.domains.add(domain); // a transfer code isn't tied to the page
@@ -287,7 +288,7 @@ Future<Map<String, dynamic>> addFromUri(Vault vault, Object? uri, Future<bool> F
       'type': 'error',
       'accepted': false,
       'reason': 'duplicate',
-      'message': found.length == 1 ? 'That account is already in Tanooki Auth.' : 'Those accounts are already in Tanooki Auth.',
+      'message': found.length == 1 ? l10n.serverAlreadyThere : l10n.serverAlreadyThereMany,
     };
   }
   if (!await confirm(fresh)) return {'type': 'declined', 'accepted': false, 'reason': 'declined'};

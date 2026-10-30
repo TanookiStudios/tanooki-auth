@@ -8,6 +8,7 @@ import 'about_maddie.dart' show appVersion;
 import 'add.dart';
 import 'import_ui.dart';
 import 'theme.dart';
+import '../l10n/l10n.dart';
 
 /// vault.settings keys: the tour was shown, and the last version whose What's new was seen.
 const tourShownKey = 'tourShown';
@@ -22,7 +23,7 @@ Future<void> openLink(BuildContext context, String url) async {
   if (!ok && context.mounted) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text('Couldn\'t open your web browser. The page is $url')));
+      ..showSnackBar(SnackBar(content: Text(l10n.helpNoBrowser(url))));
   }
 }
 
@@ -33,7 +34,7 @@ Widget guideLink(BuildContext context, Guide g) => Align(
         key: const Key('guideLink'),
         onPressed: () => openLink(context, guideUrl(g)),
         icon: const Icon(Icons.open_in_new, size: 18),
-        label: Text('How to turn on 2FA for ${g.name}'),
+        label: Text(l10n.helpGuideFor(g.name)),
       ),
     );
 
@@ -91,60 +92,56 @@ class _TourScreenState extends State<TourScreen> {
     final pages = [
       _page(
         Icons.shield_outlined,
-        'Welcome to Tanooki Auth',
-        'Lots of websites can ask for a 6-digit code as well as your password. That\'s two-factor authentication, '
-            'or 2FA. Tanooki Auth makes those codes for you, right here on your device, so someone with only your '
-            'password still can\'t get in.',
+        l10n.helpTourWelcome,
+        l10n.helpTourWelcomeBody,
         const [],
       ),
       _page(
         Icons.add_circle_outline,
-        'Add your first account',
-        'Turn on 2FA in a website\'s security settings. It shows a QR code: scan it here, or copy its setup link and '
-            'paste it. Already using another authenticator app? Bring your accounts across in one go.',
+        l10n.helpTourAdd,
+        l10n.helpTourAddBody,
         [
           FilledButton.icon(
             key: const Key('tourAdd'),
             onPressed: () => _go(AddScreen(vault: widget.vault)),
             icon: const Icon(Icons.qr_code_scanner),
-            label: const Text('Scan a QR code or paste a link'),
+            label: Text(l10n.helpTourScanOrPaste),
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: () => _go(ImportFromAppScreen(vault: widget.vault)),
             icon: const Icon(Icons.move_down),
-            label: const Text('Import from another app'),
+            label: Text(l10n.helpTourImport),
           ),
         ],
       ),
       _page(
         Icons.star_outline,
-        'Popular sites to protect first',
-        'Your email, your social media and anywhere with your money matter most. Our step-by-step guides show where '
-            'the 2FA setting is on each site.',
+        l10n.helpTourPopular,
+        l10n.helpTourPopularBody,
         [
           Card(
             child: Column(children: [
               for (final g in starterGuides)
                 ListTile(
                   title: Text(g.name),
-                  subtitle: Text('How to turn on 2FA for ${g.name}'),
+                  subtitle: Text(l10n.helpGuideFor(g.name)),
                   trailing: const Icon(Icons.open_in_new, size: 18),
                   onTap: () => openLink(context, guideUrl(g)),
                 ),
             ]),
           ),
-          TextButton(onPressed: () => openLink(context, guidesIndexUrl), child: const Text('All 2FA guides')),
+          TextButton(onPressed: () => openLink(context, guidesIndexUrl), child: Text(l10n.helpAllGuides)),
         ],
       ),
     ];
     final last = _step == _steps - 1;
     return Scaffold(
       appBar: AppBar(
-        title: Semantics(liveRegion: true, child: Text('Step ${_step + 1} of $_steps')),
+        title: Semantics(liveRegion: true, child: Text(l10n.helpTourStep(_step + 1, _steps))),
         automaticallyImplyLeading: false,
         actions: [
-          if (!last) TextButton(key: const Key('tourSkip'), onPressed: () => Navigator.pop(context), child: const Text('Skip tour')),
+          if (!last) TextButton(key: const Key('tourSkip'), onPressed: () => Navigator.pop(context), child: Text(l10n.helpTourSkip)),
         ],
       ),
       body: SafeArea(
@@ -154,12 +151,12 @@ class _TourScreenState extends State<TourScreen> {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: _narrow(Row(children: [
-            if (_step > 0) TextButton(onPressed: () => setState(() => _step--), child: const Text('Back')),
+            if (_step > 0) TextButton(onPressed: () => setState(() => _step--), child: Text(l10n.commonBack)),
             const Spacer(),
             FilledButton(
               key: const Key('tourNext'),
               onPressed: () => last ? Navigator.pop(context) : setState(() => _step++),
-              child: Text(last ? 'Done' : 'Next'),
+              child: Text(last ? l10n.commonDone : l10n.commonNext),
             ),
           ])),
         ),
@@ -169,52 +166,18 @@ class _TourScreenState extends State<TourScreen> {
 }
 
 /// The in-app changelog, newest first. The first entry's version must match [appVersion] (a test checks).
-const changelog = <({String version, List<String> items})>[
-  (
-    version: '0.3.0',
-    items: [
-      'Step-by-step guides for turning on 2FA at 40 popular sites. When you add or edit an account we have a guide for, there\'s a link to it.',
-      'A short welcome tour the first time you open the app. See it again in Settings > Help.',
-      'Send feedback from Settings > Help. It never includes your accounts or codes.',
-      'This What\'s new page.',
-      'Import from Apple Passwords, and move your accounts to Aegis, 2FAS or Google Authenticator.',
-      'Steam Guard codes, counter-based codes with a "Next code" button, and advanced code settings with a live preview.',
-      'Folders, select many accounts at once, sort A to Z or by recently used, and "Tidy account names".',
-      'Show an account\'s QR code (after Face ID or your passcode) to move it to another device.',
-      'Unlock with a security key such as a YubiKey (Premium), on newer iPhones, Macs and Windows PCs.',
-      '"Ask first" accounts that need Face ID or your passcode before showing the code, and travel mode to hide chosen accounts (Premium).',
-      'Activity history (Premium), "Codes not working?" clock check, Test a backup, lock on sleep, and backup reminders.',
-      'Emergency access: let someone you trust ask for your accounts, with days for you to say no.',
-      'Spotlight search, a copied-code Live Activity and a watch face complication (Premium), Copy on open, and Mac "Clear after one paste".',
-      'Countdown styles, a color or emoji for each account, Read aloud, an easy-to-read font, and better screen reader support.',
-      'A wide layout for big windows, and seasonal Premium icons.',
-      'Buy Premium inside the app on iPhone and Android, gift it, and invite friends.',
-      'Team vault for sharing codes with up to 10 people. The team plan itself is coming soon.',
-      'The Family plan is coming soon.',
-      'The desktop app now runs on Linux too. Linux downloads are coming soon.',
-    ],
-  ),
-  (
-    version: '0.2.0',
-    items: [
-      'Sync between your devices, phone link for the browser extension, and secure sharing of one account.',
-      'Passcode, auto-lock, panic wipe, decoy passcode, screenshot blocking, check-up and breach alerts.',
-      'Widgets, Apple Watch and Wear OS apps, the Mac menu bar and Windows tray, and automatic encrypted backups (Premium).',
-      'Importers for Aegis, 2FAS, Authy, Bitwarden and 1Password, plus favorites, tags, notes, recovery codes and Trash.',
-    ],
-  ),
-  (
-    version: '0.1.0',
-    items: ['The first version: scan or paste accounts, see codes, encrypted backups, and the browser extension.'],
-  ),
-];
+List<({String version, List<String> items})> get changelog => [
+      (version: '0.3.0', items: [l10n.helpNew030a, l10n.helpNew030b, l10n.helpNew030c, l10n.helpNew030d, l10n.helpNew030e, l10n.helpNew030f, l10n.helpNew030g, l10n.helpNew030h, l10n.helpNew030i, l10n.helpNew030j, l10n.helpNew030k, l10n.helpNew030l, l10n.helpNew030m, l10n.helpNew030n, l10n.helpNew030o, l10n.helpNew030p, l10n.helpNew030q, l10n.helpNew030r, l10n.helpNew030s]),
+      (version: '0.2.0', items: [l10n.helpNew020a, l10n.helpNew020b, l10n.helpNew020c, l10n.helpNew020d]),
+      (version: '0.1.0', items: [l10n.helpNew010a]),
+    ];
 
 class WhatsNewScreen extends StatelessWidget {
   const WhatsNewScreen({super.key});
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('What\'s new')),
+        appBar: AppBar(title: Text(l10n.helpWhatsNew)),
         body: ListView(padding: const EdgeInsets.all(16), children: [
           for (final v in changelog)
             _narrow(Card(
@@ -223,7 +186,7 @@ class WhatsNewScreen extends StatelessWidget {
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Semantics(
                     header: true,
-                    child: Text('Version ${v.version}${v.version == appVersion ? ' (this version)' : ''}',
+                    child: Text(v.version == appVersion ? l10n.helpVersionThis(v.version) : l10n.helpVersion(v.version),
                         style: Theme.of(context).textTheme.titleMedium),
                   ),
                   const SizedBox(height: 8),
@@ -267,7 +230,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   Future<void> _send() async {
     if (_message.text.trim().isEmpty) {
       setState(() {
-        _status = 'Type a message first.';
+        _status = l10n.helpFeedbackEmpty;
         _ok = false;
       });
       return;
@@ -287,11 +250,11 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       _sending = false;
       _ok = r == FeedbackResult.sent;
       _status = switch (r) {
-        FeedbackResult.sent => 'Sent. Thank you! Maddie reads every message.',
-        FeedbackResult.tooLong => 'That\'s too long to send. Please make it shorter (about 4,000 letters at most).',
-        FeedbackResult.tooMany => 'You\'ve sent a lot of feedback in the last hour. Please try again in an hour.',
-        FeedbackResult.offline => 'Couldn\'t reach the internet. Check your connection and try again. Your message is still here.',
-        FeedbackResult.serverError => 'The feedback server had a problem and didn\'t take your message. Please try again later. Your message is still here.',
+        FeedbackResult.sent => l10n.helpFeedbackSent,
+        FeedbackResult.tooLong => l10n.helpFeedbackTooLong,
+        FeedbackResult.tooMany => l10n.helpFeedbackTooMany,
+        FeedbackResult.offline => l10n.helpFeedbackOffline,
+        FeedbackResult.serverError => l10n.helpFeedbackServerError,
       };
       if (_ok) _message.clear();
     });
@@ -299,10 +262,10 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Send feedback')),
+        appBar: AppBar(title: Text(l10n.helpFeedbackTitle)),
         body: ListView(padding: const EdgeInsets.all(16), children: [
           _narrow(Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            const Text('Found a bug, or wish the app did something? Tell Maddie here.'),
+            Text(l10n.helpFeedbackIntro),
             const SizedBox(height: 12),
             TextField(
               key: const Key('feedbackMessage'),
@@ -310,16 +273,16 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               minLines: 4,
               maxLines: 10,
               maxLength: feedbackMaxChars,
-              decoration: const InputDecoration(labelText: 'Your message', alignLabelWithHint: true),
+              decoration: InputDecoration(labelText: l10n.helpFeedbackMessage, alignLabelWithHint: true),
             ),
             TextField(
               key: const Key('feedbackContact'),
               controller: _contact,
               maxLength: 200,
               keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'Your email (optional)',
-                helperText: 'Only if you\'d like a reply.',
+              decoration: InputDecoration(
+                labelText: l10n.helpFeedbackEmail,
+                helperText: l10n.helpFeedbackEmailHelp,
               ),
             ),
             CheckboxListTile(
@@ -327,11 +290,11 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               contentPadding: EdgeInsets.zero,
               value: _includeDevice,
               onChanged: (v) => setState(() => _includeDevice = v ?? true),
-              title: const Text('Include app version and device type'),
-              subtitle: const Text('For example "0.3.0" and "iOS". It helps track down bugs.'),
+              title: Text(l10n.helpFeedbackDevice),
+              subtitle: Text(l10n.helpFeedbackDeviceHelp),
             ),
             Text(
-              'Never sent: your accounts, their names, codes, setup keys, tags, notes, or anything else in the app.',
+              l10n.helpFeedbackNeverSent,
               style: TextStyle(color: Palette.muted, fontSize: 13),
             ),
             const SizedBox(height: 16),
@@ -340,7 +303,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               onPressed: _sending ? null : _send,
               child: _sending
                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('Send'),
+                  : Text(l10n.helpFeedbackSend),
             ),
             if (_status != null)
               Padding(

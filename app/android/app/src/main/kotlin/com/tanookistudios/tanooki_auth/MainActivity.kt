@@ -251,7 +251,7 @@ class MainActivity : FlutterFragmentActivity() {
             contentResolver.takePersistableUriPermission(tree, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
             val doc = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree))
             val name = contentResolver.query(doc, arrayOf(DocumentsContract.Document.COLUMN_DISPLAY_NAME), null, null, null)
-                ?.use { if (it.moveToFirst()) it.getString(0) else null } ?: "Backup folder"
+                ?.use { if (it.moveToFirst()) it.getString(0) else null } ?: getString(R.string.backup_folder)
             result.success(mapOf("ref" to tree.toString(), "name" to name))
         } catch (e: Exception) {
             result.error("permissionLost", e.message, null)

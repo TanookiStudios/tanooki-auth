@@ -47,6 +47,15 @@ Everything is free except extra themes. Premium is $5 once and helps pay for thi
 the app yourself, you can remove the check, and that's your right under the license. If it's useful
 to you, please consider buying Premium or [donating to Tanooki Studios](https://tanookistudios.com/SupportMe).
 
+## Languages
+
+The app and the browser extension come in English, Spanish, French, German and Japanese. They follow
+your device's language, and you can pick one in Settings > Language.
+
+The translations were machine-written, so some wording may sound off. If you're a native speaker and
+spot something, a fix is very welcome: the app's words live in `app/lib/l10n/app_<language>.arb` and the
+extension's in `extension/_locales/<language>/messages.json`.
+
 ## Reporting a security problem
 
 Please report it privately with the **Security** tab of this repository ("Report a vulnerability"),

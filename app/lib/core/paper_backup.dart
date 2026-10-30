@@ -1,8 +1,10 @@
 import 'dart:typed_data';
+import 'dart:ui' show Locale;
 
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../l10n/l10n.dart';
 import 'account.dart';
 import 'otpauth_uri.dart';
 
@@ -10,15 +12,15 @@ import 'otpauth_uri.dart';
 /// Anyone holding the paper can make the codes, which the confirmation before this says plainly.
 Future<Uint8List> buildPaperBackup(List<Account> accounts, {DateTime? now, bool compress = true}) {
   final date = (now ?? DateTime.now()).toIso8601String().substring(0, 10);
-  final doc = pw.Document(compress: compress, title: 'Tanooki Auth paper backup', author: 'Tanooki Auth');
+  // The PDF's built-in Helvetica has no Japanese letters, so a Japanese paper backup is printed in English.
+  final t = appLocale().languageCode == 'ja' ? lookupAppLocalizations(const Locale('en')) : l10n;
+  final doc = pw.Document(compress: compress, title: t.paperBackupTitle, author: 'Tanooki Auth');
   doc.addPage(pw.MultiPage(
     pageFormat: PdfPageFormat.letter,
     margin: const pw.EdgeInsets.all(36),
     header: (_) => pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
-      pw.Text('Tanooki Auth paper backup, $date', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
-      pw.Text(
-          'KEEP THIS SECRET. Anyone with this paper can make your login codes. Store it somewhere locked; shred it when you make a new one. '
-          'To restore: in any authenticator app, choose "Scan QR code" and scan each code below.',
+      pw.Text(t.paperBackupHeader(date), style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+      pw.Text(t.paperBackupWarning,
           style: const pw.TextStyle(fontSize: 9)),
       pw.SizedBox(height: 12),
     ]),
@@ -37,10 +39,10 @@ Future<Uint8List> buildPaperBackup(List<Account> accounts, {DateTime? now, bool 
                 if (a.issuer.isNotEmpty && a.label.isNotEmpty) pw.Text(a.label, style: const pw.TextStyle(fontSize: 10)),
                 if (a.domains.isNotEmpty) pw.Text(a.domains.join(', '), style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700)),
                 pw.SizedBox(height: 4),
-                pw.Text('Setup key: ${a.secret}', style: pw.TextStyle(fontSize: 8, font: pw.Font.courier())),
+                pw.Text(t.paperBackupSetupKey(a.secret), style: pw.TextStyle(fontSize: 8, font: pw.Font.courier())),
                 if (a.recoveryCodes.any((r) => !r.used)) ...[
                   pw.SizedBox(height: 6),
-                  pw.Text('Recovery codes (each works once):', style: const pw.TextStyle(fontSize: 9)),
+                  pw.Text(t.paperBackupRecoveryCodes, style: const pw.TextStyle(fontSize: 9)),
                   pw.Wrap(spacing: 12, runSpacing: 2, children: [
                     for (final r in a.recoveryCodes.where((r) => !r.used))
                       pw.Text(r.code, style: pw.TextStyle(fontSize: 9, font: pw.Font.courier())),

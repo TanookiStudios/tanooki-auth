@@ -11,9 +11,22 @@
 #include "flutter/generated_plugin_registrant.h"
 #include "resource.h"
 #include "security_key.h"
+#include "utils.h"
 
 namespace {
 constexpr UINT kTrayMessage = WM_APP + 1;
+
+// Error text the app shows, in the Windows display language (English, Spanish, French, German, Japanese).
+// Non-ASCII letters are written as universal character escapes so the source compiles the same under any code page.
+std::string Say(const wchar_t* en, const wchar_t* es, const wchar_t* fr, const wchar_t* de, const wchar_t* ja) {
+  switch (PRIMARYLANGID(GetUserDefaultUILanguage())) {
+    case LANG_SPANISH: return Utf8FromUtf16(es);
+    case LANG_FRENCH: return Utf8FromUtf16(fr);
+    case LANG_GERMAN: return Utf8FromUtf16(de);
+    case LANG_JAPANESE: return Utf8FromUtf16(ja);
+    default: return Utf8FromUtf16(en);
+  }
+}
 // lparam is a heap-allocated std::function<void()> to run on the platform thread (see RunOnPlatformThread).
 constexpr UINT kRunOnPlatformThread = WM_APP + 2;
 }
@@ -85,7 +98,7 @@ bool FlutterWindow::OnCreate() {
       ReleaseDC(nullptr, screen);
       SetWindowDisplayAffinity(hwnd, secure_ ? WDA_EXCLUDEFROMCAPTURE : WDA_NONE);
       if (!ok) {
-        result->Error("failed", "Screen capture failed");
+        result->Error("failed", Say(L"Screen capture failed", L"No se pudo capturar la pantalla", L"La capture d'\u00e9cran a \u00e9chou\u00e9", L"Bildschirmaufnahme fehlgeschlagen", L"\u753b\u9762\u3092\u30ad\u30e3\u30d7\u30c1\u30e3\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f"));
         return;
       }
       flutter::EncodableMap shot{
@@ -98,7 +111,7 @@ bool FlutterWindow::OnCreate() {
       // Types the code into the window that was in front before ours, as if typed on the keyboard.
       const auto* text = std::get_if<std::string>(call.arguments());
       if (text == nullptr || text->empty()) {
-        result->Error("failed", "Nothing to type");
+        result->Error("failed", Say(L"Nothing to type", L"No hay nada que escribir", L"Rien \u00e0 taper", L"Nichts zum Eingeben", L"\u5165\u529b\u3059\u308b\u3082\u306e\u304c\u3042\u308a\u307e\u305b\u3093"));
         return;
       }
       ShowWindow(hwnd, SW_MINIMIZE);  // hands focus back to the window you were in
@@ -129,7 +142,7 @@ bool FlutterWindow::OnCreate() {
       }
       const UINT sent = SendInput(static_cast<UINT>(keys.size()), keys.data(), sizeof(INPUT));
       if (sent != keys.size()) {
-        result->Error("failed", "Windows blocked the key presses");
+        result->Error("failed", Say(L"Windows blocked the key presses", L"Windows bloque\u00f3 las pulsaciones de teclas", L"Windows a bloqu\u00e9 les frappes de touches", L"Windows hat die Tastendr\u00fccke blockiert", L"Windows \u304c\u30ad\u30fc\u5165\u529b\u3092\u30d6\u30ed\u30c3\u30af\u3057\u307e\u3057\u305f"));
         return;
       }
       result->Success();

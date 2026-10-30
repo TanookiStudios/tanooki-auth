@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		69DF5EF71A029E6F6A080485 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E30B9D0F0D312B46553CE528 /* InfoPlist.xcstrings */; };
+		01BC40C89DB8E2360C7B3C49 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E47985A2E2C36EC86595D979 /* Localizable.xcstrings */; };
+		971084ABF3E3151B042501C7 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E47985A2E2C36EC86595D979 /* Localizable.xcstrings */; };
+		5030E4AA61906D1E616C94A5 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E47985A2E2C36EC86595D979 /* Localizable.xcstrings */; };
+		D7EF47EC2410D4B76DCBDF6D /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E47985A2E2C36EC86595D979 /* Localizable.xcstrings */; };
 		04331E99395376C2721D3AA7 /* CodeActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28FBBAAAFE167CA6B543A867 /* CodeActivity.swift */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		175633723910740A742B6233 /* TanookiWatchWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E802450283DFCE9DB3AF69F4 /* TanookiWatchWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -122,6 +127,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		E30B9D0F0D312B46553CE528 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		E47985A2E2C36EC86595D979 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
 		1F7A9983296D67D1871FABA6 /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
@@ -282,6 +289,7 @@
 		74FEDC097426594C39F13990 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				E47985A2E2C36EC86595D979 /* Localizable.xcstrings */,
 				2C1E9542AC587AD5C5DE59DE /* TOTP.swift */,
 				6DFD1EA1BB62F12FF698FD54 /* FavoriteStore.swift */,
 				E1B88C6CCED8AF24D4A8A90B /* OpenScannerIntent.swift */,
@@ -335,6 +343,7 @@
 		97C146F01CF9000F007C117D /* Runner */ = {
 			isa = PBXGroup;
 			children = (
+				E30B9D0F0D312B46553CE528 /* InfoPlist.xcstrings */,
 				97C146FA1CF9000F007C117D /* Main.storyboard */,
 				97C146FD1CF9000F007C117D /* Assets.xcassets */,
 				97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */,
@@ -502,6 +511,10 @@
 			knownRegions = (
 				en,
 				Base,
+				es,
+				fr,
+				de,
+				ja,
 			);
 			mainGroup = 97C146E51CF9000F007C117D;
 			packageReferences = (
@@ -532,6 +545,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				69DF5EF71A029E6F6A080485 /* InfoPlist.xcstrings in Resources */,
+				D7EF47EC2410D4B76DCBDF6D /* Localizable.xcstrings in Resources */,
 				97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */,
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
@@ -543,6 +558,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				01BC40C89DB8E2360C7B3C49 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -550,6 +566,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				971084ABF3E3151B042501C7 /* Localizable.xcstrings in Resources */,
 				CC1EC0E26F68CA375E656DC0 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -558,6 +575,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5030E4AA61906D1E616C94A5 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

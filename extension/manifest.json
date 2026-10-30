@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Tanooki Auth",
+  "name": "__MSG_extName__",
   "version": "0.1.0",
-  "description": "Fills two-factor codes from the Tanooki Auth desktop app, or from your phone, only on the website each account belongs to.",
+  "description": "__MSG_extDescription__",
+  "default_locale": "en",
   "permissions": [
     "storage",
     "contextMenus"

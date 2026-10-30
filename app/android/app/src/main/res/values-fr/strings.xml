@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">Les codes de vos favoris. Activez Réglages &gt; Afficher les codes sur les widgets et la montre dans Tanooki Auth.</string>
+    <string name="scan_tile">Scanner un QR 2FA</string>
+    <string name="widget_locked">Déverrouillez pour voir les codes</string>
+    <string name="widget_empty">Aucun favori à afficher. Dans Tanooki Auth, mettez un compte en favori et activez Réglages &gt; Afficher les codes sur les widgets et la montre.</string>
+    <string name="backup_folder">Dossier de sauvegarde</string>
+</resources>

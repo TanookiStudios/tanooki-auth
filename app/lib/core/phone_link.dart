@@ -10,6 +10,7 @@ import 'package:cryptography/cryptography.dart';
 import 'account.dart';
 import 'sync/relay_client.dart';
 import 'sync/relay_crypto.dart';
+import '../l10n/l10n.dart';
 
 /// Vault settings key: list of paired browsers (maps from [BrowserLink.toJson]).
 const phoneLinksKey = 'phoneLinks';
@@ -24,7 +25,7 @@ const phoneLinksKey = 'phoneLinks';
       q['v'] == '1' &&
       (q['relay'] ?? '').startsWith('https://') &&
       [q['room'], q['key'], q['secret']].every((v) => v != null && RegExp(r'^[A-Za-z0-9_-]{43}$').hasMatch(v));
-  if (!ok) throw const FormatException('That isn\'t a Tanooki Auth browser pairing code.');
+  if (!ok) throw FormatException(l10n.phoneLinkNotAPairingCode);
   return (relay: q['relay']!, room: q['room']!, extPub: q['key']!, secret: q['secret']!);
 }
 
@@ -175,7 +176,7 @@ class BrowserLink {
       await send({'t': 'deny', 're': r.id});
     } else {
       final domain = accountsDomainFor(account, r.host);
-      if (domain.isEmpty) throw ArgumentError('That account isn\'t saved for ${r.host}.');
+      if (domain.isEmpty) throw ArgumentError(l10n.phoneLinkNotSavedFor(r.host));
       final now = DateTime.now();
       await send({
         't': 'code',
@@ -206,8 +207,8 @@ class BrowserLink {
     final r = await relayFetch(relay, 'POST', '$roomPath/push',
         token: token, body: {'platform': platform, 'token': pushToken, 'environment': environment});
     if (r.status == 200) return null;
-    if (r.status == 503) return 'Notifications aren\'t set up on the Tanooki Auth server yet, so requests only show up while the app is open.';
-    return r.body['error'] as String? ?? 'Couldn\'t turn on notifications (HTTP ${r.status}).';
+    if (r.status == 503) return l10n.phoneLinkPushNotSetUp;
+    return r.body['error'] as String? ?? l10n.phoneLinkPushFailed(r.status);
   }
 
   /// Erases the room; the browser hears "unpaired".

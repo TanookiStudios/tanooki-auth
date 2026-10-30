@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="widget_description">Your favorites\' codes. Turn on Settings > Show codes on widgets and watch in Tanooki Auth.</string>
+    <string name="widget_description">Your favorites\' codes. Turn on Settings &gt; Show codes on widgets and watch in Tanooki Auth.</string>
     <string name="scan_tile">Scan 2FA QR</string>
+    <string name="widget_locked">Unlock to see codes</string>
+    <string name="widget_empty">No favorites to show. In Tanooki Auth, star an account and turn on Settings &gt; Show codes on widgets and watch.</string>
+    <string name="backup_folder">Backup folder</string>
 </resources>

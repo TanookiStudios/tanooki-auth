@@ -11,15 +11,10 @@ import 'home.dart' show accountTitle;
 import 'home_cards.dart' show dayText;
 import 'premium.dart';
 import 'theme.dart';
+import '../l10n/l10n.dart';
 
 /// Shown in Settings > About. Every way the app goes online.
-const privacyText =
-    'No account, no tracking. Your setup keys are stored encrypted on this device. The app goes online only for: a clock check '
-    '(it asks the Tanooki Auth server for the time, at most once an hour while codes are on screen and when you tap "Codes not '
-    'working?"; nothing about you or your accounts is sent), breach alerts if you turn them on (downloads the public breach list), '
-    'sync, phone link and emergency access if you set them up (they carry only encrypted data the server can\'t read), buying Premium, '
-    'and feedback you choose to send (your message, your email if you type one, and the app version and device type if you leave that '
-    'ticked; never your accounts, codes or anything else in the app). 2FA guides open in your web browser.';
+String get privacyText => l10n.securityExtrasPrivacy;
 
 // ---------------------------------------------------------------- monthly summary notification
 
@@ -33,15 +28,15 @@ Future<String?> setMonthlyNotification(bool on) async {
   try {
     await _notify.invokeMethod<void>(on ? 'scheduleMonthly' : 'cancelMonthly', {
       'title': 'Tanooki Auth',
-      'body': 'Your monthly security summary is ready. Open Tanooki Auth to see it.',
+      'body': l10n.securityExtrasMonthlyBody,
     });
     return null;
   } on PlatformException catch (e) {
     return e.code == 'denied'
-        ? 'Notifications are turned off for Tanooki Auth. Turn them on in ${Platform.isIOS ? 'the iPhone Settings app' : 'System Settings'}, under Notifications, then try again.'
-        : 'Couldn\'t set the reminder (${e.message ?? e.code}).';
+        ? (Platform.isIOS ? l10n.securityExtrasNotificationsOffIos : l10n.securityExtrasNotificationsOffMac)
+        : l10n.securityExtrasReminderFailed(e.message ?? e.code);
   } on MissingPluginException {
-    return 'Reminders aren\'t available on this device yet.';
+    return l10n.securityExtrasRemindersUnavailable;
   }
 }
 
@@ -65,19 +60,21 @@ class ActivityScreen extends StatefulWidget {
 class _ActivityScreenState extends State<ActivityScreen> {
   String _time(DateTime t) {
     final l = t.toLocal();
+    final mm = l.minute.toString().padLeft(2, '0');
+    if (appLocale().languageCode != 'en') return l10n.securityExtrasDayTime(dayText(l), '${l.hour}:$mm'); // 24-hour clock outside English
     final h = l.hour % 12 == 0 ? 12 : l.hour % 12;
-    return '${dayText(l)}, $h:${l.minute.toString().padLeft(2, '0')} ${l.hour < 12 ? 'AM' : 'PM'}';
+    return l10n.securityExtrasDayTime(dayText(l), '$h:$mm ${l.hour < 12 ? 'AM' : 'PM'}');
   }
 
   Future<void> _clear() async {
     final sure = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Clear activity history?'),
-        content: const Text('Every entry is removed from this device. Your accounts aren\'t touched.'),
+        title: Text(l10n.securityExtrasClearTitle),
+        content: Text(l10n.securityExtrasClearBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Clear')),
+          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(l10n.commonClear)),
         ],
       ),
     );
@@ -94,21 +91,20 @@ class _ActivityScreenState extends State<ActivityScreen> {
     final hidden = {for (final a in widget.vault.accounts) if (!names.containsKey(a.id)) a.id};
     final shown = events.where((e) => !hidden.contains(e.accountId)).toList();
     return Scaffold(
-      appBar: AppBar(title: const Text('Activity history'), actions: [
-        if (events.isNotEmpty) TextButton(onPressed: _clear, child: const Text('Clear')),
+      appBar: AppBar(title: Text(l10n.securityExtrasActivityTitle), actions: [
+        if (events.isNotEmpty) TextButton(onPressed: _clear, child: Text(l10n.commonClear)),
       ]),
       body: !premium.value
           ? _PremiumPitch(
               vault: widget.vault,
-              text: 'Activity history is part of Premium. It keeps the last $maxActivity times a code was copied, filled into a website, '
-                  'typed, shown as a QR code or exported, on this device only.',
+              text: l10n.securityExtrasActivityPitch(maxActivity),
               onUnlocked: () => setState(() {}),
             )
           : shown.isEmpty
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
-                    child: Text('Nothing yet. Copying, filling, typing, showing a QR code or exporting shows up here.',
+                    child: Text(l10n.securityExtrasNothingYet,
                         textAlign: TextAlign.center, style: TextStyle(color: Palette.muted)),
                   ),
                 )
@@ -117,7 +113,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (_, i) {
                     final e = shown[i];
-                    final what = e.accountId == null ? 'All accounts' : names[e.accountId] ?? 'A deleted account';
+                    final what = e.accountId == null ? l10n.securityExtrasAllAccounts : names[e.accountId] ?? l10n.securityExtrasDeletedAccount;
                     return ListTile(
                       leading: Icon(switch (e.kind) {
                         ActivityKind.copied => Icons.copy,
@@ -126,7 +122,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                         ActivityKind.shownQr => Icons.qr_code_2,
                         ActivityKind.exported => Icons.output,
                       }),
-                      title: Text('${e.kind.label}: $what'),
+                      title: Text(l10n.securityExtrasActivityLine(e.kind.label, what)),
                       subtitle: Text('${_time(e.time)} · ${e.where}'),
                     );
                   },
@@ -152,7 +148,7 @@ class _PremiumPitch extends StatelessWidget {
               onPressed: () async {
                 if (await needPremium(context, vault)) onUnlocked();
               },
-              child: const Text('Get Premium'),
+              child: Text(l10n.securityExtrasGetPremium),
             ),
           ]),
         ),
@@ -196,16 +192,16 @@ class _SecurityKeyScreenState extends State<SecurityKeyScreen> {
     final go = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Add a security key'),
+        title: Text(l10n.securityExtrasAddKey),
         content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(Platform.isIOS
-              ? 'Next, hold the key to the top of your iPhone, or plug it in, when asked. You may need to touch it twice.'
-              : 'Next, plug the key in and touch it when it blinks. You may need to touch it twice, and type its PIN if it has one.'),
-          TextField(controller: name, decoration: const InputDecoration(labelText: 'Name (so you can tell your keys apart)')),
+              ? l10n.securityExtrasAddKeyIos
+              : l10n.securityExtrasAddKeyOther),
+          TextField(controller: name, decoration: InputDecoration(labelText: l10n.securityExtrasKeyName)),
         ]),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Continue')),
+          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(l10n.commonContinueLabel)),
         ],
       ),
     );
@@ -213,7 +209,7 @@ class _SecurityKeyScreenState extends State<SecurityKeyScreen> {
     setState(() => _working = true);
     try {
       final e = await SecurityKeys.add(widget.vault, name.text);
-      _say('Added "${e.name}". You can now unlock Tanooki Auth with it on this device.');
+      _say(l10n.securityExtrasKeyAdded(e.name));
     } on SecurityKeyException catch (e) {
       _say(e.message);
     } finally {
@@ -224,18 +220,17 @@ class _SecurityKeyScreenState extends State<SecurityKeyScreen> {
   Future<void> _remove(SecurityKeyEntry e) async {
     await SecurityKeys.remove(widget.vault, e.id);
     if (mounted) setState(() {});
-    _say('Removed "${e.name}". It can\'t unlock Tanooki Auth any more.');
+    _say(l10n.securityExtrasKeyRemoved(e.name));
   }
 
   @override
   Widget build(BuildContext context) {
     final keys = securityKeysOf(widget.vault.settings);
     return Scaffold(
-      appBar: AppBar(title: const Text('Security keys')),
+      appBar: AppBar(title: Text(l10n.securityExtrasKeysTitle)),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         Text(
-          'A security key (like a YubiKey) can unlock Tanooki Auth instead of $_lockWord. The key holds a secret that never leaves it, '
-          'and the app uses it to lock away the key to your accounts. Lose the key and you can still unlock the usual way.',
+          l10n.securityExtrasKeysIntro(_lockWord),
           style: TextStyle(color: Palette.muted, height: 1.4),
         ),
         const SizedBox(height: 16),
@@ -248,26 +243,26 @@ class _SecurityKeyScreenState extends State<SecurityKeyScreen> {
                 ListTile(
                   leading: const Icon(Icons.key),
                   title: Text(e.name),
-                  subtitle: Text('Added ${dayText(e.added)}'),
-                  trailing: TextButton(onPressed: () => _remove(e), child: const Text('Remove')),
+                  subtitle: Text(l10n.securityExtrasKeyAddedOn(dayText(e.added))),
+                  trailing: TextButton(onPressed: () => _remove(e), child: Text(l10n.commonRemove)),
                 ),
                 const Divider(),
               ],
               ListTile(
                 leading: _working ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.add),
-                title: Text(premium.value ? 'Add a security key' : 'Add a security key (Premium)'),
+                title: Text(premium.value ? l10n.securityExtrasAddKey : l10n.securityExtrasAddKeyPremium),
                 onTap: _working || !_checked ? null : _add,
               ),
             ]),
           ),
         if (keys.isNotEmpty && widget.vault.settings['lock'] != true && widget.vault.settings['passcode'] == null) ...[
           const SizedBox(height: 12),
-          Text('The app lock is off, so the app opens without asking. Turn on "Lock the app" or a passcode in Settings to use your key.',
+          Text(l10n.securityExtrasLockOffNote,
               style: TextStyle(color: Palette.red, height: 1.4)),
         ],
       ]),
     );
   }
 
-  String get _lockWord => Platform.isWindows ? 'Windows Hello or your passcode' : Platform.isMacOS ? 'Touch ID or your passcode' : 'Face ID or your passcode';
+  String get _lockWord => Platform.isWindows ? l10n.securityExtrasLockWordWindows : Platform.isMacOS ? l10n.securityExtrasLockWordMac : l10n.securityExtrasLockWordOther;
 }

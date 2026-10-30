@@ -53,8 +53,8 @@ class FavoritesWidget : AppWidgetProvider() {
             val views = RemoteViews(context.packageName, R.layout.widget_favorites)
             views.removeAllViews(R.id.rows)
             val message = when {
-                locked -> "Unlock to see codes"
-                favorites.isEmpty() -> "No favorites to show. In Tanooki Auth, star an account and turn on Settings > Show codes on widgets and watch."
+                locked -> context.getString(R.string.widget_locked)
+                favorites.isEmpty() -> context.getString(R.string.widget_empty)
                 else -> null
             }
             views.setViewVisibility(R.id.message, if (message == null) View.GONE else View.VISIBLE)

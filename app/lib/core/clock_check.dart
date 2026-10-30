@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import 'sync/relay_client.dart';
 import 'sync/relay_crypto.dart' show relayUrl;
+import '../l10n/l10n.dart';
 
 /// Codes are made from the clock, so a device clock that's off by more than this makes them fail.
 const clockTolerance = Duration(seconds: 30);
@@ -14,7 +15,7 @@ Future<Duration> relayClockOffset({String base = relayUrl, DateTime Function() n
   final back = now();
   final server = DateTime.tryParse(r.body['time'] as String? ?? '');
   if (r.status != 200 || server == null) {
-    throw RelayException(r.status, 'The time server sent an answer the app doesn\'t understand (HTTP ${r.status}).');
+    throw RelayException(r.status, l10n.clockCheckBadAnswer('${r.status}'));
   }
   final middle = sent.add(back.difference(sent) ~/ 2);
   return middle.difference(server);
@@ -24,7 +25,7 @@ Future<Duration> relayClockOffset({String base = relayUrl, DateTime Function() n
 String? clockProblem(Duration off) {
   if (off.abs() <= clockTolerance) return null;
   final minutes = (off.abs().inSeconds / 60).round().clamp(1, 1 << 30);
-  return 'Your device clock is about $minutes minute${minutes == 1 ? '' : 's'} off, so codes won\'t work. Turn on automatic time in Settings.';
+  return l10n.clockCheckOff(minutes);
 }
 
 /// Checks the clock at most once an hour while codes are on screen, plus whenever asked ("Codes not working?").

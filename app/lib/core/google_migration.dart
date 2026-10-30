@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'account.dart';
 import 'otpauth_uri.dart';
 import 'totp.dart';
+import '../l10n/l10n.dart';
 
 /// Decodes Google Authenticator's "Transfer accounts" QR:
 /// `otpauth-migration://offline?data=` followed by a base64 MigrationPayload protobuf.
@@ -16,7 +17,7 @@ List<Account> parseGoogleMigration(String uri) {
     // queryParameters turns a literal '+' into a space.
     data = base64.decode(base64.normalize(raw.replaceAll(' ', '+')));
   } catch (_) {
-    throw const FormatException('That Google Authenticator code couldn\'t be read.');
+    throw FormatException(l10n.googleMigrationUnreadable);
   }
   final accounts = <Account>[];
   try {
@@ -26,9 +27,9 @@ List<Account> parseGoogleMigration(String uri) {
   } on FormatException {
     rethrow;
   } catch (_) {
-    throw const FormatException('That Google Authenticator code is damaged.');
+    throw FormatException(l10n.googleMigrationDamaged);
   }
-  if (accounts.isEmpty) throw const FormatException('That Google Authenticator code has no accounts in it.');
+  if (accounts.isEmpty) throw FormatException(l10n.googleMigrationEmpty);
   return accounts;
 }
 
@@ -54,7 +55,7 @@ Account _otp(Uint8List msg) {
         counter = value as int;
     }
   }
-  if (secret == null || secret.isEmpty) throw const FormatException('An account in that code has no secret.');
+  if (secret == null || secret.isEmpty) throw FormatException(l10n.googleMigrationNoSecret);
   // Name is often "Issuer:label"; the issuer field wins when both are present.
   var label = name;
   final colon = name.indexOf(':');
@@ -71,7 +72,7 @@ Account _otp(Uint8List msg) {
     algorithm: switch (algorithm) {
       2 => OtpAlgorithm.sha256,
       3 => OtpAlgorithm.sha512,
-      4 => throw const FormatException('An account in that code uses MD5, which Tanooki Auth doesn\'t support.'),
+      4 => throw FormatException(l10n.googleMigrationMd5),
       _ => OtpAlgorithm.sha1,
     },
     digits: digits == 2 ? 8 : 6,
@@ -106,7 +107,7 @@ Iterable<(int, Object)> _fields(Uint8List b) sync* {
       case 5:
         i += 4;
       default:
-        throw const FormatException('That Google Authenticator code is damaged.');
+        throw FormatException(l10n.googleMigrationDamaged);
     }
   }
 }
@@ -114,9 +115,9 @@ Iterable<(int, Object)> _fields(Uint8List b) sync* {
 /// Why Google Authenticator can't take [a], or null if it can. Google only knows 6 or 8 digits,
 /// 30-second codes, and plain time or counter codes.
 String? googleCantTake(Account a) {
-  if (a.type == OtpType.steam) return 'Steam codes';
-  if (a.digits != 6 && a.digits != 8) return '${a.digits}-digit codes';
-  if (a.type == OtpType.totp && a.period != 30) return 'codes that change every ${a.period} seconds';
+  if (a.type == OtpType.steam) return l10n.googleCantTakeSteam;
+  if (a.digits != 6 && a.digits != 8) return l10n.googleCantTakeDigits(a.digits);
+  if (a.type == OtpType.totp && a.period != 30) return l10n.googleCantTakePeriod(a.period);
   return null;
 }
 

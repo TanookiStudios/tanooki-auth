@@ -1,0 +1,383 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%llds": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld s"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld s"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld s"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld秒"
+          }
+        }
+      }
+    },
+    "Codes for the accounts you starred. Turn on Settings > Show codes on widgets and watch in Tanooki Auth.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codes der Konten, die du mit einem Stern markiert hast. Schalte in Tanooki Auth Einstellungen > Codes auf Widgets und Uhr anzeigen ein."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Códigos de las cuentas que marcaste con estrella. Activa Ajustes > Mostrar códigos en widgets y reloj en Tanooki Auth."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les codes des comptes que vous avez mis en favoris. Activez Réglages > Afficher les codes sur les widgets et la montre dans Tanooki Auth."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星を付けたアカウントのコードです。Tanooki Auth の［設定］>［ウィジェットとウォッチにコードを表示］をオンにしてください。"
+          }
+        }
+      }
+    },
+    "Expired": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abgelaufen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caducado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expiré"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "期限切れ"
+          }
+        }
+      }
+    },
+    "Favorite code": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favoriten-Code"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código favorito"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code favori"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "お気に入りのコード"
+          }
+        }
+      }
+    },
+    "Favorite codes": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favoriten-Codes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Códigos favoritos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codes favoris"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "お気に入りのコード"
+          }
+        }
+      }
+    },
+    "No favorites yet.\n\nOn your iPhone, open Tanooki Auth, star an account, and turn on Settings > Show codes on widgets and watch.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch keine Favoriten.\n\nÖffne auf deinem iPhone Tanooki Auth, markiere ein Konto mit dem Stern und schalte Einstellungen > Codes auf Widgets und Uhr anzeigen ein."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no hay favoritos.\n\nEn tu iPhone, abre Tanooki Auth, marca una cuenta con la estrella y activa Ajustes > Mostrar códigos en widgets y reloj."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pas encore de favoris.\n\nSur votre iPhone, ouvrez Tanooki Auth, ajoutez un compte aux favoris avec l'étoile et activez Réglages > Afficher les codes sur les widgets et la montre."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "お気に入りはまだありません。\n\niPhone で Tanooki Auth を開き、アカウントに星を付けて、［設定］>［ウィジェットとウォッチにコードを表示］をオンにしてください。"
+          }
+        }
+      }
+    },
+    "One favorite's code. Pick it on your iPhone in Tanooki Auth: Settings > Watch face favorite.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Code eines Favoriten. Wähle ihn auf deinem iPhone in Tanooki Auth: Einstellungen > Favorit fürs Zifferblatt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El código de un favorito. Elígelo en tu iPhone en Tanooki Auth: Ajustes > Favorito de la esfera."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le code d'un favori. Choisissez-le sur votre iPhone dans Tanooki Auth : Réglages > Favori du cadran."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "お気に入り1件のコードです。iPhone の Tanooki Auth の［設定］>［文字盤のお気に入り］で選んでください。"
+          }
+        }
+      }
+    },
+    "Opens Tanooki Auth's camera to add an account.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffnet die Kamera von Tanooki Auth, um ein Konto hinzuzufügen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre la cámara de Tanooki Auth para añadir una cuenta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvre l'appareil photo de Tanooki Auth pour ajouter un compte."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanooki Auth のカメラを開いてアカウントを追加します。"
+          }
+        }
+      }
+    },
+    "Pick a favorite in Tanooki Auth on your iPhone": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle einen Favoriten in Tanooki Auth auf deinem iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un favorito en Tanooki Auth en tu iPhone"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez un favori dans Tanooki Auth sur votre iPhone"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone の Tanooki Auth でお気に入りを選んでください"
+          }
+        }
+      }
+    },
+    "Scan 2FA QR": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2FA-QR scannen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escanear QR de 2FA"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scanner un QR 2FA"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2FA の QR を読み取る"
+          }
+        }
+      }
+    },
+    "Scan 2FA QR code": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2FA-QR-Code scannen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escanear código QR de 2FA"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scanner un code QR 2FA"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2FA の QR コードを読み取る"
+          }
+        }
+      }
+    },
+    "Star a favorite in Tanooki Auth": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markiere einen Favoriten in Tanooki Auth"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marca un favorito en Tanooki Auth"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajoutez un favori dans Tanooki Auth"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanooki Auth でお気に入りに星を"
+          }
+        }
+      }
+    },
+    "Star an account in Tanooki Auth, then turn on Settings > Show codes on widgets and watch.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markiere in Tanooki Auth ein Konto mit einem Stern und schalte dann Einstellungen > Codes auf Widgets und Uhr anzeigen ein."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marca una cuenta con estrella en Tanooki Auth y luego activa Ajustes > Mostrar códigos en widgets y reloj."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mettez un compte en favori dans Tanooki Auth, puis activez Réglages > Afficher les codes sur les widgets et la montre."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanooki Auth でアカウントに星を付けてから、［設定］>［ウィジェットとウォッチにコードを表示］をオンにしてください。"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'relay_crypto.dart';
+import '../../l10n/l10n.dart';
 
 /// A refusal or failure from the relay, with the relay's own plain-English sentence when it sent one.
 class RelayException implements Exception {
@@ -41,15 +42,15 @@ Future<RelayResponse> relayFetch(String base, String method, String path,
     try {
       json = text.isEmpty ? {} : jsonDecode(text) as Map<String, dynamic>;
     } on FormatException {
-      json = {'error': 'The sync server sent an answer the app doesn\'t understand (HTTP ${res.statusCode}).'};
+      json = {'error': l10n.relayBadAnswer(res.statusCode)};
     }
     return RelayResponse(res.statusCode, json);
   } on SocketException {
-    throw RelayException(0, 'Can\'t reach the sync server. Check your internet connection.');
+    throw RelayException(0, l10n.relayUnreachable);
   } on TimeoutException {
-    throw RelayException(0, 'The sync server didn\'t answer in time. Check your internet connection.');
+    throw RelayException(0, l10n.relayTimeout);
   } on HandshakeException {
-    throw RelayException(0, 'Couldn\'t make a secure connection to the sync server.');
+    throw RelayException(0, l10n.relayInsecure);
   } finally {
     client.close();
   }
@@ -58,7 +59,7 @@ Future<RelayResponse> relayFetch(String base, String method, String path,
 /// Throws the relay's error sentence unless the status is one of [ok].
 Map<String, dynamic> expectStatus(RelayResponse r, List<int> ok) {
   if (ok.contains(r.status)) return r.body;
-  throw RelayException(r.status, r.body['error'] as String? ?? 'The sync server said no (HTTP ${r.status}).');
+  throw RelayException(r.status, r.body['error'] as String? ?? l10n.relaySaidNo(r.status));
 }
 
 /// Signed requests for one sync group, as one device.

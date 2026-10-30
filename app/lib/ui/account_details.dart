@@ -5,6 +5,7 @@ import 'brand_icon.dart';
 import 'code_view.dart';
 import 'home.dart' show accountTitle, groupCode;
 import 'theme.dart';
+import '../l10n/l10n.dart';
 
 /// The right-hand pane of the wide layout (900 px and up): one account with its code big, and everything
 /// else about it. The home screen does the asking (Face ID for "ask first" accounts) behind each callback.
@@ -52,12 +53,12 @@ class AccountDetails extends StatelessWidget {
               if (a.issuer.isNotEmpty && a.label.isNotEmpty) Text(a.label, style: TextStyle(color: Palette.muted)),
             ]),
           ),
-          IconButton(tooltip: 'Edit account', icon: const Icon(Icons.edit_outlined), onPressed: onEdit),
+          IconButton(tooltip: l10n.detailsEditAccount, icon: const Icon(Icons.edit_outlined), onPressed: onEdit),
         ]),
         const SizedBox(height: 28),
         Semantics(
           container: true,
-          label: hidden ? 'Code hidden' : codeSemantics(code, left),
+          label: hidden ? l10n.homeCodeHidden : codeSemantics(code, left),
           excludeSemantics: true,
           child: Row(children: [
             Expanded(
@@ -83,31 +84,31 @@ class AccountDetails extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         Wrap(spacing: 10, runSpacing: 10, children: [
-          FilledButton.icon(onPressed: onCopy, icon: const Icon(Icons.copy, size: 18), label: const Text('Copy code')),
-          if (left == null) OutlinedButton.icon(onPressed: onNext, icon: const Icon(Icons.refresh, size: 18), label: const Text('Next code')),
+          FilledButton.icon(onPressed: onCopy, icon: const Icon(Icons.copy, size: 18), label: Text(l10n.detailsCopyCode)),
+          if (left == null) OutlinedButton.icon(onPressed: onNext, icon: const Icon(Icons.refresh, size: 18), label: Text(l10n.homeNextCode)),
           if (readAloudSupported)
-            OutlinedButton.icon(onPressed: onReadAloud, icon: const Icon(Icons.volume_up_outlined, size: 18), label: const Text('Read aloud')),
-          OutlinedButton.icon(onPressed: onShowQr, icon: const Icon(Icons.qr_code_2, size: 18), label: const Text('Show QR code')),
+            OutlinedButton.icon(onPressed: onReadAloud, icon: const Icon(Icons.volume_up_outlined, size: 18), label: Text(l10n.detailsReadAloud)),
+          OutlinedButton.icon(onPressed: onShowQr, icon: const Icon(Icons.qr_code_2, size: 18), label: Text(l10n.homeShowQr)),
           OutlinedButton.icon(
             onPressed: onRecoveryCodes,
             icon: const Icon(Icons.key_outlined, size: 18),
-            label: Text(a.recoveryCodes.isEmpty ? 'Recovery codes' : 'Recovery codes ($unused left)'),
+            label: Text(a.recoveryCodes.isEmpty ? l10n.homeRecoveryCodes : l10n.homeRecoveryCodesLeft(unused)),
           ),
         ]),
         if (a.folder != null || a.tags.isNotEmpty) ...[
-          heading('Folder and tags'),
+          heading(l10n.detailsFolderAndTags),
           Wrap(spacing: 8, runSpacing: 8, children: [
             if (a.folder != null) Pill(a.folder!, color: Palette.accent),
             for (final t in a.tags) Pill(t, color: Palette.muted),
           ]),
         ],
         if (a.domains.isNotEmpty) ...[
-          heading('Websites'),
+          heading(l10n.detailsWebsites),
           Wrap(spacing: 8, runSpacing: 8, children: [for (final d in a.domains) Pill(d, color: Palette.green)]),
         ],
-        heading('Notes'),
+        heading(l10n.detailsNotes),
         Text(
-          secret ? 'Hidden until you confirm it\'s you.' : (a.notes.isEmpty ? 'No notes. Add some with Edit.' : a.notes),
+          secret ? l10n.detailsNotesHidden : (a.notes.isEmpty ? l10n.detailsNoNotes : a.notes),
           style: TextStyle(height: 1.4, color: a.notes.isEmpty || secret ? Palette.muted : Palette.text),
         ),
       ],

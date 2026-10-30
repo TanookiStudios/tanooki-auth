@@ -1,0 +1,272 @@
+{
+  "extName": {
+    "message": "Tanooki Auth"
+  },
+  "extDescription": {
+    "message": "2段階認証のコードを、Tanooki Authのデスクトップアプリまたはスマホから、各アカウントのサイトでだけ入力します。"
+  },
+  "errNoApp": {
+    "message": "Tanooki Authが起動していません。このパソコンでTanooki Authアプリを開いてください。"
+  },
+  "errNotPaired": {
+    "message": "このブラウザはまだTanooki Authと連携していません。"
+  },
+  "errLocked": {
+    "message": "Tanooki Authがロックされています。ロックを解除してから、もう一度お試しください。"
+  },
+  "errTimeout": {
+    "message": "Tanooki Authが時間内に応答しませんでした。"
+  },
+  "errLookalike": {
+    "message": "このサイトは$1に似ていますが、別のサイトです。Tanooki Authはここではコードを入力しません。"
+  },
+  "menuAddQr": {
+    "message": "Tanooki Authに追加"
+  },
+  "errBadPage": {
+    "message": "コードを入力できるのはウェブサイトだけです。"
+  },
+  "errFramed": {
+    "message": "このページは別のサイトの中に埋め込まれているため、Tanooki Authは入力しません。"
+  },
+  "errQuiet": {
+    "message": "少し前にスマホに確認しました。"
+  },
+  "errWrongSitePhone": {
+    "message": "スマホから$1のコードが届きましたが、このページではありません。何も入力していません。"
+  },
+  "errWrongSitePhoneUnknown": {
+    "message": "スマホから別のサイトのコードが届きました。このページではないため、何も入力していません。"
+  },
+  "errSetupPageFirst": {
+    "message": "先にサイトの2段階認証の設定ページを開いてください。"
+  },
+  "errMigration": {
+    "message": "これはGoogle Authenticatorの移行コードです。Tanooki Authアプリの「アカウントを追加…」から読み込んでください。"
+  },
+  "errNoQrVisible": {
+    "message": "設定用のQRコードが見えません。QRコード全体が画面に入るようにスクロールしてから、もう一度お試しください。"
+  },
+  "errNotSavedHere": {
+    "message": "このアカウントはこのサイト用に保存されていません。"
+  },
+  "errReload": {
+    "message": "このページを再読み込みしてから、もう一度お試しください。"
+  },
+  "errNoField": {
+    "message": "このページでコードの入力欄が見つかりませんでした。入力欄をクリックしてもう一度試すか、「コピー」を使って貼り付けてください。"
+  },
+  "errBadgeSeconds": {
+    "message": "バッジには秒数しか指定できません。"
+  },
+  "noticeAdded": {
+    "message": "Tanooki Authに追加しました。"
+  },
+  "noticeDuplicate": {
+    "message": "このアカウントはすでにTanooki Authにあります。"
+  },
+  "noticeNotAdded": {
+    "message": "追加しませんでした。"
+  },
+  "errNoQrInImage": {
+    "message": "この画像にQRコードが見つかりませんでした。"
+  },
+  "errNotSetupQr": {
+    "message": "このQRコードは2段階認証の設定コードではありません。"
+  },
+  "noticeCheckApp": {
+    "message": "Tanooki Authで確認してください。"
+  },
+  "errOldApp": {
+    "message": "このバージョンのTanooki Authは、まだブラウザからGoogle Authenticatorの移行コードを追加できません。Tanooki Authをアップデートするか、アプリの「アカウントを追加…」を使ってください。"
+  },
+  "noticeCheckPhone": {
+    "message": "スマホのTanooki Authで確認してください。"
+  },
+  "linkOffline": {
+    "message": "Tanooki Authのサーバーに接続できません。インターネット接続を確認してください。"
+  },
+  "linkUnpaired": {
+    "message": "スマホとの連携が解除されています。もう一度連携してください。"
+  },
+  "linkServerSaidNo": {
+    "message": "Tanooki Authのサーバーに拒否されました(HTTP $1)。"
+  },
+  "linkNotLinked": {
+    "message": "このブラウザと連携しているスマホはありません。"
+  },
+  "linkDenied": {
+    "message": "スマホで「拒否」をタップしました。"
+  },
+  "linkYourPhone": {
+    "message": "あなたのスマホ"
+  },
+  "linkCodeTimeout": {
+    "message": "スマホが時間内に応答しませんでした。スマホでTanooki Authを開いて、もう一度お試しください。"
+  },
+  "linkAddTimeout": {
+    "message": "スマホが応答しませんでした。スマホでTanooki Authを開いてください。確認が一度も表示されなかった場合は、スマホのアプリをアップデートしてください。古いバージョンはまだブラウザからアカウントを追加できません。"
+  },
+  "toastFilled": {
+    "message": "Tanooki Authから$1のコードを入力しました"
+  },
+  "toastFilledNoName": {
+    "message": "Tanooki Authからコードを入力しました"
+  },
+  "dismiss": {
+    "message": "閉じる"
+  },
+  "undo": {
+    "message": "元に戻す"
+  },
+  "addButton": {
+    "message": "+ Tanooki Authに追加"
+  },
+  "checkTheApp": {
+    "message": "Tanooki Authアプリを確認してください…"
+  },
+  "addedCheck": {
+    "message": "Tanooki Authに追加しました ✓"
+  },
+  "alreadyIn": {
+    "message": "すでにTanooki Authにあります"
+  },
+  "notAdded": {
+    "message": "追加しませんでした"
+  },
+  "connecting": {
+    "message": "接続しています…"
+  },
+  "tryAgain": {
+    "message": "もう一度試す"
+  },
+  "usePhoneInstead": {
+    "message": "このパソコンにアプリがない場合: 代わりにスマホを使う"
+  },
+  "pairingQrLabel": {
+    "message": "連携用のQRコード。スマホのTanooki Authでスキャンしてください。"
+  },
+  "makingPairingCode": {
+    "message": "連携コードを作成しています…"
+  },
+  "waitingForPhone": {
+    "message": "スマホを待っています…"
+  },
+  "phonePairSteps": {
+    "message": "スマホでTanooki Authを開き、「設定」>「ブラウザで使う」で「ブラウザと連携」をタップします。このコードにカメラを向けてください。"
+  },
+  "cancel": {
+    "message": "キャンセル"
+  },
+  "pairedPhoneHello": {
+    "message": "連携しました。コードごとにスマホで承認を求められます。"
+  },
+  "codeExpired": {
+    "message": "このコードは期限切れです。"
+  },
+  "makeNewCode": {
+    "message": "新しいコードを作成"
+  },
+  "usingYourPhone": {
+    "message": "スマホを使用中"
+  },
+  "yourPhone": {
+    "message": "あなたのスマホ"
+  },
+  "codesFromPhoneNoApp": {
+    "message": "デスクトップアプリが起動していないため、コードはスマホから届きます。"
+  },
+  "codesFromPhone": {
+    "message": "コードはスマホから届きます。"
+  },
+  "getCodeFor": {
+    "message": "$1のコードを取得"
+  },
+  "checkPhoneApprove": {
+    "message": "スマホを確認して「承認」をタップしてください…"
+  },
+  "copy": {
+    "message": "コピー"
+  },
+  "copied": {
+    "message": "コピーしました"
+  },
+  "filledCode": {
+    "message": "$1のコードを入力しました ✓"
+  },
+  "noCodeBox": {
+    "message": "このページでコードの入力欄が見つかりませんでした。「コピー」して貼り付けてください。"
+  },
+  "openSignInPage": {
+    "message": "サイトのログインページを開いてから、もう一度拡張機能をクリックしてください。"
+  },
+  "tryDesktopAgain": {
+    "message": "デスクトップアプリをもう一度試す"
+  },
+  "unpairPhone": {
+    "message": "スマホとの連携を解除"
+  },
+  "pairWithApp": {
+    "message": "Tanooki Authと連携"
+  },
+  "pairNote": {
+    "message": "このブラウザを、このパソコンのTanooki Authアプリと連携します。必要なのは1回だけです。"
+  },
+  "pair": {
+    "message": "連携"
+  },
+  "startAgain": {
+    "message": "最初からやり直す"
+  },
+  "typeSixDigit": {
+    "message": "Tanooki Authに6桁のコードが表示されています。ここに入力してください:"
+  },
+  "showCode": {
+    "message": "コードを表示"
+  },
+  "fill": {
+    "message": "入力"
+  },
+  "useHere": {
+    "message": "ここで使う"
+  },
+  "fillTitle": {
+    "message": "このページにコードを入力"
+  },
+  "useHereTitle": {
+    "message": "このページに入力し、このアカウントに$1を記憶"
+  },
+  "scanPage": {
+    "message": "ページのQRコードをスキャン"
+  },
+  "scanPageTitle": {
+    "message": "このページに表示されている2段階認証の設定QRコードを追加します"
+  },
+  "scanning": {
+    "message": "QRコードを探しています…見つかったらTanooki Authアプリで確認してください。"
+  },
+  "addAccountApp": {
+    "message": "アカウントを追加…"
+  },
+  "backupSettings": {
+    "message": "バックアップと設定…"
+  },
+  "forHost": {
+    "message": "$1用"
+  },
+  "noAccountHere": {
+    "message": "このサイト用に保存されたアカウントはありません。下から選んで「ここで使う」をクリックすると、次回から自動で入力されます。"
+  },
+  "otherAccounts": {
+    "message": "ほかのアカウント($1)"
+  },
+  "allAccounts": {
+    "message": "すべてのアカウント($1)"
+  },
+  "searchAccounts": {
+    "message": "アカウントを検索…"
+  },
+  "noAccountsYet": {
+    "message": "まだアカウントがありません。サイトの2段階認証の設定ページを開き、「ページのQRコードをスキャン」をクリックしてください。"
+  }
+}

@@ -1,4 +1,5 @@
 import 'vault.dart';
+import '../l10n/l10n.dart';
 
 /// Activity history (Premium): what happened to which code, when and where. Kept in the vault's settings on
 /// this device only (settings never sync), newest last, at most [maxActivity] events.
@@ -9,14 +10,19 @@ const maxActivity = 500;
 bool Function() activityPremium = () => false;
 
 enum ActivityKind {
-  copied('Copied'),
-  filled('Filled'),
-  typed('Typed'),
-  shownQr('Showed QR code'),
-  exported('Exported');
+  copied,
+  filled,
+  typed,
+  shownQr,
+  exported;
 
-  const ActivityKind(this.label);
-  final String label;
+  String get label => switch (this) {
+        copied => l10n.activityCopied,
+        filled => l10n.activityFilled,
+        typed => l10n.activityTyped,
+        shownQr => l10n.activityShownQr,
+        exported => l10n.activityExported,
+      };
 }
 
 class ActivityEvent {

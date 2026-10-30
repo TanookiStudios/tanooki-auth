@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import '../l10n/l10n.dart';
 
 enum OtpAlgorithm { sha1, sha256, sha512 }
 
@@ -12,7 +13,7 @@ Uint8List base32Decode(String input) {
   var buffer = 0, bits = 0;
   for (final ch in clean.split('')) {
     final v = alphabet.indexOf(ch);
-    if (v < 0) throw FormatException('Not a valid base32 secret (bad character "$ch")');
+    if (v < 0) throw FormatException(l10n.totpBadCharacter(ch));
     buffer = (buffer << 5) | v;
     bits += 5;
     if (bits >= 8) {
@@ -20,7 +21,7 @@ Uint8List base32Decode(String input) {
       out.add((buffer >> bits) & 0xff);
     }
   }
-  if (out.isEmpty) throw const FormatException('Secret is empty');
+  if (out.isEmpty) throw FormatException(l10n.totpEmpty);
   return Uint8List.fromList(out);
 }
 

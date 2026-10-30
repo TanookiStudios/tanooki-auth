@@ -10,6 +10,7 @@ import '../vault.dart';
 import 'relay_client.dart';
 import 'relay_crypto.dart';
 import 'sync_engine.dart';
+import '../../l10n/l10n.dart';
 
 bool syncOn(Vault v) => v.settings[Vault.syncKey] is Map;
 String? syncTransport(Vault v) => syncOn(v) ? syncState(v)['transport'] as String? : null;
@@ -34,7 +35,7 @@ class ICloudFolder implements SyncFolder {
 
   /// Null when iCloud Drive can be used, otherwise why not, in plain words.
   static Future<String?> problem() async {
-    if (!Platform.isIOS && !Platform.isMacOS) return 'iCloud only works on iPhone, iPad and Mac.';
+    if (!Platform.isIOS && !Platform.isMacOS) return l10n.syncICloudAppleOnly;
     String? status;
     try {
       status = await _ch.invokeMethod<String>('available');
@@ -45,10 +46,10 @@ class ICloudFolder implements SyncFolder {
     }
     return switch (status) {
       'ok' => null,
-      'signedOut' => 'iCloud Drive is off on this device. Sign in to iCloud and turn on iCloud Drive in Settings to use it.',
+      'signedOut' => l10n.syncICloudSignedOut,
       // iPhone builds always have iCloud. On Mac only the Developer ID download does (scripts/release-mac.sh);
       // debug and test builds are ad-hoc signed, and macOS won't open an ad-hoc app that claims iCloud.
-      _ => 'iCloud sync isn\'t switched on in this version of Tanooki Auth yet. Use the Tanooki relay for now; it works on every device.',
+      _ => l10n.syncICloudNotInBuild,
     };
   }
 
@@ -81,7 +82,7 @@ class SyncSetup {
     final keys = await SyncKeys.fromRoot(root);
     final cursor = await SyncRelay(relay, keys.groupId, device).create().catchError((Object e) {
       if (e is RelayException && e.status == 409) {
-        throw SyncSetupException('A sync group with this passphrase already exists. On a device that\'s already syncing, tap "Add a device" and scan its code instead.');
+        throw SyncSetupException(l10n.syncGroupExists);
       }
       throw e;
     });
@@ -109,12 +110,12 @@ class SyncSetup {
       if (q['v'] != '1' || !relay.startsWith('https://')) throw const FormatException();
       invite = jsonDecode(utf8.decode(unb64u(q['invite']!))) as Map<String, dynamic>;
     } catch (_) {
-      throw SyncSetupException('That isn\'t a Tanooki Auth sync code. On a device that\'s already syncing, open Settings, Sync, Add a device.');
+      throw SyncSetupException(l10n.syncNotASyncCode);
     }
     final root = await deriveSyncRoot(passphrase, unb64u(q['salt'] ?? ''));
     final keys = await SyncKeys.fromRoot(root);
     if (keys.groupId != q['group']) {
-      throw SyncSetupException('That passphrase doesn\'t match the one your other devices use. Check it and try again.');
+      throw SyncSetupException(l10n.syncWrongPassphrase);
     }
     final device = await DeviceKey.create();
     await SyncRelay(relay, keys.groupId, device).join(invite);
@@ -130,7 +131,7 @@ class SyncSetup {
     final root = await deriveSyncRoot(passphrase, salt);
     final keys = await SyncKeys.fromRoot(root);
     if (existing != null && (await folder.list(keys.groupId)).isEmpty) {
-      throw SyncSetupException('Your other Apple devices sync with a different passphrase. Type that one, or start fresh with this one.');
+      throw SyncSetupException(l10n.syncICloudOtherPassphrase);
     }
     if (existing == null) await folder.write(FolderSync.saltFile, jsonEncode({'v': 1, 'salt': b64u(salt)}));
     v.settings[Vault.syncKey] = _fresh('icloud', root, salt, null, extra: {'device': b64u(randomBytes(12)), 'name': thisDeviceName});
@@ -284,12 +285,12 @@ class SyncService {
 String describeSyncError(Object e) {
   if (e is SyncSetupException) return e.message;
   if (e is RelayException) {
-    if (e.status == 403) return 'This device was removed from sync on another device. Turn sync off, then on again to rejoin.';
-    if (e.status == 404) return 'Sync was turned off from another device. Turn it off here too, then on again to start over.';
-    if (e.status == 429) return 'Syncing too often. It will try again in a few minutes.';
-    if (e.status == 507) return 'You\'ve reached the sync limit (2,000 accounts, including deleted ones).';
+    if (e.status == 403) return l10n.syncErrorRemoved;
+    if (e.status == 404) return l10n.syncErrorTurnedOff;
+    if (e.status == 429) return l10n.syncErrorTooOften;
+    if (e.status == 507) return l10n.syncErrorLimit;
     return e.message;
   }
-  if (e is PlatformException) return 'iCloud Drive had a problem: ${e.message ?? e.code}.';
-  return 'Sync stopped because of an unexpected problem: $e';
+  if (e is PlatformException) return l10n.syncErrorICloud(e.message ?? e.code);
+  return l10n.syncErrorUnexpected('$e');
 }

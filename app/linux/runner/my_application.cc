@@ -61,6 +61,24 @@ static void tray_quit_cb(GtkMenuItem* item, gpointer user_data) {
   g_application_quit(G_APPLICATION(user_data));
 }
 
+// Tray menu words in the desktop's language (English, Spanish, French, German, Japanese).
+static const char* tray_text(int i) {
+  static const char* words[][3] = {
+      {"Quick pick", "Show Tanooki Auth", "Quit"},
+      {"Selección rápida", "Mostrar Tanooki Auth", "Salir"},
+      {"Choix rapide", "Afficher Tanooki Auth", "Quitter"},
+      {"Schnellauswahl", "Tanooki Auth anzeigen", "Beenden"},
+      {"クイックピック", "Tanooki Auth を表示", "終了"},
+  };
+  const char* lang = g_get_language_names()[0];
+  int row = 0;
+  if (g_str_has_prefix(lang, "es")) row = 1;
+  else if (g_str_has_prefix(lang, "fr")) row = 2;
+  else if (g_str_has_prefix(lang, "de")) row = 3;
+  else if (g_str_has_prefix(lang, "ja")) row = 4;
+  return words[row][i];
+}
+
 static void add_tray(MyApplication* self, const gchar* icon) {
   self->tray = app_indicator_new(APPLICATION_ID, icon ? icon : "dialog-password",
                                  APP_INDICATOR_CATEGORY_APPLICATION_STATUS);
@@ -69,9 +87,9 @@ static void add_tray(MyApplication* self, const gchar* icon) {
   struct {
     const char* label;
     GCallback cb;
-  } items[] = {{"Quick pick", G_CALLBACK(tray_quick_pick_cb)},
-               {"Show Tanooki Auth", G_CALLBACK(tray_show_cb)},
-               {"Quit", G_CALLBACK(tray_quit_cb)}};
+  } items[] = {{tray_text(0), G_CALLBACK(tray_quick_pick_cb)},
+               {tray_text(1), G_CALLBACK(tray_show_cb)},
+               {tray_text(2), G_CALLBACK(tray_quit_cb)}};
   for (const auto& i : items) {
     GtkWidget* item = gtk_menu_item_new_with_label(i.label);
     g_signal_connect(item, "activate", i.cb, self);

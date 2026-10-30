@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">Die Codes deiner Favoriten. Schalte in Tanooki Auth Einstellungen &gt; Codes auf Widgets und Uhr anzeigen ein.</string>
+    <string name="scan_tile">2FA-QR scannen</string>
+    <string name="widget_locked">Entsperren, um Codes zu sehen</string>
+    <string name="widget_empty">Keine Favoriten zum Anzeigen. Markiere in Tanooki Auth ein Konto mit einem Stern und schalte Einstellungen &gt; Codes auf Widgets und Uhr anzeigen ein.</string>
+    <string name="backup_folder">Backup-Ordner</string>
+</resources>

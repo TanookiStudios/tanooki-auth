@@ -14,6 +14,7 @@ import 'clipboard.dart';
 import 'code_view.dart';
 import 'home.dart' show accountTitle, groupCode;
 import 'security_ui.dart' show confirmItsYou;
+import '../l10n/l10n.dart';
 
 const _window = MethodChannel('tanooki/window');
 
@@ -27,11 +28,11 @@ Future<String?> typeCode(String code) async {
   } on PlatformException catch (e) {
     return switch (e.code) {
       'denied' => 'denied',
-      'self' => 'Tanooki Auth was still in front, so nothing was typed. Click into the box you want to fill, then use the menu bar icon again.',
-      _ => 'Couldn\'t type the code (${e.message ?? e.code}). Copy it instead.',
+      'self' => l10n.quickPickSelf,
+      _ => l10n.quickPickTypeFailed(e.message ?? e.code),
     };
   } on MissingPluginException {
-    return 'Typing codes isn\'t available on this computer. Copy it instead.';
+    return l10n.quickPickTypeUnavailable;
   }
 }
 
@@ -76,7 +77,7 @@ class _QuickPickScreenState extends State<QuickPickScreen> {
 
   /// "Ask first" accounts never show their code here, and ask for Touch ID / Windows Hello before using it.
   Future<bool> _ok(Account a) async =>
-      !a.requireAuth || await confirmItsYou(context, widget.vault, 'Use the code for ${accountTitle(a)}');
+      !a.requireAuth || await confirmItsYou(context, widget.vault, l10n.quickPickUseCodeFor(accountTitle(a)));
 
   Future<void> _copy(Account a) async {
     if (!await _ok(a)) return;
@@ -86,7 +87,7 @@ class _QuickPickScreenState extends State<QuickPickScreen> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
-        content: Text('Copied ${accountTitle(a)} code. The clipboard clears in 30 seconds.'),
+        content: Text(l10n.homeCopied(accountTitle(a))),
         duration: const Duration(seconds: 2),
       ));
   }
@@ -107,7 +108,7 @@ class _QuickPickScreenState extends State<QuickPickScreen> {
         context: context,
         builder: (c) => AlertDialog(
           content: Text(problem),
-          actions: [TextButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
+          actions: [TextButton(onPressed: () => Navigator.pop(c), child: Text(l10n.commonOk))],
         ),
       );
     }
@@ -116,16 +117,10 @@ class _QuickPickScreenState extends State<QuickPickScreen> {
   Future<void> _explainPermission() => showDialog<void>(
         context: context,
         builder: (c) => AlertDialog(
-          title: const Text('Allow Tanooki Auth to type'),
-          content: const Text(
-              'To type a code into another app, your Mac needs to let Tanooki Auth press keys for you.\n\n'
-              '1. Click "Open System Settings" below.\n'
-              '2. You\'ll see a list called Accessibility. Find Tanooki Auth and turn its switch on (blue).\n'
-              '3. If your Mac asks for your password or Touch ID, give it.\n'
-              '4. Come back here and click Type again.\n\n'
-              'Tanooki Auth only presses keys when you click Type, and only types the code.'),
+          title: Text(l10n.quickPickAllowTitle),
+          content: Text(l10n.quickPickAllowBody),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(c), child: const Text('Not now')),
+            TextButton(onPressed: () => Navigator.pop(c), child: Text(l10n.commonNotNow)),
             FilledButton(
               onPressed: () async {
                 Navigator.pop(c);
@@ -137,7 +132,7 @@ class _QuickPickScreenState extends State<QuickPickScreen> {
                 }
                 await launchUrl(Uri.parse('x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility'));
               },
-              child: const Text('Open System Settings'),
+              child: Text(l10n.quickPickOpenSystemSettings),
             ),
           ],
         ),
@@ -148,25 +143,25 @@ class _QuickPickScreenState extends State<QuickPickScreen> {
     final now = DateTime.now();
     final list = _matches;
     return Scaffold(
-      appBar: AppBar(title: const Text('Quick pick')),
+      appBar: AppBar(title: Text(l10n.quickPickTitle)),
       body: Column(children: [
         Padding(
           padding: const EdgeInsets.all(12),
           child: TextField(
             autofocus: true,
-            decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search accounts'),
+            decoration: InputDecoration(prefixIcon: const Icon(Icons.search), hintText: l10n.quickPickSearch),
             onChanged: (v) => setState(() => _query = v),
             onSubmitted: (_) => list.isEmpty ? null : _copy(list.first),
           ),
         ),
         if (Platform.isLinux)
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Text('Typing codes into other apps isn\'t available on Linux. Click an account to copy its code.'),
+            child: Text(l10n.quickPickLinuxNote),
           ),
         Expanded(
           child: list.isEmpty
-              ? const Center(child: Text('No matching accounts'))
+              ? Center(child: Text(l10n.quickPickNoMatches))
               : ListView.builder(
                   itemCount: list.length,
                   itemBuilder: (_, i) {
@@ -177,8 +172,8 @@ class _QuickPickScreenState extends State<QuickPickScreen> {
                       leading: IssuerAvatar(a, size: 32),
                       title: Text(accountTitle(a)),
                       subtitle: Text(
-                        a.requireAuth ? '••• •••  (asks first)' : groupCode(code),
-                        semanticsLabel: a.requireAuth ? 'Code hidden, asks first' : codeSemantics(code, left),
+                        a.requireAuth ? l10n.quickPickAsksFirst : groupCode(code),
+                        semanticsLabel: a.requireAuth ? l10n.quickPickHiddenAsks : codeSemantics(code, left),
                         style: const TextStyle(fontFeatures: [FontFeature.tabularFigures()]),
                       ),
                       onTap: () => _copy(a),
@@ -188,7 +183,7 @@ class _QuickPickScreenState extends State<QuickPickScreen> {
                           TextButton.icon(
                             onPressed: () => _type(a),
                             icon: const Icon(Icons.keyboard_outlined),
-                            label: const Text('Type'),
+                            label: Text(l10n.quickPickType),
                           ),
                       ]),
                     );

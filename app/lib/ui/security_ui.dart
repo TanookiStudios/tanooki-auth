@@ -13,6 +13,7 @@ import 'backup_ui.dart';
 import 'home.dart';
 import 'premium.dart';
 import 'theme.dart';
+import '../l10n/l10n.dart';
 
 const _window = MethodChannel('tanooki/window');
 
@@ -33,12 +34,12 @@ Future<void> applyScreenshotBlocking(bool on) async {
 
 /// What this device asks for to prove it's you, in the words its owner knows.
 String get proofName => Platform.isWindows
-    ? 'Windows Hello'
+    ? l10n.securityUiProofWindows
     : Platform.isMacOS
-        ? 'Touch ID or your password'
+        ? l10n.securityUiProofMac
         : Platform.isIOS
-            ? 'Face ID or passcode'
-            : 'fingerprint or PIN';
+            ? l10n.securityUiProofIos
+            : l10n.securityUiProofOther;
 
 /// Tests replace this to skip the system Face ID / passcode prompt.
 @visibleForTesting
@@ -86,25 +87,25 @@ Future<String?> askNewPasscode(BuildContext context, {required String title, Str
         content: SingleChildScrollView(
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
             if (intro != null) Text(intro),
-            PasscodeField(controller: first, label: 'Passcode (at least $minPasscodeLength numbers)', autofocus: true),
-            PasscodeField(controller: second, label: 'Type it again'),
+            PasscodeField(controller: first, label: l10n.securityUiPasscodeAtLeast(minPasscodeLength), autofocus: true),
+            PasscodeField(controller: second, label: l10n.securityUiTypeAgain),
             if (error != null)
               Padding(padding: const EdgeInsets.only(top: 12), child: Text(error!, style: TextStyle(color: Theme.of(c).colorScheme.error))),
           ]),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(c), child: Text(l10n.commonCancel)),
           FilledButton(
             onPressed: () async {
               final pin = first.text;
-              final problem = passcodeProblem(pin) ?? (pin != second.text ? 'The two passcodes don\'t match.' : null);
+              final problem = passcodeProblem(pin) ?? (pin != second.text ? l10n.securityUiPasscodesDontMatch : null);
               if (problem != null) return setState(() => error = problem);
               if (notThis != null && await verifyPasscode(pin, notThis)) {
-                return setState(() => error = 'Pick a different passcode from your other one.');
+                return setState(() => error = l10n.securityUiPickDifferent);
               }
               if (c.mounted) Navigator.pop(c, pin);
             },
-            child: const Text('Save'),
+            child: Text(l10n.commonSave),
           ),
         ],
       ),
@@ -120,23 +121,23 @@ Future<bool> confirmCurrentPasscode(BuildContext context, Object? record) async 
     context: context,
     builder: (c) => StatefulBuilder(
       builder: (c, setState) => AlertDialog(
-        title: const Text('Enter your app passcode'),
+        title: Text(l10n.securityUiEnterPasscode),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          PasscodeField(controller: field, label: 'Passcode', autofocus: true),
+          PasscodeField(controller: field, label: l10n.securityUiPasscode, autofocus: true),
           if (error != null)
             Padding(padding: const EdgeInsets.only(top: 12), child: Text(error!, style: TextStyle(color: Theme.of(c).colorScheme.error))),
         ]),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
           FilledButton(
             onPressed: () async {
               if (await verifyPasscode(field.text, record)) {
                 if (c.mounted) Navigator.pop(c, true);
               } else {
-                setState(() => error = 'That\'s not your passcode.');
+                setState(() => error = l10n.securityUiWrongPasscode);
               }
             },
-            child: const Text('OK'),
+            child: Text(l10n.commonOk),
           ),
         ],
       ),
@@ -202,45 +203,41 @@ class _CheckupScreenState extends State<CheckupScreen> {
           ),
         );
     return Scaffold(
-      appBar: AppBar(title: const Text('Security check-up')),
+      appBar: AppBar(title: Text(l10n.securityUiCheckupTitle)),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         if (findings.isEmpty)
           Card(
             child: ListTile(
               leading: Icon(Icons.verified_user, color: Palette.green),
-              title: const Text('All good'),
-              subtitle: const Text('Your app is locked, you have a recent backup, and every account has recovery codes.'),
+              title: Text(l10n.securityUiAllGood),
+              subtitle: Text(l10n.securityUiAllGoodBody),
             ),
           ),
         for (final f in findings)
           switch (f.issue) {
-            CheckupIssue.lockOff => item(Icons.lock_open, 'The app isn\'t locked',
-                'Anyone who picks up your unlocked device can see your codes. Turn on "Lock the app" or an app passcode in Settings.'),
-            CheckupIssue.noPasscode => item(Icons.pin_outlined, 'No app passcode',
-                'A passcode lets you open Tanooki Auth even if Face ID or your fingerprint stops working. Set one in Settings.'),
-            CheckupIssue.autoBackupFailed => item(Icons.cloud_off_outlined, 'Automatic backup failed', autoBackup.failure.value?.message ?? '',
-                action: 'Open automatic backups', onAction: () async {
+            CheckupIssue.lockOff => item(Icons.lock_open, l10n.securityUiLockOffTitle, l10n.securityUiLockOffBody),
+            CheckupIssue.noPasscode => item(Icons.pin_outlined, l10n.securityUiNoPasscodeTitle, l10n.securityUiNoPasscodeBody),
+            CheckupIssue.autoBackupFailed => item(Icons.cloud_off_outlined, l10n.securityUiAutoBackupFailed, autoBackup.failure.value?.message ?? '',
+                action: l10n.securityUiOpenAutoBackups, onAction: () async {
                 await Navigator.push(context, MaterialPageRoute(builder: (_) => AutoBackupScreen(vault: widget.vault)));
                 setState(() {});
               }),
-            CheckupIssue.noBackup => item(Icons.save_alt, 'No backup in the last 30 days',
-                'If this device is lost or broken, a backup is the only way to get your accounts back.',
-                action: 'Make a backup now', onAction: () async {
+            CheckupIssue.noBackup => item(Icons.save_alt, l10n.securityUiNoBackupTitle, l10n.securityUiNoBackupBody,
+                action: l10n.securityUiMakeBackupNow, onAction: () async {
                 await exportBackupFlow(context, widget.vault);
                 setState(() {});
               }),
             CheckupIssue.noRecoveryCodes => item(
                 Icons.key_off_outlined,
-                '${f.accounts.length} ${f.accounts.length == 1 ? 'account has' : 'accounts have'} no recovery codes',
-                'Recovery codes get you into a website if you lose this app. Find them in each site\'s security settings, then add them with ⋯ > Recovery codes on the account.\n\n'
-                    '${f.accounts.map(accountTitle).join(', ')}'),
+                l10n.securityUiNoRecoveryTitle(f.accounts.length),
+                l10n.securityUiNoRecoveryBody(f.accounts.map(accountTitle).join(', '))),
           },
         const SizedBox(height: 8),
         Card(
           child: ListTile(
             leading: const Icon(Icons.medical_services_outlined),
-            title: const Text('Your recovery kit'),
-            subtitle: const Text('Backup, recovery codes and a paper copy, step by step'),
+            title: Text(l10n.securityUiRecoveryKit),
+            subtitle: Text(l10n.securityUiRecoveryKitSub),
             trailing: const Icon(Icons.chevron_right),
             onTap: () async {
               await Navigator.push(context, MaterialPageRoute(builder: (_) => RecoveryKitScreen(vault: widget.vault)));
@@ -280,7 +277,7 @@ Future<void> weeklyBreachCheck(BuildContext context, Vault vault) async {
     if (fresh.isNotEmpty && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         duration: const Duration(seconds: 10),
-        content: Text('${fresh.map((m) => m.breach.title).toSet().join(', ')} had a data breach. Change your password there.'),
+        content: Text(l10n.securityUiBreachSnack(fresh.map((m) => m.breach.title).toSet().join(', '))),
       ));
     }
   } catch (_) {
@@ -311,7 +308,7 @@ class _BreachScreenState extends State<BreachScreen> {
     try {
       _matches = (await checkBreaches(widget.vault)).$1;
     } catch (_) {
-      _error = 'Couldn\'t download the breach list. Check your internet connection and try again.';
+      _error = l10n.securityUiBreachDownloadFailed;
     }
     if (mounted) setState(() => _busy = false);
   }
@@ -331,45 +328,40 @@ class _BreachScreenState extends State<BreachScreen> {
   Widget build(BuildContext context) {
     final withSite = widget.vault.visible.where((a) => a.domains.isNotEmpty).length;
     return Scaffold(
-      appBar: AppBar(title: const Text('Breach alerts')),
+      appBar: AppBar(title: Text(l10n.securityUiBreachAlerts)),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         Card(
           child: SwitchListTile(
-            title: Text(premium.value ? 'Breach alerts' : 'Breach alerts (Premium)'),
-            subtitle: const Text('Once a week, tells you if a website you use had a data breach'),
+            title: Text(premium.value ? l10n.securityUiBreachAlerts : l10n.securityUiBreachAlertsPremium),
+            subtitle: Text(l10n.securityUiBreachAlertsSub),
             value: _on,
             onChanged: _toggle,
           ),
         ),
-        const Padding(
+        Padding(
           padding: EdgeInsets.all(8),
           child: Text(
-              'How it works: Tanooki Auth downloads the public list of known breaches from haveibeenpwned.com and compares it with your saved websites on this device. '
-              'Nothing about you or your accounts is sent: it\'s the same download for everyone. '
-              'This is the only time the app goes on the internet, apart from sync and buying Premium.'),
+              l10n.securityUiBreachHow),
         ),
         if (withSite < widget.vault.visible.length)
           Padding(
             padding: const EdgeInsets.all(8),
             child: Text(
-                '${widget.vault.visible.length - withSite} of your accounts have no website saved, so they can\'t be checked. Add one with ⋯ > Edit.',
+                l10n.securityUiNoWebsite(widget.vault.visible.length - withSite),
                 style: TextStyle(color: Palette.muted)),
           ),
         if (_on) ...[
-          FilledButton.icon(onPressed: _busy ? null : _check, icon: const Icon(Icons.refresh), label: const Text('Check now')),
+          FilledButton.icon(onPressed: _busy ? null : _check, icon: const Icon(Icons.refresh), label: Text(l10n.securityUiCheckNow)),
           if (_busy) const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator())),
           if (_error != null) Padding(padding: const EdgeInsets.all(8), child: Text(_error!, style: TextStyle(color: Palette.red))),
           if (_matches != null && _matches!.isEmpty)
-            const Padding(padding: EdgeInsets.all(8), child: Text('No known breaches for your saved websites.')),
+            Padding(padding: const EdgeInsets.all(8), child: Text(l10n.securityUiNoBreaches)),
           for (final m in _matches ?? const <BreachMatch>[])
             Card(
               child: ListTile(
                 leading: Icon(Icons.report_outlined, color: Palette.red),
                 title: Text('${m.breach.title}: ${accountTitle(m.account)}'),
-                subtitle: Text(
-                    '${m.breach.breachDate == null ? 'Breached' : 'Breached ${m.breach.breachDate!.toIso8601String().substring(0, 10)}'}'
-                    '${m.breach.dataClasses.isEmpty ? '' : '. Leaked: ${m.breach.dataClasses.take(4).join(', ')}'}. '
-                    'If you made your password before then, change it there.'),
+                subtitle: Text(_breachLine(m.breach.breachDate?.toIso8601String().substring(0, 10), m.breach.dataClasses.take(4).join(', '))),
               ),
             ),
         ],
@@ -377,6 +369,10 @@ class _BreachScreenState extends State<BreachScreen> {
     );
   }
 }
+
+String _breachLine(String? date, String data) => date == null
+    ? (data.isEmpty ? l10n.securityUiBreached : l10n.securityUiBreachedLeaked(data))
+    : (data.isEmpty ? l10n.securityUiBreachedOn(date) : l10n.securityUiBreachedOnLeaked(date, data));
 
 // ---------- recovery kit ----------
 
@@ -399,22 +395,18 @@ class RecoveryKitScreen extends StatelessWidget {
           ),
         );
     return Scaffold(
-      appBar: AppBar(title: const Text('Your recovery kit'), automaticallyImplyLeading: false),
+      appBar: AppBar(title: Text(l10n.securityUiRecoveryKit), automaticallyImplyLeading: false),
       body: ListView(padding: const EdgeInsets.all(16), children: [
-        const Text(
-            'If you lose this device, these are how you get back into your accounts. Each takes a minute. '
-            'If you haven\'t added any accounts yet, add them first, then come back here from Settings > Security check-up.'),
+        Text(l10n.securityUiKitIntro),
         const SizedBox(height: 12),
-        step(1, 'Make a backup', 'An encrypted file, locked with a passphrase you choose. Keep it somewhere other than this device, like iCloud Drive, Google Drive, or a USB stick.',
-            'Make a backup', () => exportBackupFlow(context, vault)),
-        step(2, 'Save your recovery codes', 'When you turn on two-factor login, most websites give you a list of one-time recovery codes. Add them to each account with ⋯ > Recovery codes, so they\'re in your backup too.'),
-        step(3, 'Print a paper backup', 'Optional. A printed page of QR codes works even if every device is gone. Keep it locked away: anyone with it can make your codes.',
-            'Print paper backup', () => paperBackupFlow(context, vault)),
+        step(1, l10n.securityUiKitBackupTitle, l10n.securityUiKitBackupBody, l10n.securityUiKitBackupButton, () => exportBackupFlow(context, vault)),
+        step(2, l10n.securityUiKitCodesTitle, l10n.securityUiKitCodesBody),
+        step(3, l10n.securityUiKitPaperTitle, l10n.securityUiKitPaperBody, l10n.securityUiKitPaperButton, () => paperBackupFlow(context, vault)),
         const SizedBox(height: 8),
         Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Skip for now')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.securityUiSkipForNow)),
           const SizedBox(width: 8),
-          FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Done')),
+          FilledButton(onPressed: () => Navigator.pop(context), child: Text(l10n.commonDone)),
         ]),
       ]),
     );

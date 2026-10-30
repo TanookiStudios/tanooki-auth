@@ -5,6 +5,7 @@ import '../core/vault.dart';
 import 'brand_icon.dart';
 import 'home.dart';
 import 'theme.dart';
+import '../l10n/l10n.dart';
 
 /// Deleted accounts wait here for 30 days, then the app removes them for good when it next opens.
 class TrashScreen extends StatefulWidget {
@@ -24,22 +25,22 @@ class _TrashScreenState extends State<TrashScreen> {
     await widget.vault.save();
     if (!mounted) return;
     setState(() {});
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${accountTitle(a)} is back in your list.')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.trashRestored(accountTitle(a)))));
   }
 
   Future<void> _deleteForever(Account a) async {
     final sure = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: Text('Delete ${accountTitle(a)} for good?'),
-        content: const Text(
-            'This can\'t be undone. Before deleting, turn off two-factor login on that website or make sure you have its recovery codes, or you could be locked out.'),
+        title: Text(l10n.trashDeleteTitle(accountTitle(a))),
+        content: Text(
+            l10n.trashDeleteBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Theme.of(c).colorScheme.error),
             onPressed: () => Navigator.pop(c, true),
-            child: const Text('Delete for good'),
+            child: Text(l10n.trashDeleteForGood),
           ),
         ],
       ),
@@ -54,17 +55,17 @@ class _TrashScreenState extends State<TrashScreen> {
   Widget build(BuildContext context) {
     final trash = widget.vault.trash;
     return Scaffold(
-      appBar: AppBar(title: const Text('Trash')),
+      appBar: AppBar(title: Text(l10n.trashTitle)),
       body: trash.isEmpty
           ? Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: Text('Trash is empty.\nDeleted accounts stay here for 30 days.',
+                child: Text(l10n.trashEmpty,
                     textAlign: TextAlign.center, style: TextStyle(color: Palette.muted)),
               ),
             )
           : ListView(padding: const EdgeInsets.all(16), children: [
-              Text('Deleted accounts stay here for 30 days, then they\'re removed for good.',
+              Text(l10n.trashNote,
                   style: TextStyle(color: Palette.muted)),
               const SizedBox(height: 16),
               Card(
@@ -76,12 +77,12 @@ class _TrashScreenState extends State<TrashScreen> {
                       title: Text(accountTitle(a)),
                       subtitle: Text([
                         if (a.issuer.isNotEmpty && a.label.isNotEmpty) a.label,
-                        switch (_daysLeft(a)) { 0 => 'Removed next time the app opens', 1 => '1 day left', final n => '$n days left' },
+                        switch (_daysLeft(a)) { 0 => l10n.trashRemovedNextOpen, final n => l10n.trashDaysLeft(n) },
                       ].join(' · ')),
                       trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                        TextButton(onPressed: () => _restore(a), child: const Text('Restore')),
+                        TextButton(onPressed: () => _restore(a), child: Text(l10n.trashRestore)),
                         IconButton(
-                          tooltip: 'Delete for good',
+                          tooltip: l10n.trashDeleteForGood,
                           icon: Icon(Icons.delete_forever_outlined, color: Palette.red),
                           onPressed: () => _deleteForever(a),
                         ),

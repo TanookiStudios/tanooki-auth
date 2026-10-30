@@ -12,6 +12,7 @@ import '../core/otpauth_uri.dart';
 import '../core/totp.dart';
 import '../core/vault.dart';
 import '../core/widget_share.dart' show showCopiedCodeActivity;
+import 'about_maddie.dart' show appVersion;
 import 'account_details.dart';
 import 'add.dart';
 import 'brand_icon.dart';
@@ -25,6 +26,7 @@ import 'share_ui.dart';
 import 'sync_ui.dart' show QrView;
 import 'team_ui.dart';
 import 'theme.dart';
+import '../l10n/l10n.dart';
 
 String groupCode(String code) => codeGroups(code).join(' ');
 
@@ -69,7 +71,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String get _sort => sortOf(_settings);
   bool get _hideCodes => _settings[hideCodesKey] == true;
   bool get _compact => _settings[layoutKey] == 'compact';
-  double get _cardHeight => _compact ? 92 : 196; // roomy needs room for the "Next" line in the last 5 s
+  // Roomy needs room for the "Next" line in the last 5 s. Large text grows the card instead of overflowing it.
+  double get _cardHeight => (_compact ? 92 : 196) * MediaQuery.textScalerOf(context).scale(14).clamp(14, 28) / 14;
 
   List<Account> get _live => widget.vault.visible;
 
@@ -161,9 +164,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// For accounts set to "ask first": Face ID / Touch ID / passcode before the code is shown, copied or shared.
   /// True when it's fine to go ahead.
-  Future<bool> _prove(Account a, String why) async {
+  Future<bool> _prove(Account a, String Function(String name) why) async {
     if (!a.requireAuth || !_isHidden(a, DateTime.now())) return true;
-    if (!await confirmItsYou(context, widget.vault, '$why ${accountTitle(a)}')) return false;
+    if (!await confirmItsYou(context, widget.vault, why(accountTitle(a)))) return false;
     _proved[a.id] = DateTime.now();
     return true;
   }
@@ -173,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ..showSnackBar(SnackBar(content: Text(msg), action: action));
 
   Future<void> _copy(Account a) async {
-    if (!await _prove(a, 'Copy the code for') || !mounted) return;
+    if (!await _prove(a, l10n.homeProveCopy) || !mounted) return;
     final now = DateTime.now();
     _revealed[a.id] = now;
     await copyCode(a.codeAt(now));
@@ -182,7 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
-        content: Text('Copied ${accountTitle(a)} code. The clipboard clears in 30 seconds.'),
+        content: Text(l10n.homeCopied(accountTitle(a))),
         duration: const Duration(seconds: 2),
       ));
     a.lastUsedAt = DateTime.now().toUtc();
@@ -193,7 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Speaks the code slowly. "Ask first" accounts ask for Face ID etc. first, like copying does.
   Future<void> _readAloud(Account a) async {
-    if (!await _prove(a, 'Read aloud the code for') || !mounted) return;
+    if (!await _prove(a, l10n.homeProveReadAloud) || !mounted) return;
     await readAloud(a, a.codeAt(DateTime.now()));
   }
 
@@ -204,9 +207,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _edit(Account a) async {
     // The edit window previews the code, so "ask first" accounts ask here too (also stops turning it off unseen).
-    if (!await _prove(a, 'Edit') || !mounted) return;
+    if (!await _prove(a, l10n.homeProveEdit) || !mounted) return;
     final changed = await showAccountDialog(context, a,
-        title: 'Edit account', confirm: 'Save', folders: folderNames(_live), existing: true);
+        title: l10n.homeEditAccount, confirm: l10n.commonSave, folders: folderNames(_live), existing: true);
     if (changed) {
       await widget.vault.save();
       setState(() {});
@@ -225,7 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _showQr(Account a) async {
-    if (!await confirmItsYou(context, widget.vault, 'Show the QR code for ${accountTitle(a)}') || !mounted) return;
+    if (!await confirmItsYou(context, widget.vault, l10n.homeShowQrFor(accountTitle(a))) || !mounted) return;
     final shownAt = DateTime.now();
     await Navigator.push(context, MaterialPageRoute(builder: (_) => AccountQrScreen(account: a)));
     logActivity(widget.vault, ActivityKind.shownQr, accountId: a.id, where: 'This app', now: shownAt);
@@ -237,9 +240,9 @@ class _HomeScreenState extends State<HomeScreen> {
     await widget.vault.save();
     if (!mounted) return;
     setState(() => _selected = _selected.clamp(0, (_visible.length - 1).clamp(0, 1 << 30)));
-    _say('Moved ${accountTitle(a)} to Trash. You can restore it from Settings for 30 days.',
+    _say(l10n.homeMovedToTrash(accountTitle(a)),
         action: SnackBarAction(
-          label: 'Undo',
+          label: l10n.homeUndo,
           onPressed: () async {
             a.deletedAt = null;
             await widget.vault.save();
@@ -331,7 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _say(msg, action: action);
   }
 
-  String _count(int n) => n == 1 ? '1 account' : '$n accounts';
+  String _count(int n) => l10n.homeAccountCount(n);
 
   Future<void> _bulkTag() async {
     final picked = _pickedAccounts;
@@ -340,12 +343,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final tag = await showDialog<String>(
       context: context,
       builder: (c) => AlertDialog(
-        title: Text('Add a tag to ${_count(picked.length)}'),
+        title: Text(l10n.homeAddTagTo(picked.length)),
         content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
           TextField(
             controller: field,
             autofocus: true,
-            decoration: const InputDecoration(labelText: 'Tag (e.g. work)'),
+            decoration: InputDecoration(labelText: l10n.homeTagHint),
             onSubmitted: (v) => Navigator.pop(c, v.trim()),
           ),
           if (_allTags.isNotEmpty) ...[
@@ -356,8 +359,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ]),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(c, field.text.trim()), child: const Text('Add tag')),
+          TextButton(onPressed: () => Navigator.pop(c), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(c, field.text.trim()), child: Text(l10n.homeAddTag)),
         ],
       ),
     );
@@ -365,7 +368,7 @@ class _HomeScreenState extends State<HomeScreen> {
     for (final a in picked) {
       if (!a.tags.contains(tag)) a.tags.add(tag);
     }
-    await _bulkDone('Tagged ${_count(picked.length)} "$tag".');
+    await _bulkDone(l10n.homeTagged(picked.length, tag));
   }
 
   Future<void> _bulkFolder() async {
@@ -376,24 +379,24 @@ class _HomeScreenState extends State<HomeScreen> {
     final folder = await showDialog<String>(
       context: context,
       builder: (c) => AlertDialog(
-        title: Text('Move ${_count(picked.length)} to a folder'),
+        title: Text(l10n.homeMoveToFolderTitle(picked.length)),
         content: SingleChildScrollView(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             for (final f in folderNames(_live))
               ListTile(leading: const Icon(Icons.folder_outlined), title: Text(f), onTap: () => Navigator.pop(c, f)),
-            ListTile(leading: const Icon(Icons.folder_off_outlined), title: const Text('No folder'), onTap: () => Navigator.pop(c, '')),
+            ListTile(leading: const Icon(Icons.folder_off_outlined), title: Text(l10n.homeNoFolder), onTap: () => Navigator.pop(c, '')),
             TextField(
               controller: field,
-              decoration: const InputDecoration(labelText: 'Or a new folder (e.g. Work)'),
+              decoration: InputDecoration(labelText: l10n.homeNewFolderHint),
               onSubmitted: (v) => v.trim().isEmpty ? null : Navigator.pop(c, v.trim()),
             ),
           ]),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(c), child: Text(l10n.commonCancel)),
           FilledButton(
             onPressed: () => field.text.trim().isEmpty ? null : Navigator.pop(c, field.text.trim()),
-            child: const Text('Move to new folder'),
+            child: Text(l10n.homeMoveToNewFolder),
           ),
         ],
       ),
@@ -402,7 +405,7 @@ class _HomeScreenState extends State<HomeScreen> {
     for (final a in picked) {
       a.folder = folder.isEmpty ? null : folder;
     }
-    await _bulkDone(folder.isEmpty ? 'Took ${_count(picked.length)} out of their folders.' : 'Moved ${_count(picked.length)} to $folder.');
+    await _bulkDone(folder.isEmpty ? l10n.homeTookOut(picked.length) : l10n.homeMovedTo(picked.length, folder));
   }
 
   Future<void> _bulkFavorite() async {
@@ -412,7 +415,7 @@ class _HomeScreenState extends State<HomeScreen> {
     for (final a in picked) {
       a.favorite = on;
     }
-    await _bulkDone(on ? 'Added ${_count(picked.length)} to favorites.' : 'Removed ${_count(picked.length)} from favorites.');
+    await _bulkDone(on ? l10n.homeAddedToFavorites(picked.length) : l10n.homeRemovedFromFavorites(picked.length));
   }
 
   Future<void> _bulkTrash() async {
@@ -423,9 +426,9 @@ class _HomeScreenState extends State<HomeScreen> {
       a.deletedAt = now;
     }
     _selected = 0;
-    await _bulkDone('Moved ${_count(picked.length)} to Trash. You can restore them from Settings for 30 days.',
+    await _bulkDone(l10n.homeBulkTrashed(picked.length),
         action: SnackBarAction(
-          label: 'Undo',
+          label: l10n.homeUndo,
           onPressed: () async {
             for (final a in picked) {
               a.deletedAt = null;
@@ -449,13 +452,13 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
           child: Row(children: [
-            IconButton(tooltip: 'Done selecting', icon: const Icon(Icons.close), onPressed: _stopSelecting),
+            IconButton(tooltip: l10n.homeDoneSelecting, icon: const Icon(Icons.close), onPressed: _stopSelecting),
             Expanded(
-              child: Text(none ? 'Tap accounts to select' : '${picked.length} selected',
+              child: Text(none ? l10n.homeTapToSelect : l10n.homeSelectedCount(picked.length),
                   maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600)),
             ),
             IconButton(
-              tooltip: picked.length == all.length ? 'Select none' : 'Select all',
+              tooltip: picked.length == all.length ? l10n.homeSelectNone : l10n.homeSelectAll,
               icon: Icon(picked.length == all.length && !none ? Icons.deselect : Icons.select_all),
               onPressed: () => setState(() {
                 if (picked.length == all.length) {
@@ -467,15 +470,15 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             // Disabled-looking buttons still say why when pressed.
             for (final (icon, tip, run) in [
-              (Icons.sell_outlined, 'Add a tag', _bulkTag),
-              (Icons.drive_file_move_outlined, 'Move to folder', _bulkFolder),
-              (allFav ? Icons.star_rounded : Icons.star_outline_rounded, allFav ? 'Remove from favorites' : 'Add to favorites', _bulkFavorite),
-              (Icons.delete_outline, 'Move to Trash', _bulkTrash),
+              (Icons.sell_outlined, l10n.homeAddATag, _bulkTag),
+              (Icons.drive_file_move_outlined, l10n.homeMoveToFolder, _bulkFolder),
+              (allFav ? Icons.star_rounded : Icons.star_outline_rounded, allFav ? l10n.homeRemoveFromFavorites : l10n.homeAddToFavorites, _bulkFavorite),
+              (Icons.delete_outline, l10n.homeMoveToTrash, _bulkTrash),
             ])
               IconButton(
                 tooltip: tip,
                 icon: Icon(icon, color: none ? Palette.muted : null),
-                onPressed: none ? () => _say('Select some accounts first: tap them in the list.') : run,
+                onPressed: none ? () => _say(l10n.homeSelectFirst) : run,
               ),
           ]),
         ),
@@ -513,7 +516,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onFavorite: () => _toggleFavorite(a),
         onRecoveryCodes: () => _recoveryCodes(a),
         onShare: () async {
-          if (await _prove(a, 'Share') && mounted) await shareAccountFlow(context, widget.vault, a);
+          if (await _prove(a, l10n.homeProveShare) && mounted) await shareAccountFlow(context, widget.vault, a);
         },
         onShowQr: () => _showQr(a),
         onMove: _canReorder ? (_, d) => _reorder(visible, i, i + d) : null,
@@ -523,11 +526,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _sectionHeader(_Section s) {
     final open = !_collapsed.contains(s.name ?? '');
-    final name = s.name ?? 'No folder';
+    final name = s.name ?? l10n.homeNoFolder;
     return Semantics(
       button: true,
       expanded: open,
-      label: '$name, ${_count(s.count)}, ${open ? 'tap to fold away' : 'tap to show'}',
+      label: open ? l10n.homeSectionOpen(name, _count(s.count)) : l10n.homeSectionClosed(name, _count(s.count)),
       excludeSemantics: true,
       child: InkWell(
         key: ValueKey('folder-${s.name ?? ''}'),
@@ -560,7 +563,7 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: InputDecoration(
           isDense: true,
           prefixIcon: Icon(Icons.search, color: Palette.muted),
-          hintText: 'Search accounts or websites…',
+          hintText: l10n.homeSearchHint,
         ),
       );
 
@@ -582,7 +585,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: padding,
-      child: Row(children: [chip('All', null), for (final t in tags) chip(t, t)]),
+      child: Row(children: [chip(l10n.homeAllTags, null), for (final t in tags) chip(t, t)]),
     );
   }
 
@@ -595,14 +598,14 @@ class _HomeScreenState extends State<HomeScreen> {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Text('No accounts yet.\nAdd one to scan a setup QR code.',
+          child: Text(l10n.homeNoAccountsYet,
               textAlign: TextAlign.center, style: TextStyle(color: Palette.muted)),
         ),
       );
     }
     if (rows.isEmpty) {
       return Center(
-          child: Text(_query.isEmpty ? 'No accounts with this tag.' : 'No accounts match your search.',
+          child: Text(_query.isEmpty ? l10n.homeNoTagMatches : l10n.homeNoSearchMatches,
               style: TextStyle(color: Palette.muted)));
     }
     if (wide) {
@@ -702,7 +705,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final selectButton = live.isEmpty || _selecting
         ? null
-        : IconButton(tooltip: 'Select accounts', icon: const Icon(Icons.checklist), onPressed: _startSelecting);
+        : IconButton(tooltip: l10n.homeSelectAccounts, icon: const Icon(Icons.checklist), onPressed: _startSelecting);
 
     if (split) return _split(list, live, selectButton, now, unix);
 
@@ -716,7 +719,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ]),
           actions: [
             ?selectButton,
-            IconButton(tooltip: 'Settings', icon: const Icon(Icons.settings_outlined), onPressed: _openSettings),
+            IconButton(tooltip: l10n.homeSettings, icon: const Icon(Icons.settings_outlined), onPressed: _openSettings),
           ],
         ),
         floatingActionButton: _selecting
@@ -724,7 +727,7 @@ class _HomeScreenState extends State<HomeScreen> {
             : FloatingActionButton.extended(
                 onPressed: _add,
                 icon: const Icon(Icons.add),
-                label: const Text('Add account'),
+                label: Text(l10n.homeAddAccount),
               ),
         body: Column(children: [
           if (live.length > 3) Padding(padding: const EdgeInsets.fromLTRB(16, 12, 16, 8), child: _search()),
@@ -749,23 +752,23 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               alignment: Alignment.centerLeft,
               decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Palette.line))),
-              child: const Text('Accounts', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+              child: Text(l10n.homeAccounts, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
               child: Row(children: [
                 // Gives way first on an upright iPad mini, where the row is tight.
-                const Flexible(child: Text('Your accounts', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700))),
+                Flexible(child: Text(l10n.homeYourAccounts, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700))),
                 const SizedBox(width: 10),
                 CountBadge(live.length),
                 const SizedBox(width: 20),
                 Expanded(child: _search()),
                 const SizedBox(width: 12),
                 if (selectButton != null) ...[
-                  OutlinedButton.icon(onPressed: _startSelecting, icon: const Icon(Icons.checklist, size: 18), label: const Text('Select')),
+                  OutlinedButton.icon(onPressed: _startSelecting, icon: const Icon(Icons.checklist, size: 18), label: Text(l10n.homeSelect)),
                   const SizedBox(width: 8),
                 ],
-                FilledButton.icon(onPressed: _add, icon: const Icon(Icons.add, size: 18), label: const Text('Add')),
+                FilledButton.icon(onPressed: _add, icon: const Icon(Icons.add, size: 18), label: Text(l10n.commonAdd)),
               ]),
             ),
             _tagChips(const EdgeInsets.fromLTRB(20, 12, 20, 0)),
@@ -779,8 +782,8 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: BoxDecoration(border: Border(top: BorderSide(color: Palette.line))),
               child: Text(
                 Platform.isIOS || Platform.isAndroid
-                    ? 'Tap (Copy) · Enter (Copy) · Arrows (Navigate)'
-                    : 'Click (Copy) · Enter (Copy) · Arrows (Navigate)',
+                    ? l10n.homeKeysTouch
+                    : l10n.homeKeysClick,
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 12, color: Palette.muted),
               ),
@@ -807,7 +810,7 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Palette.line))),
               child: Row(children: [
-                const Text('Accounts', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+                Text(l10n.homeAccounts, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
                 const SizedBox(width: 10),
                 CountBadge(live.length),
                 const Spacer(),
@@ -824,7 +827,7 @@ class _HomeScreenState extends State<HomeScreen> {
         const VerticalDivider(width: 1),
         Expanded(
           child: a == null
-              ? Center(child: Text('Pick an account on the left to see it here.', style: TextStyle(color: Palette.muted)))
+              ? Center(child: Text(l10n.homePickOnLeft, style: TextStyle(color: Palette.muted)))
               : AccountDetails(
                   key: ValueKey('details-${a.id}'),
                   account: a,
@@ -886,7 +889,7 @@ class _AccountQrScreenState extends State<AccountQrScreen> {
   Widget build(BuildContext context) {
     final a = widget.account;
     return Scaffold(
-      appBar: AppBar(title: Text('QR code for ${accountTitle(a)}')),
+      appBar: AppBar(title: Text(l10n.homeQrFor(accountTitle(a)))),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -899,13 +902,13 @@ class _AccountQrScreenState extends State<AccountQrScreen> {
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Text(
-                'Scan this with another authenticator app to add the same account there. Anyone who sees or photographs it can make your codes, so keep it private.',
+                l10n.homeQrWarning,
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Palette.muted, height: 1.4),
               ),
             ),
             const SizedBox(height: 12),
-            Text('Hides in $_left seconds', key: const Key('qrCountdown'), style: TextStyle(color: Palette.red, fontWeight: FontWeight.w600)),
+            Text(l10n.homeHidesIn(_left), key: const Key('qrCountdown'), style: TextStyle(color: Palette.red, fontWeight: FontWeight.w600)),
           ]),
         ),
       ),
@@ -968,14 +971,14 @@ class Sidebar extends StatelessWidget {
             ),
           ]),
         ),
-        item(Icons.key_rounded, 'Accounts', () {}, active: true),
-        item(Icons.add_circle_outline, 'Add account', onAdd),
-        item(Icons.settings_outlined, 'Settings', onSettings),
+        item(Icons.key_rounded, l10n.homeAccounts, () {}, active: true),
+        item(Icons.add_circle_outline, l10n.homeAddAccount, onAdd),
+        item(Icons.settings_outlined, l10n.homeSettings, onSettings),
         const Spacer(),
         const Divider(),
         Padding(
           padding: EdgeInsets.all(16),
-          child: Text('v0.1.0 · stays on this device', style: TextStyle(fontSize: 11, color: Palette.muted)),
+          child: Text(l10n.homeVersionNote(appVersion), style: TextStyle(fontSize: 11, color: Palette.muted)),
         ),
       ]),
     );
@@ -1042,12 +1045,12 @@ class _AccountCardState extends State<AccountCard> {
     final a = account;
     final w = widget;
     if (picked != null) {
-      return Checkbox(value: picked, onChanged: (_) => w.onTap(), semanticLabel: 'Select ${accountTitle(a)}');
+      return Checkbox(value: picked, onChanged: (_) => w.onTap(), semanticLabel: l10n.homeSelectName(accountTitle(a)));
     }
     final left = a.recoveryCodes.where((r) => !r.used).length;
     return PopupMenuButton<String>(
       key: _menuKey,
-      tooltip: 'More',
+      tooltip: l10n.homeMore,
       iconSize: 18,
       icon: Icon(Icons.more_vert, color: Palette.muted),
       onSelected: (v) => switch (v) {
@@ -1061,17 +1064,17 @@ class _AccountCardState extends State<AccountCard> {
         _ => w.onMove?.call(a, 1),
       },
       itemBuilder: (_) => [
-        const PopupMenuItem(value: 'edit', child: Text('Edit')),
-        PopupMenuItem(value: 'favorite', child: Text(a.favorite ? 'Remove from favorites' : 'Add to favorites')),
+        PopupMenuItem(value: 'edit', child: Text(l10n.commonEdit)),
+        PopupMenuItem(value: 'favorite', child: Text(a.favorite ? l10n.homeRemoveFromFavorites : l10n.homeAddToFavorites)),
         PopupMenuItem(
           value: 'recovery',
-          child: Text(a.recoveryCodes.isEmpty ? 'Recovery codes' : 'Recovery codes ($left left)'),
+          child: Text(a.recoveryCodes.isEmpty ? l10n.homeRecoveryCodes : l10n.homeRecoveryCodesLeft(left)),
         ),
-        if (w.onShare != null) const PopupMenuItem(value: 'share', child: Text('Share securely')),
-        if (w.onShowQr != null) const PopupMenuItem(value: 'qr', child: Text('Show QR code')),
-        if (w.onMove != null) const PopupMenuItem(value: 'earlier', child: Text('Move earlier')),
-        if (w.onMove != null) const PopupMenuItem(value: 'later', child: Text('Move later')),
-        const PopupMenuItem(value: 'delete', child: Text('Delete')),
+        if (w.onShare != null) PopupMenuItem(value: 'share', child: Text(l10n.homeShareSecurely)),
+        if (w.onShowQr != null) PopupMenuItem(value: 'qr', child: Text(l10n.homeShowQr)),
+        if (w.onMove != null) PopupMenuItem(value: 'earlier', child: Text(l10n.homeMoveEarlier)),
+        if (w.onMove != null) PopupMenuItem(value: 'later', child: Text(l10n.homeMoveLater)),
+        PopupMenuItem(value: 'delete', child: Text(l10n.commonDelete)),
       ],
     );
   }
@@ -1092,11 +1095,11 @@ class _AccountCardState extends State<AccountCard> {
 
   Widget? _next() => nextCode == null || hidden
       ? null
-      : Text('Next ${groupCode(nextCode!)}',
+      : Text(l10n.homeNextCodeShort(groupCode(nextCode!)),
           style: TextStyle(fontSize: 12, color: Palette.muted, fontFeatures: const [FontFeature.tabularFigures()]));
 
   Widget _timer() => left == null
-      ? TextButton.icon(onPressed: widget.onNext, icon: const Icon(Icons.refresh, size: 18), label: const Text('Next code'))
+      ? TextButton.icon(onPressed: widget.onNext, icon: const Icon(Icons.refresh, size: 18), label: Text(l10n.homeNextCode))
       : Countdown(left: left!, period: account.period, style: widget.countdownStyle);
 
   /// The whole card is one screen-reader item: name, code in groups and time left; tap copies, and the
@@ -1106,16 +1109,16 @@ class _AccountCardState extends State<AccountCard> {
     final parts = [
       accountTitle(a),
       if (a.issuer.isNotEmpty && a.label.isNotEmpty) a.label,
-      if (a.favorite) 'Favorite',
-      hidden ? (a.requireAuth ? 'Code hidden until you confirm it is you' : 'Code hidden') : codeSemantics(code, left),
-      if (nextCode != null && !hidden) 'Next code ${spokenCode(nextCode!)}',
+      if (a.favorite) l10n.homeFavorite,
+      hidden ? (a.requireAuth ? l10n.homeCodeHiddenAsk : l10n.homeCodeHidden) : codeSemantics(code, left),
+      if (nextCode != null && !hidden) l10n.homeNextCodeSpoken(spokenCode(nextCode!)),
     ];
     return parts.join('. ');
   }
 
   Widget _star() => Padding(
         padding: const EdgeInsets.only(left: 6),
-        child: Icon(Icons.star_rounded, size: 16, color: Palette.accent, semanticLabel: 'Favorite'),
+        child: Icon(Icons.star_rounded, size: 16, color: Palette.accent, semanticLabel: l10n.homeFavorite),
       );
 
   @override
@@ -1126,9 +1129,9 @@ class _AccountCardState extends State<AccountCard> {
     final next = _next();
     final speaker = _readAloud == null ? null : ReadAloudButton(onPressed: _readAloud!);
     final kind = switch (a.type) {
-      OtpType.totp => 'TOTP · ${a.digits} digits · ${a.period}s',
-      OtpType.steam => 'Steam · 5 characters · ${a.period}s',
-      OtpType.hotp => 'HOTP · ${a.digits} digits · #${a.counter}',
+      OtpType.totp => l10n.homeKindTotp(a.digits, a.period),
+      OtpType.steam => l10n.homeKindSteam(a.period),
+      OtpType.hotp => l10n.homeKindHotp(a.digits, '${a.counter}'),
     };
     final Widget body;
     if (compact) {
@@ -1197,7 +1200,7 @@ class _AccountCardState extends State<AccountCard> {
             padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
             child: Row(children: [
               if (a.issuer.isNotEmpty && a.label.isNotEmpty) ...[
-                const CapsLabel('Account'),
+                CapsLabel(l10n.homeAccountHeading),
                 const SizedBox(width: 8),
                 Flexible(child: Pill(a.label)),
               ],
@@ -1231,12 +1234,12 @@ class _AccountCardState extends State<AccountCard> {
       button: true,
       selected: picked ?? false,
       label: _semanticsLabel,
-      onTapHint: picked != null ? (picked! ? 'unselect' : 'select') : 'copy the code',
+      onTapHint: picked != null ? (picked! ? l10n.homeHintUnselect : l10n.homeHintSelect) : l10n.homeHintCopy,
       onTap: w.onTap,
       customSemanticsActions: {
-        const CustomSemanticsAction(label: 'Read code aloud'): ?_readAloud,
-        if (left == null) const CustomSemanticsAction(label: 'Next code'): w.onNext,
-        if (picked == null) const CustomSemanticsAction(label: 'More options'): () => _menuKey.currentState?.showButtonMenu(),
+        CustomSemanticsAction(label: l10n.homeReadCodeAloud): ?_readAloud,
+        if (left == null) CustomSemanticsAction(label: l10n.homeNextCode): w.onNext,
+        if (picked == null) CustomSemanticsAction(label: l10n.homeMoreOptions): () => _menuKey.currentState?.showButtonMenu(),
       },
       excludeSemantics: true,
       child: Card(

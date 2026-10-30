@@ -2,12 +2,20 @@ import 'dart:typed_data';
 
 import 'package:image/image.dart' as img;
 import 'package:zxing2/qrcode.dart';
+import '../l10n/l10n.dart';
+
+/// [FormatException.message] values from [decodeQrImage]. Decoding often runs on another isolate, which
+/// doesn't know the app's language, so callers turn these into words with [qrImageError].
+const qrNotAPicture = 'not-a-picture', qrNotFound = 'no-qr';
+
+/// The sentence for a [decodeQrImage] failure, in the app's language.
+String qrImageError(FormatException e) => e.message == qrNotAPicture ? l10n.qrImageNotAPicture : l10n.qrImageNoQr;
 
 /// Decodes the QR code in an image file's bytes (PNG, JPEG, GIF, BMP, WebP...).
-/// Throws [FormatException] with a user-readable message.
+/// Throws [FormatException] (see [qrImageError]).
 String decodeQrImage(Uint8List bytes) {
   final image = img.decodeImage(bytes);
-  if (image == null) throw const FormatException('That file is not a picture this app can read.');
+  if (image == null) throw const FormatException(qrNotAPicture);
   return decodeQr(image);
 }
 
@@ -20,7 +28,7 @@ String decodeQr(img.Image image) {
     final text = _tryDecode(small);
     if (text != null) return text;
   }
-  return _tryDecode(image) ?? (throw const FormatException('No QR code found in that picture.'));
+  return _tryDecode(image) ?? (throw const FormatException(qrNotFound));
 }
 
 String? _tryDecode(img.Image image) {

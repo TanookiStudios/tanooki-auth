@@ -11,6 +11,7 @@
     try { return new URL(o).hostname.toLowerCase(); } catch { return ''; }
   });
   // Decisions only, never codes or secrets; readable in the page's console when diagnosing a site.
+  const t = (key, ...subs) => chrome.i18n.getMessage(key, subs.map(String)); // _locales/<language>/messages.json
   const log = (...a) => console.debug('[Tanooki Auth]', ...a);
   const handledFields = new WeakSet();
   const scannedImages = new WeakSet();
@@ -117,7 +118,7 @@
     else target.forEach((el, i) => setValue(el, code[i] || ''));
     target.forEach((el) => handledFields.add(el));
     startCountdown(secondsLeft, accountId);
-    toast(`Filled ${issuer ? issuer + ' ' : ''}code from Tanooki Auth`, () => target.forEach((el, i) => setValue(el, before[i])));
+    toast(issuer ? t('toastFilled', issuer) : t('toastFilledNoName'), () => target.forEach((el, i) => setValue(el, before[i])));
   }
 
   // Top-of-page warning for a site imitating a saved one. Stays until dismissed.
@@ -130,6 +131,7 @@
       button{background:#fff;color:#B3261E;border:0;border-radius:6px;font:600 13px system-ui,sans-serif;padding:6px 10px;cursor:pointer}
     </style><div role="alert"><span></span><button>Dismiss</button></div>`;
     root.querySelector('span').textContent = `⚠ ${text}`;
+    root.querySelector('button').textContent = t('dismiss');
     root.querySelector('button').addEventListener('click', () => box.remove());
     box.dataset.tanookiAuthWarning = '1';
     document.documentElement.appendChild(box);
@@ -145,6 +147,7 @@
       button{background:none;border:0;color:#2F80FF;font:600 13px system-ui,sans-serif;cursor:pointer;padding:0}
     </style><div role="status"><span></span><button>Undo</button></div>`; // static markup: Firefox's add-on review flags built HTML
     root.querySelector('span').textContent = text;
+    root.querySelector('button').textContent = t('undo');
     if (undo) root.querySelector('button').addEventListener('click', () => { undo(); host.remove(); });
     else root.querySelector('button').remove();
     document.documentElement.appendChild(host);
@@ -251,7 +254,7 @@
     const b = document.createElement('button');
     b.type = 'button';
     b.dataset.tanookiAuth = '1';
-    b.textContent = '+ Add to Tanooki Auth';
+    b.textContent = t('addButton');
     b.style.cssText =
       'display:inline-block;margin:8px;padding:6px 12px;border:0;border-radius:999px;background:#2F80FF;color:#fff;' +
       'font:600 13px system-ui,sans-serif;cursor:pointer;vertical-align:middle';
@@ -259,12 +262,12 @@
       e.preventDefault();
       e.stopPropagation();
       b.disabled = true;
-      b.textContent = 'Check the Tanooki Auth app…';
+      b.textContent = t('checkTheApp');
       const r = await chrome.runtime.sendMessage({ type: 'add', uri });
       b.textContent = r.error ? r.message
-        : r.accepted ? 'Added to Tanooki Auth ✓'
-        : r.reason === 'duplicate' ? 'Already in Tanooki Auth'
-        : 'Not added';
+        : r.accepted ? t('addedCheck')
+        : r.reason === 'duplicate' ? t('alreadyIn')
+        : t('notAdded');
       b.disabled = !!r.accepted || r.reason === 'duplicate';
     });
     after.insertAdjacentElement('afterend', b);

@@ -18,6 +18,7 @@ import '../core/vault.dart';
 import 'brand_icon.dart';
 import 'home.dart';
 import 'theme.dart';
+import '../l10n/l10n.dart';
 
 void _say(BuildContext context, String msg) => ScaffoldMessenger.of(context)
   ..hideCurrentSnackBar()
@@ -49,19 +50,18 @@ Future<String?> askPassphrase(BuildContext context, {required bool forExport}) a
     context: context,
     builder: (c) => StatefulBuilder(
       builder: (c, setState) => AlertDialog(
-        title: Text(forExport ? 'Choose a backup passphrase' : 'Backup passphrase'),
+        title: Text(forExport ? l10n.backupUiChoosePassphrase : l10n.backupUiPassphraseTitle),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           if (forExport)
-            const Text(
-                'You\'ll need this to restore the backup. Nobody, including us, can recover it if you forget it. Write it down somewhere safe.'),
+            Text(l10n.backupUiPassphraseWarning),
           TextField(
             controller: first,
             obscureText: true,
             autofocus: true,
-            decoration: const InputDecoration(labelText: 'Passphrase'),
+            decoration: InputDecoration(labelText: l10n.backupUiPassphrase),
           ),
           if (forExport)
-            TextField(controller: second, obscureText: true, decoration: const InputDecoration(labelText: 'Type it again')),
+            TextField(controller: second, obscureText: true, decoration: InputDecoration(labelText: l10n.backupUiTypeAgain)),
           if (error != null)
             Padding(
               padding: const EdgeInsets.only(top: 12),
@@ -69,21 +69,21 @@ Future<String?> askPassphrase(BuildContext context, {required bool forExport}) a
             ),
         ]),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(c), child: Text(l10n.commonCancel)),
           FilledButton(
             onPressed: () {
               final p = first.text;
               if (forExport && p.length < 8) {
-                setState(() => error = 'Use at least 8 characters. A few random words works well.');
+                setState(() => error = l10n.backupUiTooShort);
               } else if (forExport && p != second.text) {
-                setState(() => error = 'The two passphrases don\'t match.');
+                setState(() => error = l10n.backupUiNoMatch);
               } else if (p.isEmpty) {
-                setState(() => error = 'Type the passphrase.');
+                setState(() => error = l10n.backupUiTypePassphrase);
               } else {
                 Navigator.pop(c, p);
               }
             },
-            child: const Text('OK'),
+            child: Text(l10n.commonOk),
           ),
         ],
       ),
@@ -109,12 +109,12 @@ String _today() => DateTime.now().toIso8601String().substring(0, 10);
 
 Future<void> exportBackupFlow(BuildContext context, Vault vault) async {
   if (vault.visible.isEmpty) {
-    _say(context, 'There are no accounts to back up yet.');
+    _say(context, l10n.backupUiNothingToBackUp);
     return;
   }
   final pass = await askPassphrase(context, forExport: true);
   if (pass == null || !context.mounted) return;
-  final text = await busy(context, 'Encrypting backup…', () => exportBackup(vault.visible, pass));
+  final text = await busy(context, l10n.backupUiEncrypting, () => exportBackup(vault.visible, pass));
   if (!context.mounted) return;
   final saved = await deliverFile(context, 'Tanooki Auth backup ${_today()}.$backupExtension',
       Uint8List.fromList(utf8.encode(text)), 'application/octet-stream');
@@ -122,7 +122,7 @@ Future<void> exportBackupFlow(BuildContext context, Vault vault) async {
   vault.settings[lastBackupKey] = DateTime.now().toUtc().toIso8601String();
   logActivity(vault, ActivityKind.exported, where: 'Backup file');
   await vault.save();
-  if (context.mounted) _say(context, 'Backup of ${vault.visible.length} accounts saved.');
+  if (context.mounted) _say(context, l10n.backupUiSaved(vault.visible.length));
 }
 
 /// Picks a backup file and decrypts it. Returns null if the user cancels or it fails (with a message shown).
@@ -133,7 +133,7 @@ Future<List<Account>?> pickAndOpenBackup(BuildContext context) async {
   try {
     text = utf8.decode(await files.first.readAsBytes());
   } catch (_) {
-    if (context.mounted) _say(context, 'That file isn\'t a Tanooki Auth backup.');
+    if (context.mounted) _say(context, l10n.backupUiNotABackup);
     return null;
   }
   while (true) {
@@ -141,11 +141,11 @@ Future<List<Account>?> pickAndOpenBackup(BuildContext context) async {
     final pass = await askPassphrase(context, forExport: false);
     if (pass == null || !context.mounted) return null;
     try {
-      return await busy(context, 'Unlocking backup…', () => importBackup(text, pass));
+      return await busy(context, l10n.backupUiUnlocking, () => importBackup(text, pass));
     } on BackupException catch (e) {
       if (!context.mounted) return null;
       _say(context, e.message);
-      if (!e.message.startsWith('Wrong passphrase')) return null; // only a passphrase is worth retrying
+      if (e.message != l10n.backupWrongPassphrase) return null; // only a passphrase is worth retrying
     }
   }
 }
@@ -158,15 +158,19 @@ Future<void> importBackupFlow(BuildContext context, Vault vault) async {
 
 /// Adds [incoming], then says how many came in and how many were left out. [problems] are things the
 /// importer couldn't read; they're listed in a dialog so nothing disappears without a reason.
+/// [verb] is 'Imported' or 'Added' (which wording the summary uses).
 Future<void> mergeAndReport(BuildContext context, Vault vault, List<Account> incoming,
     {List<String> problems = const [], String verb = 'Imported'}) async {
   final (added, already) = mergeAccounts(vault.accounts, incoming);
   if (added > 0) await vault.save();
   if (!context.mounted) return;
   final skipped = already + problems.length;
-  final summary = skipped == 0 ? '$verb $added.' : '$verb $added, skipped $skipped.';
+  final adding = verb == 'Added';
+  final summary = skipped == 0
+      ? (adding ? l10n.backupUiAdded(added) : l10n.backupUiImported(added))
+      : (adding ? l10n.backupUiAddedSkipped(added, skipped) : l10n.backupUiImportedSkipped(added, skipped));
   if (problems.isEmpty) {
-    _say(context, already == 0 ? summary : '$verb $added, skipped $already already in your list.');
+    _say(context, already == 0 ? summary : (adding ? l10n.backupUiAddedSkippedAlready(added, already) : l10n.backupUiImportedSkippedAlready(added, already)));
     return;
   }
   await showDialog<void>(
@@ -175,14 +179,18 @@ Future<void> mergeAndReport(BuildContext context, Vault vault, List<Account> inc
       title: Text(summary),
       content: SingleChildScrollView(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          if (already > 0) Text('• $already already in your list'),
-          for (final p in problems) Text('• $p'),
+          if (already > 0) Text(l10n.backupUiAlreadyInList(already)),
+          for (final p in problems) Text(l10n.backupUiBullet(p)),
         ]),
       ),
-      actions: [FilledButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
+      actions: [FilledButton(onPressed: () => Navigator.pop(c), child: Text(l10n.commonOk))],
     ),
   );
 }
+
+/// "GitHub (maddie)": the account's title, plus its login name when it has both.
+String accountNameWithLabel(Account a) =>
+    a.issuer.isNotEmpty && a.label.isNotEmpty ? l10n.backupUiAccountWithLabel(accountTitle(a), a.label) : accountTitle(a);
 
 /// Shows what's about to come in and asks before adding anything.
 Future<bool> confirmImport(BuildContext context, String title, List<Account> incoming, {String? note}) async {
@@ -194,14 +202,14 @@ Future<bool> confirmImport(BuildContext context, String title, List<Account> inc
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            for (final a in incoming) Text('• ${accountTitle(a)}${a.issuer.isNotEmpty && a.label.isNotEmpty ? ' (${a.label})' : ''}'),
+            for (final a in incoming) Text(l10n.backupUiBullet(accountNameWithLabel(a))),
             if (note != null) ...[const SizedBox(height: 12), Text(note)],
           ],
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-        FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Import')),
+        TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
+        FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(l10n.backupUiImport)),
       ],
     ),
   );
@@ -217,8 +225,8 @@ Future<void> importGoogleFlow(BuildContext context, Vault vault, String uri) asy
     _say(context, e.message);
     return;
   }
-  if (await confirmImport(context, 'Import ${incoming.length} from Google Authenticator?', incoming,
-          note: 'If Google Authenticator showed more than one QR code, scan each of them.') &&
+  if (await confirmImport(context, l10n.backupUiImportFromGoogle(incoming.length), incoming,
+          note: l10n.backupUiGoogleMoreCodes) &&
       context.mounted) {
     await mergeAndReport(context, vault, incoming);
   }
@@ -226,7 +234,7 @@ Future<void> importGoogleFlow(BuildContext context, Vault vault, String uri) asy
 
 Future<void> exportPlainFlow(BuildContext context, Vault vault) async {
   if (vault.visible.isEmpty) {
-    _say(context, 'There are no accounts to export yet.');
+    _say(context, l10n.backupUiNothingToExport);
     return;
   }
   if (!await confirmPlainExport(context) || !context.mounted) return;
@@ -237,21 +245,19 @@ Future<void> exportPlainFlow(BuildContext context, Vault vault) async {
 }
 
 /// The loud warning before any export that isn't encrypted. True when the user says go ahead.
-Future<bool> confirmPlainExport(BuildContext context,
-    {String what = 'This saves every setup key as plain text, for moving to another authenticator app.'}) async {
+Future<bool> confirmPlainExport(BuildContext context, {String? what}) async {
   final ok = await showDialog<bool>(
     context: context,
     builder: (c) => AlertDialog(
       icon: Icon(Icons.warning_amber_rounded, color: Theme.of(c).colorScheme.error),
-      title: const Text('Export unencrypted?'),
-      content: Text(
-          '$what Anyone who gets this file can make your login codes. Import it, then delete it straight away. For a normal backup, use "Export backup" instead.'),
+      title: Text(l10n.backupUiPlainTitle),
+      content: Text(l10n.backupUiPlainBody(what ?? l10n.backupUiPlainWhat)),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
         FilledButton(
           style: FilledButton.styleFrom(backgroundColor: Theme.of(c).colorScheme.error),
           onPressed: () => Navigator.pop(c, true),
-          child: const Text('I understand, export'),
+          child: Text(l10n.backupUiUnderstandExport),
         ),
       ],
     ),
@@ -262,36 +268,34 @@ Future<bool> confirmPlainExport(BuildContext context,
 /// A printable PDF of every account's QR code and recovery codes, behind a blunt warning.
 Future<void> paperBackupFlow(BuildContext context, Vault vault) async {
   if (vault.visible.isEmpty) {
-    _say(context, 'There are no accounts to print yet.');
+    _say(context, l10n.backupUiNothingToPrint);
     return;
   }
   final ok = await showDialog<bool>(
     context: context,
     builder: (c) => AlertDialog(
       icon: Icon(Icons.warning_amber_rounded, color: Theme.of(c).colorScheme.error),
-      title: const Text('Print a paper backup?'),
-      content: const Text(
-          'This makes a PDF with a QR code for every account, plus your unused recovery codes. Anyone who sees or photographs that paper can make your login codes, forever, without your phone or password.\n\n'
-          'Print it, then delete the PDF. Keep the paper somewhere locked, like a safe or with important documents. Don\'t email it, and don\'t save it to a shared folder.'),
+      title: Text(l10n.backupUiPaperTitle),
+      content: Text(l10n.backupUiPaperBody),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+        TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
         FilledButton(
           style: FilledButton.styleFrom(backgroundColor: Theme.of(c).colorScheme.error),
           onPressed: () => Navigator.pop(c, true),
-          child: const Text('I understand, make the PDF'),
+          child: Text(l10n.backupUiUnderstandPdf),
         ),
       ],
     ),
   );
   if (ok != true || !context.mounted) return;
-  final pdf = await busy(context, 'Making the PDF…', () => buildPaperBackup(vault.visible));
+  final pdf = await busy(context, l10n.backupUiMakingPdf, () => buildPaperBackup(vault.visible));
   if (!context.mounted) return;
   final saved = await deliverFile(context, 'Tanooki Auth paper backup ${_today()}.pdf', pdf, 'application/pdf');
   if (saved) {
     logActivity(vault, ActivityKind.exported, where: 'Paper backup PDF');
     await vault.save();
   }
-  if (saved && context.mounted) _say(context, 'PDF ready. Print it, then delete the file.');
+  if (saved && context.mounted) _say(context, l10n.backupUiPdfReady);
 }
 
 /// Settings > "Test a backup": opens a backup file with its passphrase and says what's in it. Adds nothing and
@@ -303,9 +307,9 @@ Future<void> testBackupFlow(BuildContext context) async {
     context: context,
     builder: (c) => AlertDialog(
       icon: Icon(Icons.check_circle_outline, color: Palette.green),
-      title: const Text('Backup works'),
-      content: Text('This backup opens fine and has ${accounts.length} account${accounts.length == 1 ? '' : 's'}. Nothing was added or changed.'),
-      actions: [FilledButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
+      title: Text(l10n.backupUiWorksTitle),
+      content: Text(l10n.backupUiWorksBody(accounts.length)),
+      actions: [FilledButton(onPressed: () => Navigator.pop(c), child: Text(l10n.commonOk))],
     ),
   );
 }

@@ -62,14 +62,14 @@ class MainActivity : Activity() {
         list.removeAllViews()
         val favorites = FavoriteStore.load(this)
         if (favorites.isEmpty()) {
-            list.addView(text("No favorites yet.\n\nOn your phone, open Tanooki Auth, star an account, and turn on Settings > Show codes on widgets and watch.", 13f))
+            list.addView(text(getString(R.string.wear_empty), 13f))
             return
         }
         val now = System.currentTimeMillis() / 1000
         for (f in favorites) {
             list.addView(text(f.badgedTitle, 12f).apply { f.color?.let { setTextColor(it) } })
             list.addView(text(Totp.grouped(f.code(now)), 24f, bold = true))
-            list.addView(text("${f.period - now % f.period}s", 10f))
+            list.addView(text(getString(R.string.wear_seconds, (f.period - now % f.period).toInt()), 10f))
         }
     }
 }

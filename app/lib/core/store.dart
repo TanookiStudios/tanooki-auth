@@ -12,6 +12,7 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'license.dart';
 import 'sync/relay_client.dart';
 import 'vault.dart';
+import '../l10n/l10n.dart';
 
 const workerUrl = 'https://tanooki-auth-premium.kirbymail.workers.dev';
 
@@ -68,13 +69,14 @@ WorkerCall workerCall = (method, path, {body}) async {
   try {
     return await relayFetch(workerUrl, method, path, body: body);
   } on RelayException catch (e) {
-    if (e.status == 0) throw RelayException(0, 'Can\'t reach the Tanooki Auth server. Check your internet connection and try again.');
+    if (e.status == 0) throw RelayException(0, l10n.storeServerUnreachable);
     rethrow;
   }
 };
 
 String _err(RelayResponse r) {
-  final e = r.body['error'] as String? ?? 'the server said no (HTTP ${r.status})';
+  final e = r.body['error'] as String?;
+  if (e == null) return l10n.storeServerSaidNo(r.status);
   return e.isEmpty ? e : '${e[0].toUpperCase()}${e.substring(1)}.';
 }
 
@@ -109,7 +111,7 @@ Future<({String key, int seats})> appleLicenseKey(String signedTransaction) asyn
   final r = await workerCall('POST', '/iap/apple', body: {'signedTransaction': signedTransaction});
   if (r.status != 200 || r.body['key'] is! String) throw RelayException(r.status, _err(r));
   final key = r.body['key'] as String;
-  if (!await verifyLicense(key)) throw RelayException(r.status, 'The server sent a license key this app doesn\'t accept.');
+  if (!await verifyLicense(key)) throw RelayException(r.status, l10n.storeBadKey);
   return (key: key, seats: r.body['seats'] as int? ?? 1);
 }
 
@@ -140,7 +142,7 @@ class Store {
   /// Starts listening (once) and points purchases at [vault].
   void attach(Vault vault) {
     _vault = vault;
-    _sub ??= _iap.purchaseStream.listen(handle, onError: (Object e) => message.value = 'The store reported a problem: $e');
+    _sub ??= _iap.purchaseStream.listen(handle, onError: (Object e) => message.value = l10n.storeReportedProblem('$e'));
   }
 
   Future<void> loadProducts() async {
@@ -148,17 +150,19 @@ class Store {
     try {
       if (!await _iap.isAvailable()) {
         problem.value = front == Storefront.google
-            ? 'Google Play isn\'t available on this device, so Premium can\'t be bought here. If you bought Premium elsewhere, enter your license key below.'
-            : 'The App Store isn\'t available right now. Check your internet connection and try again.';
+            ? l10n.storeGooglePlayUnavailable
+            : l10n.storeAppStoreUnavailable;
         return;
       }
       final r = await _iap.queryProductDetails(storeProductIds);
       products.value = {for (final p in r.productDetails) p.id: p};
       problem.value = r.productDetails.isEmpty
-          ? 'The ${front == Storefront.google ? 'Play Store' : 'App Store'} didn\'t list Premium just now${r.error == null ? '' : ' (${r.error!.message})'}. Try again in a little while.'
+          ? r.error == null
+              ? l10n.storeNotListed(front == Storefront.google ? 'Play Store' : 'App Store')
+              : l10n.storeNotListedWithError(front == Storefront.google ? 'Play Store' : 'App Store', r.error!.message)
           : '';
     } catch (e) {
-      problem.value = 'Couldn\'t load prices from the store: $e';
+      problem.value = l10n.storePricesFailed('$e');
     }
   }
 
@@ -171,7 +175,7 @@ class Store {
       await _iap.buyNonConsumable(purchaseParam: PurchaseParam(productDetails: p));
     } catch (e) {
       busy.value = false;
-      message.value = 'The purchase couldn\'t start: $e';
+      message.value = l10n.storePurchaseCouldNotStart('$e');
     }
   }
 
@@ -184,12 +188,12 @@ class Store {
       Timer(const Duration(seconds: 8), () {
         if (busy.value) {
           busy.value = false;
-          message.value ??= 'No Premium purchase was found for this ${front == Storefront.google ? 'Google' : 'Apple'} account.';
+          message.value ??= l10n.storeNothingToRestore(front == Storefront.google ? 'Google' : 'Apple');
         }
       });
     } catch (e) {
       busy.value = false;
-      message.value = 'Couldn\'t restore purchases: $e';
+      message.value = l10n.storeRestoreFailed('$e');
     }
   }
 
@@ -198,14 +202,14 @@ class Store {
     for (final p in list) {
       switch (p.status) {
         case PurchaseStatus.pending:
-          message.value = 'Waiting for the payment to be approved. Premium unlocks as soon as it is.';
+          message.value = l10n.storePending;
           continue; // finished later, in another update
         case PurchaseStatus.canceled:
           busy.value = false;
-          message.value = 'Purchase canceled. You weren\'t charged.';
+          message.value = l10n.storeCanceled;
         case PurchaseStatus.error:
           busy.value = false;
-          message.value = 'The purchase didn\'t go through: ${p.error?.message ?? 'the store gave no reason'}. You weren\'t charged.';
+          message.value = p.error?.message == null ? l10n.storeFailedNoReason : l10n.storeFailed(p.error!.message);
         case PurchaseStatus.purchased:
         case PurchaseStatus.restored:
           if (storeProductIds.contains(p.productID) && _vault != null) await _unlock(_vault!, p);
@@ -222,13 +226,13 @@ class Store {
     await v.save();
     onUnlocked?.call();
     if (front != Storefront.apple) {
-      message.value = 'Premium unlocked. Thank you so much!';
+      message.value = l10n.storeUnlocked;
       return;
     }
     // A key that already covers this purchase needs no new one (restores happen often).
     final have = v.settings['license'];
     if (have is String && await verifyLicense(have) && licenseSeats(have) >= (family ? 5 : 1)) {
-      message.value = 'Premium unlocked. Thank you so much!';
+      message.value = l10n.storeUnlocked;
       return;
     }
     try {
@@ -236,10 +240,9 @@ class Store {
       v.settings['license'] = k.key;
       await v.save();
       onUnlocked?.call();
-      message.value = 'Premium unlocked. Your license key for your computers is below.';
+      message.value = l10n.storeUnlockedWithKey;
     } on RelayException catch (e) {
-      message.value = 'Premium is unlocked on this device. The key for your computers couldn\'t be made yet: ${e.message} '
-          'Tap Restore Purchases later to try again.';
+      message.value = l10n.storeUnlockedKeyFailed(e.message);
     }
   }
 

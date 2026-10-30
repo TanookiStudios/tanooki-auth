@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">Los códigos de tus favoritos. Activa Ajustes &gt; Mostrar códigos en widgets y reloj en Tanooki Auth.</string>
+    <string name="scan_tile">Escanear QR de 2FA</string>
+    <string name="widget_locked">Desbloquea para ver los códigos</string>
+    <string name="widget_empty">No hay favoritos que mostrar. En Tanooki Auth, marca una cuenta con estrella y activa Ajustes &gt; Mostrar códigos en widgets y reloj.</string>
+    <string name="backup_folder">Carpeta de copias</string>
+</resources>

@@ -7,6 +7,7 @@ import 'package:cryptography/cryptography.dart';
 import 'account.dart';
 import 'auto_backup.dart';
 import 'vault.dart';
+import '../l10n/l10n.dart';
 
 // Keys in vault.settings. The real vault's settings are the only ones the lock screen reads.
 const lockKey = 'lock'; // biometric lock on/off (existed before 0.2)
@@ -20,7 +21,8 @@ const blockScreenshotsKey = 'blockScreenshots';
 const kitShownKey = 'kitShown';
 
 /// Auto-lock choices, in seconds. 30 s matches what the app did before the choice existed.
-const lockAfterChoices = {0: 'Immediately', 30: 'After 30 seconds', 60: 'After 1 minute', 300: 'After 5 minutes'};
+Map<int, String> get lockAfterChoices =>
+    {0: l10n.securityLockImmediately, 30: l10n.securityLockAfter30s, 60: l10n.securityLockAfter1m, 300: l10n.securityLockAfter5m};
 int lockAfterSeconds(Map<String, dynamic> s) => s[lockAfterKey] as int? ?? 30;
 
 /// After coming back from the background, lock again if the app was away at least the chosen time.
@@ -35,11 +37,11 @@ const _iterations = 120000;
 
 /// Null if [pin] is acceptable, otherwise what's wrong with it in plain words.
 String? passcodeProblem(String pin) {
-  if (!RegExp(r'^\d+$').hasMatch(pin)) return 'Use numbers only.';
-  if (pin.length < minPasscodeLength) return 'Use at least $minPasscodeLength numbers.';
-  if (RegExp(r'^(\d)\1+$').hasMatch(pin)) return 'Don\'t use the same number over and over.';
+  if (!RegExp(r'^\d+$').hasMatch(pin)) return l10n.securityNumbersOnly;
+  if (pin.length < minPasscodeLength) return l10n.securityAtLeastNumbers(minPasscodeLength);
+  if (RegExp(r'^(\d)\1+$').hasMatch(pin)) return l10n.securitySameNumber;
   const runs = '01234567890123456789', down = '98765432109876543210';
-  if (runs.contains(pin) || down.contains(pin)) return 'Don\'t use numbers in a row like 123456.';
+  if (runs.contains(pin) || down.contains(pin)) return l10n.securityNumbersInRow;
   return null;
 }
 
@@ -110,9 +112,9 @@ Map<String, Object> _dummyRecord(int iterations) => {'alg': 'pbkdf2-sha256', 'it
 
 /// Null if panic wipe may be turned on, otherwise why not, in plain words.
 String? panicWipeBlocker(Map<String, dynamic> s, DateTime now) {
-  if (s[passcodeKey] == null) return 'Set an app passcode first. Panic wipe counts wrong passcodes.';
+  if (s[passcodeKey] == null) return l10n.securityPanicNeedsPasscode;
   if (!backupIsRecent(s, now)) {
-    return 'Make a backup first (Settings > Export backup). Panic wipe erases every account, so it only turns on if you made a backup in the last 30 days.';
+    return l10n.securityPanicNeedsBackup;
   }
   return null;
 }

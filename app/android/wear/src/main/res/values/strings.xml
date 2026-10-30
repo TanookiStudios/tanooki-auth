@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wear_empty">No favorites yet.\n\nOn your phone, open Tanooki Auth, star an account, and turn on Settings &gt; Show codes on widgets and watch.</string>
+    <string name="wear_seconds">%1$ds</string>
+</resources>

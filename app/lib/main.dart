@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart' show LicenseEntryWithLineBreaks, LicenseRegistry;
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:path_provider/path_provider.dart';
@@ -17,6 +18,7 @@ import 'core/security_key.dart';
 import 'core/spotlight.dart';
 import 'core/vault.dart';
 import 'core/widget_share.dart';
+import 'l10n/l10n.dart';
 import 'ui/add.dart';
 import 'ui/app_icon.dart';
 import 'ui/backup_ui.dart';
@@ -56,7 +58,7 @@ Future<void> createDecoyVault(Vault real, Map<String, Object> passcodeRecord) as
   }
   final decoy = await openVault(second: true);
   await decoy.resetToEmpty();
-  const lookAlike = ['theme', 'license', easyFontKey, countdownKey, layoutKey, hideCodesKey, recentFirstKey, sortKey, lockKey, lockAfterKey, blockScreenshotsKey];
+  const lookAlike = ['theme', 'license', languageKey, easyFontKey, countdownKey, layoutKey, hideCodesKey, recentFirstKey, sortKey, lockKey, lockAfterKey, blockScreenshotsKey];
   for (final k in lookAlike) {
     if (real.settings.containsKey(k)) decoy.settings[k] = real.settings[k];
   }
@@ -116,18 +118,23 @@ class _TanookiAuthAppState extends State<TanookiAuthApp> with WidgetsBindingObse
     WidgetsBinding.instance.addObserver(this);
     themeChoice.addListener(_repaintAll);
     easyFont.addListener(_repaintAll);
+    appLanguage.addListener(_repaintAll);
   }
 
   @override
   void dispose() {
     themeChoice.removeListener(_repaintAll);
     easyFont.removeListener(_repaintAll);
+    appLanguage.removeListener(_repaintAll);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
   void didChangePlatformBrightness() => _repaintAll();
+
+  @override
+  void didChangeLocales(List<Locale>? locales) => _repaintAll();
 
   // Widgets read colors from Palette directly, so after a theme switch every one of them must rebuild.
   // Re-keying the tree would also do it, but would throw away the open screens and the unlocked vault.
@@ -149,6 +156,9 @@ class _TanookiAuthAppState extends State<TanookiAuthApp> with WidgetsBindingObse
     return MaterialApp(
       title: 'Tanooki Auth',
       debugShowCheckedModeBanner: false,
+      locale: appLocale(),
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: const [AppLocalizations.delegate, ...GlobalMaterialLocalizations.delegates],
       theme: buildTheme(fixed ?? lightPalette),
       darkTheme: buildTheme(fixed ?? darkPalette),
       themeMode: fixed == null
@@ -226,18 +236,10 @@ class _GateState extends State<Gate> implements BridgeHost {
       builder: (c) {
         _pairDialog = c;
         final (title, body, warning) = switch (bridgeClientName(origin)) {
-          'Raycast' => ('Pair with Raycast', 'Type this code into Raycast:', 'Only do this if you just started pairing in Raycast yourself.'),
-          'Alfred' => ('Pair with Alfred', 'Type 2fa-pair and this code into Alfred:', 'Only do this if you just typed 2fa-pair in Alfred yourself.'),
-          'PowerToys' => (
-              'Pair with PowerToys',
-              'Type this code into PowerToys Command Palette:',
-              'Only do this if you just started pairing in PowerToys yourself.'
-            ),
-          _ => (
-              'Pair with your browser',
-              'Type this code into the Tanooki Auth browser extension:',
-              'Only do this if you just clicked "Pair" in the extension yourself.'
-            ),
+          'Raycast' => (l10n.mainPairRaycastTitle, l10n.mainPairRaycastBody, l10n.mainPairRaycastWarning),
+          'Alfred' => (l10n.mainPairAlfredTitle, l10n.mainPairAlfredBody, l10n.mainPairAlfredWarning),
+          'PowerToys' => (l10n.mainPairPowerToysTitle, l10n.mainPairPowerToysBody, l10n.mainPairPowerToysWarning),
+          _ => (l10n.mainPairBrowserTitle, l10n.mainPairBrowserBody, l10n.mainPairBrowserWarning),
         };
         return AlertDialog(
           title: Text(title),
@@ -257,7 +259,7 @@ class _GateState extends State<Gate> implements BridgeHost {
                 activeBridge?.cancelPairing();
                 hidePairingCode();
               },
-              child: const Text('Cancel'),
+              child: Text(l10n.commonCancel),
             ),
           ],
         );
@@ -283,7 +285,7 @@ class _GateState extends State<Gate> implements BridgeHost {
   Future<bool> confirmReveal(Account account, String client) async {
     await bringToFront();
     if (!mounted || locked) return false;
-    return confirmItsYou(context, vault, 'Send the code for ${accountTitle(account)} to $client');
+    return confirmItsYou(context, vault, l10n.mainSendCodeTo(accountTitle(account), client));
   }
 
   @override
@@ -353,6 +355,7 @@ class _GateState extends State<Gate> implements BridgeHost {
     if (spotlightId != null) _pendingAction = 'account:$spotlightId';
     await loadPremiumAndTheme(vault);
     easyFont.value = vault.settings[easyFontKey] == true;
+    loadLanguage(vault.settings);
     await restoreDockIcon(vault, premium: premium.value);
     await loadBrandIcons();
     await applyScreenshotBlocking(blockScreenshotsOn(vault.settings));
@@ -376,6 +379,7 @@ class _GateState extends State<Gate> implements BridgeHost {
     if (v != _vault) {
       await loadPremiumAndTheme(v);
       easyFont.value = v.settings[easyFontKey] == true;
+      loadLanguage(v.settings);
     }
     if (!mounted) return;
     setState(() {
@@ -410,7 +414,7 @@ class _GateState extends State<Gate> implements BridgeHost {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
-        content: Text('Copied ${accountTitle(a)} code. The clipboard clears in 30 seconds.'),
+        content: Text(l10n.homeCopied(accountTitle(a))),
         duration: const Duration(seconds: 2),
       ));
     await showCopiedCodeActivity(v, a, now);
@@ -464,8 +468,8 @@ class _GateState extends State<Gate> implements BridgeHost {
         setState(() {
           _pin.clear();
           _pinError = _real!.settings[panicWipeKey] == true && left <= 5
-              ? 'Wrong passcode. $left more wrong ${left == 1 ? 'try erases' : 'tries erase'} everything.'
-              : 'Wrong passcode.';
+              ? l10n.mainWrongPasscodeLeft(left)
+              : l10n.mainWrongPasscode;
         });
         _pinFocus.requestFocus(); // ready to type again
       case Unlock.wiped:
@@ -475,10 +479,10 @@ class _GateState extends State<Gate> implements BridgeHost {
   }
 
   String get _biometricName => Platform.isWindows
-      ? 'Windows Hello'
+      ? l10n.mainBiometricWindows
       : Platform.isMacOS
-          ? 'Touch ID'
-          : 'Face ID or fingerprint';
+          ? l10n.mainBiometricMac
+          : l10n.mainBiometricOther;
 
   // Phones: ask once, default on. Desktop: off by default, toggle in Settings.
   Future<void> _askAboutLockOnFirstRun() async {
@@ -490,12 +494,11 @@ class _GateState extends State<Gate> implements BridgeHost {
             context: context,
             barrierDismissible: false,
             builder: (c) => AlertDialog(
-              title: const Text('Lock Tanooki Auth?'),
-              content: const Text(
-                  'Ask for your face, fingerprint, or passcode when the app opens, so someone holding your unlocked phone can\'t read your codes. You can change this later in Settings.'),
+              title: Text(l10n.mainLockTitle),
+              content: Text(l10n.mainLockBody),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Not now')),
-                FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Turn on lock')),
+                TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonNotNow)),
+                FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(l10n.mainTurnOnLock)),
               ],
             ),
           ) ??
@@ -508,7 +511,7 @@ class _GateState extends State<Gate> implements BridgeHost {
   Future<void> _unlock() async {
     bool ok;
     try {
-      ok = await _auth.authenticate(localizedReason: 'Unlock Tanooki Auth');
+      ok = await _auth.authenticate(localizedReason: l10n.mainUnlockReason);
     } catch (_) {
       ok = false;
     }
@@ -569,15 +572,14 @@ class _GateState extends State<Gate> implements BridgeHost {
     final sure = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Start a new, empty vault?'),
-        content: const Text(
-            'This permanently replaces whatever is left of your old accounts. Only do this if you have no backup to restore, or you have already turned off two-factor login on those sites.'),
+        title: Text(l10n.mainStartOverTitle),
+        content: Text(l10n.mainStartOverBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Theme.of(c).colorScheme.error),
             onPressed: () => Navigator.pop(c, true),
-            child: const Text('Erase and start over'),
+            child: Text(l10n.mainEraseStartOver),
           ),
         ],
       ),
@@ -600,10 +602,10 @@ class _GateState extends State<Gate> implements BridgeHost {
               const SizedBox(height: 16),
               Text(_error!.message, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 24),
-              FilledButton(onPressed: _restore, child: const Text('Restore from backup')),
+              FilledButton(onPressed: _restore, child: Text(l10n.mainRestoreFromBackup)),
               const SizedBox(height: 8),
-              OutlinedButton(onPressed: _load, child: const Text('Try again')),
-              TextButton(onPressed: _startOver, child: const Text('Start a new, empty vault')),
+              OutlinedButton(onPressed: _load, child: Text(l10n.commonTryAgain)),
+              TextButton(onPressed: _startOver, child: Text(l10n.mainStartNewVault)),
             ]),
           ),
         ),
@@ -619,12 +621,12 @@ class _GateState extends State<Gate> implements BridgeHost {
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               const Icon(Icons.lock_outline, size: 48),
               const SizedBox(height: 16),
-              const Text('Tanooki Auth is locked'),
+              Text(l10n.mainLocked),
               const SizedBox(height: 16),
               if (hasPasscode) ...[
                 SizedBox(
                   width: 260,
-                  child: PasscodeField(controller: _pin, focusNode: _pinFocus, label: 'Passcode', autofocus: !_biometricOn, onSubmitted: (_) => _submitPasscode()),
+                  child: PasscodeField(controller: _pin, focusNode: _pinFocus, label: l10n.securityUiPasscode, autofocus: !_biometricOn, onSubmitted: (_) => _submitPasscode()),
                 ),
                 if (_pinError != null)
                   Padding(
@@ -636,13 +638,13 @@ class _GateState extends State<Gate> implements BridgeHost {
                   onPressed: _checking ? null : _submitPasscode,
                   child: _checking
                       ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Text('Unlock'),
+                      : Text(l10n.commonUnlock),
                 ),
-                if (_biometricOn) TextButton(onPressed: _unlock, child: Text('Use $_biometricName')),
+                if (_biometricOn) TextButton(onPressed: _unlock, child: Text(l10n.mainUseBiometric(_biometricName))),
               ] else
-                FilledButton(onPressed: _unlock, child: const Text('Unlock')),
+                FilledButton(onPressed: _unlock, child: Text(l10n.commonUnlock)),
               if (securityKeysOf(_real!.settings).isNotEmpty) ...[
-                TextButton.icon(onPressed: _unlockWithKey, icon: const Icon(Icons.key), label: const Text('Use security key')),
+                TextButton.icon(onPressed: _unlockWithKey, icon: const Icon(Icons.key), label: Text(l10n.mainUseSecurityKey)),
                 if (_keyError != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),

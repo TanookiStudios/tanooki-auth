@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'backup.dart';
 import 'security.dart' show lastBackupKey;
 import 'vault.dart';
+import '../l10n/l10n.dart';
 
 /// vault.settings key: {folder: ref, folderName, passphrase, lastAt}. Lives only inside the encrypted vault.
 /// A folder ref is a path (Windows), a base64 security-scoped bookmark (macOS, iOS) or a SAF tree URI (Android).
@@ -36,12 +37,10 @@ class AutoBackupException implements Exception {
 
   /// One message per failure mode, saying what to do about it.
   String get message => switch (failure) {
-        AutoBackupFailure.folderGone =>
-          'The backup folder is gone. It may have been deleted, renamed outside the app, or its drive is unplugged. Choose the folder again.',
-        AutoBackupFailure.permissionLost =>
-          'Tanooki Auth is no longer allowed to write to the backup folder. Choose the folder again to give permission back.',
-        AutoBackupFailure.diskFull => 'The backup folder\'s drive is full. Free up some space, then tap Back up now.',
-        AutoBackupFailure.other => 'The backup couldn\'t be saved${detail == null ? '' : ' ($detail)'}. Tap Back up now to try again.',
+        AutoBackupFailure.folderGone => l10n.autoBackupFolderGone,
+        AutoBackupFailure.permissionLost => l10n.autoBackupPermissionLost,
+        AutoBackupFailure.diskFull => l10n.autoBackupDiskFull,
+        AutoBackupFailure.other => detail == null ? l10n.autoBackupOther : l10n.autoBackupOtherWhy(detail!),
       };
 
   @override
@@ -127,7 +126,7 @@ Future<T?> folderCall<T>(String method, [Map<String, Object?>? args]) async {
     final failure = AutoBackupFailure.values.where((f) => f.name == e.code).firstOrNull ?? AutoBackupFailure.other;
     throw AutoBackupException(failure, e.message);
   } on MissingPluginException {
-    throw AutoBackupException(AutoBackupFailure.other, 'not supported on this device');
+    throw AutoBackupException(AutoBackupFailure.other, l10n.autoBackupNotSupported);
   }
 }
 

@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:cryptography/cryptography.dart';
 
 import 'account.dart';
+import '../l10n/l10n.dart';
 
 const backupExtension = 'tanookiauth';
 const _format = 'tanooki-auth-backup';
@@ -49,10 +50,10 @@ Future<List<Account>> importBackup(String text, String passphrase) async {
   try {
     env = jsonDecode(text) as Map<String, dynamic>;
   } catch (_) {
-    throw BackupException('That file isn\'t a Tanooki Auth backup.');
+    throw BackupException(l10n.backupUiNotABackup);
   }
-  if (env['format'] != _format) throw BackupException('That file isn\'t a Tanooki Auth backup.');
-  if (env['v'] != 1) throw BackupException('This backup was made by a newer version of Tanooki Auth. Update the app and try again.');
+  if (env['format'] != _format) throw BackupException(l10n.backupUiNotABackup);
+  if (env['v'] != 1) throw BackupException(l10n.backupWrongVersion);
 
   final List<int> clear;
   try {
@@ -65,13 +66,13 @@ Future<List<Account>> importBackup(String text, String passphrase) async {
       aad: _aad,
     );
   } catch (_) {
-    throw BackupException('Wrong passphrase, or the backup file is damaged.');
+    throw BackupException(l10n.backupWrongPassphrase);
   }
   try {
     final body = jsonDecode(utf8.decode(clear)) as Map<String, dynamic>;
     return (body['accounts'] as List).map((j) => Account.fromJson(j as Map<String, dynamic>)).toList();
   } catch (_) {
-    throw BackupException('The backup unlocked but its contents are damaged.');
+    throw BackupException(l10n.backupDamaged);
   }
 }
 

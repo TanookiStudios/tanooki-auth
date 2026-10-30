@@ -5,6 +5,7 @@ import '../core/vault.dart';
 import 'clipboard.dart';
 import 'home.dart';
 import 'theme.dart';
+import '../l10n/l10n.dart';
 
 /// The one-time backup codes a website gave out, kept with the account.
 class RecoveryCodesScreen extends StatefulWidget {
@@ -33,7 +34,7 @@ class _RecoveryCodesScreenState extends State<RecoveryCodesScreen> {
     final text = await showDialog<String>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Add recovery codes'),
+        title: Text(l10n.recoveryAddTitle),
         content: TextField(
           controller: field,
           autofocus: true,
@@ -41,13 +42,13 @@ class _RecoveryCodesScreenState extends State<RecoveryCodesScreen> {
           maxLines: 10,
           autocorrect: false,
           enableSuggestions: false,
-          decoration: const InputDecoration(
-            hintText: 'Paste the codes the website gave you, one per line',
+          decoration: InputDecoration(
+            hintText: l10n.recoveryPasteHint,
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(c, field.text), child: const Text('Add')),
+          TextButton(onPressed: () => Navigator.pop(c), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(c, field.text), child: Text(l10n.commonAdd)),
         ],
       ),
     );
@@ -55,30 +56,30 @@ class _RecoveryCodesScreenState extends State<RecoveryCodesScreen> {
     final have = _codes.map((r) => r.code).toSet();
     final fresh = RecoveryCode.parseList(text).where((r) => have.add(r.code)).toList();
     if (fresh.isEmpty) {
-      _say('No new codes found in what you pasted.');
+      _say(l10n.recoveryNoneNew);
       return;
     }
     _codes.addAll(fresh);
     await _save();
-    _say('Added ${fresh.length} ${fresh.length == 1 ? 'code' : 'codes'}.');
+    _say(l10n.recoveryAdded(fresh.length));
   }
 
   Future<void> _copy(RecoveryCode r) async {
     await copyCode(r.code);
     _say(r.used
-        ? 'Copied. Heads up: you marked this code as used, so it probably won\'t work again.'
-        : 'Copied. The clipboard clears in 30 seconds. Mark it used once you\'ve signed in.');
+        ? l10n.recoveryCopiedUsed
+        : l10n.recoveryCopied);
   }
 
   Future<void> _remove(RecoveryCode r) async {
     final sure = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Remove this code?'),
-        content: Text('${r.code}\n\nOnly remove it if the website no longer accepts it.'),
+        title: Text(l10n.recoveryRemoveTitle),
+        content: Text(l10n.recoveryRemoveBody(r.code)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Remove')),
+          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(l10n.commonRemove)),
         ],
       ),
     );
@@ -91,19 +92,19 @@ class _RecoveryCodesScreenState extends State<RecoveryCodesScreen> {
   Widget build(BuildContext context) {
     final unused = _codes.where((r) => !r.used).length;
     return Scaffold(
-      appBar: AppBar(title: Text('${accountTitle(widget.account)} recovery codes')),
+      appBar: AppBar(title: Text(l10n.recoveryTitle(accountTitle(widget.account)))),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _add,
         icon: const Icon(Icons.add),
-        label: const Text('Add codes'),
+        label: Text(l10n.recoveryAddCodes),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
         children: [
           Text(
             _codes.isEmpty
-                ? 'When you turn on two-factor login, most websites also give you a list of backup codes. Each one gets you in once if you ever lose this app. Paste them here so they\'re kept safe with the account.'
-                : '$unused of ${_codes.length} unused. Tap a code to copy it, and tick it once you\'ve used it.',
+                ? l10n.recoveryIntro
+                : l10n.recoveryUnusedOf('$unused', _codes.length),
             style: TextStyle(color: Palette.muted),
           ),
           const SizedBox(height: 16),
@@ -115,7 +116,7 @@ class _RecoveryCodesScreenState extends State<RecoveryCodesScreen> {
                   ListTile(
                     leading: Checkbox(
                       value: r.used,
-                      semanticLabel: 'Used',
+                      semanticLabel: l10n.recoveryUsed,
                       onChanged: (v) {
                         r.used = v ?? false;
                         _save();
@@ -130,10 +131,10 @@ class _RecoveryCodesScreenState extends State<RecoveryCodesScreen> {
                         decoration: r.used ? TextDecoration.lineThrough : null,
                       ),
                     ),
-                    subtitle: r.used ? const Text('Used') : null,
+                    subtitle: r.used ? Text(l10n.recoveryUsed) : null,
                     onTap: () => _copy(r),
                     trailing: IconButton(
-                      tooltip: 'Remove',
+                      tooltip: l10n.commonRemove,
                       icon: const Icon(Icons.delete_outline),
                       onPressed: () => _remove(r),
                     ),

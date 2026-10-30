@@ -1,0 +1,41 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "NSCameraUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanooki Auth nutzt die Kamera, um QR-Codes zur Einrichtung der Zwei-Faktor-Anmeldung zu scannen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanooki Auth uses the camera to scan two-factor setup QR codes."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanooki Auth usa la cámara para escanear los códigos QR de configuración de la verificación en dos pasos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanooki Auth utilise l'appareil photo pour scanner les codes QR de configuration de la double authentification."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanooki Auth は2段階認証の設定用 QR コードを読み取るためにカメラを使います。"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

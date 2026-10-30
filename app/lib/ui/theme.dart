@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/l10n.dart';
 
 /// One color set. The house look is near-black panels, thin outlines, an accent color, small caps labels.
 class AppPalette {
@@ -110,6 +111,23 @@ const themeChoices = <String, AppPalette?>{
   ),
 };
 const freeThemes = {'auto', 'dark', 'light'};
+
+/// The name shown for theme [id] in the app's language (AppPalette.name stays the English one).
+String themeName(String id) => switch (id) {
+      'dark' => l10n.themeDark,
+      'light' => l10n.themeLight,
+      'pink' => l10n.themePink,
+      'blue' => l10n.themeBlue,
+      'lavender' => l10n.themeLavender,
+      'mint' => l10n.themeMint,
+      'midnight' => l10n.themeMidnight,
+      'sunset' => l10n.themeSunset,
+      'peach' => l10n.themePeach,
+      'forest' => l10n.themeForest,
+      'ocean' => l10n.themeOcean,
+      'mono' => l10n.themeMono,
+      _ => l10n.themeAuto,
+    };
 
 /// The colors in use right now. Set once per build by the app root, which also re-keys the whole
 /// tree when it changes, so every widget reading these repaints.

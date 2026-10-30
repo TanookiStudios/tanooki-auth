@@ -15,6 +15,11 @@
   };
   const unb64u = (s) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
 
+  // Words from _locales/<language>/messages.json; under Node (test/*.cjs) the English file.
+  const t = (key, ...subs) => (globalThis.chrome?.i18n
+    ? chrome.i18n.getMessage(key, subs.map(String))
+    : require('./_locales/en/messages.json')[key].message.replace(/\$(\d)/g, (_, i) => subs[i - 1]));
+
   class LinkError extends Error {
     constructor(code, message) { super(message); this.code = code; }
   }
@@ -34,11 +39,11 @@
           body: body ? JSON.stringify(body) : undefined,
         });
       } catch {
-        throw new LinkError('offline', 'Can\'t reach the Tanooki Auth server. Check your internet connection.');
+        throw new LinkError('offline', t('linkOffline'));
       }
       const json = await r.json().catch(() => ({}));
-      if (r.status === 404 || r.status === 401) throw new LinkError('unpaired', 'Your phone is no longer paired. Pair it again.');
-      if (r.status >= 400) throw new LinkError('relay', json.error || `The Tanooki Auth server said no (HTTP ${r.status}).`);
+      if (r.status === 404 || r.status === 401) throw new LinkError('unpaired', t('linkUnpaired'));
+      if (r.status >= 400) throw new LinkError('relay', json.error || t('linkServerSaidNo', r.status));
       return json;
     }
 
@@ -99,7 +104,7 @@
     // waiting); 'deny' always ends it.
     async function ask(out, accept, { timeoutMs, onSent, timeoutMessage }) {
       const st = await storage.get();
-      if (!st?.paired) throw new LinkError('notLinked', 'No phone is paired with this browser.');
+      if (!st?.paired) throw new LinkError('notLinked', t('linkNotLinked'));
       await poll(st).catch(() => {}); // skip anything old, so only answers to this request count
       const { ciphertext, id } = await seal(st, out);
       const sent = await api(st, 'POST', `/v1/link/rooms/${st.roomId}/messages`, { ciphertext, ttl: 120, notify: true });
@@ -111,7 +116,7 @@
           for (const { msg, relayId } of await poll(st)) {
             if (msg.re !== id) continue; // ignore answers to requests we didn't make
             api(st, 'DELETE', `/v1/link/rooms/${st.roomId}/messages/${relayId}`).catch(() => {});
-            if (msg.t === 'deny') throw new LinkError('denied', 'You tapped Deny on your phone.');
+            if (msg.t === 'deny') throw new LinkError('denied', t('linkDenied'));
             const result = accept(msg);
             if (result) return result;
           }
@@ -152,7 +157,7 @@
           st.phoneKey = room.phoneKey;
         }
         for (const { msg } of await poll(st)) {
-          if (msg.t === 'hello') { st.paired = true; st.phoneName = String(msg.device || 'your phone').slice(0, 60); }
+          if (msg.t === 'hello') { st.paired = true; st.phoneName = String(msg.device || t('linkYourPhone')).slice(0, 60); }
         }
         await save(st);
         return st.paired ? { state: 'paired', phoneName: st.phoneName } : { state: 'waiting' };
@@ -170,7 +175,7 @@
       async requestCode(host, { timeoutMs = 110000, onSent } = {}) {
         return ask({ t: 'fill-request', host }, (msg) => (msg.t === 'code' && /^[0-9A-Z]{5,10}$/.test(msg.code)
           ? { code: msg.code, domain: String(msg.domain || ''), issuer: String(msg.issuer || ''), expiresIn: msg.expiresIn }
-          : null), { timeoutMs, onSent, timeoutMessage: 'Your phone didn\'t answer in time. Open Tanooki Auth on your phone and try again.' });
+          : null), { timeoutMs, onSent, timeoutMessage: t('linkCodeTimeout') });
       },
 
       /**
@@ -183,7 +188,7 @@
           ? { accepted: msg.accepted === true, reason: String(msg.reason || '') }
           : null), {
           timeoutMs,
-          timeoutMessage: 'Your phone didn\'t answer. Open Tanooki Auth on your phone. If it never asked you, update the app on your phone: older versions can\'t add accounts from the browser yet.',
+          timeoutMessage: t('linkAddTimeout'),
         });
       },
 

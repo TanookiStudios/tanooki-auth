@@ -7,10 +7,11 @@ import 'package:flutter_tts/flutter_tts.dart';
 
 import '../core/account.dart';
 import 'theme.dart';
+import '../l10n/l10n.dart';
 
 /// Settings key for how each code's time left is drawn: a ring, a bar, or just the number.
 const countdownKey = 'countdown';
-const countdownChoices = {'ring': 'Ring', 'bar': 'Bar', 'number': 'Number'};
+Map<String, String> get countdownChoices => {'ring': l10n.codeViewRing, 'bar': l10n.codeViewBar, 'number': l10n.codeViewNumber};
 String countdownOf(Map<String, dynamic> settings) =>
     countdownChoices.containsKey(settings[countdownKey]) ? settings[countdownKey] as String : 'ring';
 
@@ -27,10 +28,8 @@ String spokenCode(String code) => codeGroups(code).map((g) => g.split('').join('
 
 /// What a screen reader says for a code with [left] seconds to go (null for counter-based codes).
 String codeSemantics(String code, int? left) => left == null
-    ? 'Code ${spokenCode(code)}'
-    : left == 1
-        ? 'Code ${spokenCode(code)}, 1 second left'
-        : 'Code ${spokenCode(code)}, $left seconds left';
+    ? l10n.codeViewSpoken(spokenCode(code))
+    : l10n.codeViewSpokenLeft(left, spokenCode(code));
 
 /// What Read aloud says: digits in pairs ("4 8, 2 1, 3 9"), and Steam's letters one by one so each is spelled.
 String readAloudText(String code, {bool letters = false}) {
@@ -66,7 +65,7 @@ class ReadAloudButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => IconButton(
-        tooltip: 'Read code aloud',
+        tooltip: l10n.codeViewReadAloud,
         iconSize: size,
         icon: Icon(Icons.volume_up_outlined, color: Palette.muted),
         onPressed: onPressed,
@@ -85,7 +84,7 @@ class Countdown extends StatelessWidget {
   Widget build(BuildContext context) {
     final urgent = left <= 5;
     final color = urgent ? Palette.red : Palette.accent;
-    final label = Text('${left}s',
+    final label = Text(l10n.codeViewSecondsShort(left),
         style: TextStyle(fontSize: big ? 15 : 12, color: urgent ? Palette.red : Palette.muted, fontFeatures: const [FontFeature.tabularFigures()]));
     final Widget body = switch (style) {
       'number' => Text('$left',
@@ -121,7 +120,10 @@ class Countdown extends StatelessWidget {
 const accountColors = [
   0xFF2F80FF, 0xFF8565DD, 0xFFE2649A, 0xFFD9364F, 0xFFE08A2F, 0xFFD4A51C, 0xFF239E78, 0xFF3AA6B9, 0xFF6B7A99,
 ];
-const accountColorNames = ['Blue', 'Purple', 'Pink', 'Red', 'Orange', 'Gold', 'Green', 'Teal', 'Gray'];
+List<String> get accountColorNames => [
+      l10n.codeViewColorBlue, l10n.codeViewColorPurple, l10n.codeViewColorPink, l10n.codeViewColorRed, l10n.codeViewColorOrange,
+      l10n.codeViewColorGold, l10n.codeViewColorGreen, l10n.codeViewColorTeal, l10n.codeViewColorGray,
+    ];
 
 /// A few emoji offered next to the emoji field.
 const emojiSuggestions = ['🔑', '💼', '🎮', '🏦', '📧', '🛒', '🏠', '⭐', '💬', '☁️'];

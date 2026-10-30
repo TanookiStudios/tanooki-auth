@@ -1,0 +1,272 @@
+{
+  "extName": {
+    "message": "Tanooki Auth"
+  },
+  "extDescription": {
+    "message": "Füllt Zwei-Faktor-Codes aus der Tanooki Auth-Desktop-App oder von deinem Handy aus, nur auf der Website, zu der das jeweilige Konto gehört."
+  },
+  "errNoApp": {
+    "message": "Tanooki Auth läuft nicht. Öffne die Tanooki Auth-App auf diesem Computer."
+  },
+  "errNotPaired": {
+    "message": "Dieser Browser ist noch nicht mit Tanooki Auth gekoppelt."
+  },
+  "errLocked": {
+    "message": "Tanooki Auth ist gesperrt. Entsperre die App und versuch es noch mal."
+  },
+  "errTimeout": {
+    "message": "Tanooki Auth hat nicht rechtzeitig geantwortet."
+  },
+  "errLookalike": {
+    "message": "Diese Seite sieht aus wie $1, ist es aber nicht. Tanooki Auth füllt hier keine Codes aus."
+  },
+  "menuAddQr": {
+    "message": "Zu Tanooki Auth hinzufügen"
+  },
+  "errBadPage": {
+    "message": "Codes können nur auf Websites ausgefüllt werden."
+  },
+  "errFramed": {
+    "message": "Diese Seite steckt in einer anderen Website, daher füllt Tanooki Auth sie nicht aus."
+  },
+  "errQuiet": {
+    "message": "Dein Handy wurde gerade eben schon gefragt."
+  },
+  "errWrongSitePhone": {
+    "message": "Dein Handy hat einen Code für $1 geschickt, das ist nicht diese Seite. Es wurde nichts ausgefüllt."
+  },
+  "errWrongSitePhoneUnknown": {
+    "message": "Dein Handy hat einen Code für eine andere Website geschickt, nicht für diese Seite. Es wurde nichts ausgefüllt."
+  },
+  "errSetupPageFirst": {
+    "message": "Öffne zuerst die Seite der Website, auf der du die Zwei-Faktor-Anmeldung einrichtest."
+  },
+  "errMigration": {
+    "message": "Das ist ein Google Authenticator-Übertragungscode. Nutze „Konto hinzufügen…“ in der Tanooki Auth-App, um ihn zu importieren."
+  },
+  "errNoQrVisible": {
+    "message": "Kein Einrichtungs-QR-Code zu sehen. Scrolle, bis der ganze QR-Code zu sehen ist, und versuch es noch mal."
+  },
+  "errNotSavedHere": {
+    "message": "Dieses Konto ist nicht für diese Website gespeichert."
+  },
+  "errReload": {
+    "message": "Lade diese Seite neu und versuch es noch mal."
+  },
+  "errNoField": {
+    "message": "Das Codefeld auf dieser Seite wurde nicht gefunden. Klicke in das Feld und versuch es noch mal, oder nutze Kopieren und füge ihn ein."
+  },
+  "errBadgeSeconds": {
+    "message": "Das Abzeichen nimmt nur Sekunden an."
+  },
+  "noticeAdded": {
+    "message": "Zu Tanooki Auth hinzugefügt."
+  },
+  "noticeDuplicate": {
+    "message": "Dieses Konto ist schon in Tanooki Auth."
+  },
+  "noticeNotAdded": {
+    "message": "Nicht hinzugefügt."
+  },
+  "errNoQrInImage": {
+    "message": "In diesem Bild wurde kein QR-Code gefunden."
+  },
+  "errNotSetupQr": {
+    "message": "Dieser QR-Code ist kein Einrichtungscode für die Zwei-Faktor-Anmeldung."
+  },
+  "noticeCheckApp": {
+    "message": "Bestätige in Tanooki Auth."
+  },
+  "errOldApp": {
+    "message": "Diese Version von Tanooki Auth kann Google Authenticator-Übertragungscodes noch nicht aus dem Browser hinzufügen. Aktualisiere Tanooki Auth oder nutze „Konto hinzufügen…“ in der App."
+  },
+  "noticeCheckPhone": {
+    "message": "Bestätige in Tanooki Auth auf deinem Handy."
+  },
+  "linkOffline": {
+    "message": "Der Tanooki Auth-Server ist nicht erreichbar. Prüfe deine Internetverbindung."
+  },
+  "linkUnpaired": {
+    "message": "Dein Handy ist nicht mehr gekoppelt. Kopple es erneut."
+  },
+  "linkServerSaidNo": {
+    "message": "Der Tanooki Auth-Server hat abgelehnt (HTTP $1)."
+  },
+  "linkNotLinked": {
+    "message": "Mit diesem Browser ist kein Handy gekoppelt."
+  },
+  "linkDenied": {
+    "message": "Du hast auf deinem Handy auf Ablehnen getippt."
+  },
+  "linkYourPhone": {
+    "message": "dein Handy"
+  },
+  "linkCodeTimeout": {
+    "message": "Dein Handy hat nicht rechtzeitig geantwortet. Öffne Tanooki Auth auf deinem Handy und versuch es noch mal."
+  },
+  "linkAddTimeout": {
+    "message": "Dein Handy hat nicht geantwortet. Öffne Tanooki Auth auf deinem Handy. Wenn es dich nie gefragt hat, aktualisiere die App auf deinem Handy: Ältere Versionen können noch keine Konten aus dem Browser hinzufügen."
+  },
+  "toastFilled": {
+    "message": "Code von $1 aus Tanooki Auth ausgefüllt"
+  },
+  "toastFilledNoName": {
+    "message": "Code aus Tanooki Auth ausgefüllt"
+  },
+  "dismiss": {
+    "message": "Schließen"
+  },
+  "undo": {
+    "message": "Rückgängig"
+  },
+  "addButton": {
+    "message": "+ Zu Tanooki Auth hinzufügen"
+  },
+  "checkTheApp": {
+    "message": "Schau in die Tanooki Auth-App…"
+  },
+  "addedCheck": {
+    "message": "Zu Tanooki Auth hinzugefügt ✓"
+  },
+  "alreadyIn": {
+    "message": "Schon in Tanooki Auth"
+  },
+  "notAdded": {
+    "message": "Nicht hinzugefügt"
+  },
+  "connecting": {
+    "message": "Verbinde…"
+  },
+  "tryAgain": {
+    "message": "Erneut versuchen"
+  },
+  "usePhoneInstead": {
+    "message": "Keine Desktop-App hier? Stattdessen mein Handy nutzen"
+  },
+  "pairingQrLabel": {
+    "message": "Kopplungs-QR-Code. Scanne ihn mit Tanooki Auth auf deinem Handy."
+  },
+  "makingPairingCode": {
+    "message": "Kopplungscode wird erstellt…"
+  },
+  "waitingForPhone": {
+    "message": "Warte auf dein Handy…"
+  },
+  "phonePairSteps": {
+    "message": "Öffne auf deinem Handy Tanooki Auth, geh zu Einstellungen > „Mit einem Browser nutzen“ und tippe auf „Browser koppeln“. Richte die Kamera auf diesen Code."
+  },
+  "cancel": {
+    "message": "Abbrechen"
+  },
+  "pairedPhoneHello": {
+    "message": "Gekoppelt. Dein Handy fragt dich bei jedem Code nach einer Bestätigung."
+  },
+  "codeExpired": {
+    "message": "Dieser Code ist abgelaufen."
+  },
+  "makeNewCode": {
+    "message": "Neuen Code erstellen"
+  },
+  "usingYourPhone": {
+    "message": "Mit deinem Handy"
+  },
+  "yourPhone": {
+    "message": "Dein Handy"
+  },
+  "codesFromPhoneNoApp": {
+    "message": "Die Desktop-App läuft nicht, daher kommen die Codes von deinem Handy."
+  },
+  "codesFromPhone": {
+    "message": "Die Codes kommen von deinem Handy."
+  },
+  "getCodeFor": {
+    "message": "Code für $1 holen"
+  },
+  "checkPhoneApprove": {
+    "message": "Schau auf dein Handy und tippe auf Bestätigen…"
+  },
+  "copy": {
+    "message": "Kopieren"
+  },
+  "copied": {
+    "message": "Kopiert"
+  },
+  "filledCode": {
+    "message": "Code von $1 ausgefüllt ✓"
+  },
+  "noCodeBox": {
+    "message": "Das Codefeld auf dieser Seite wurde nicht gefunden. Nutze Kopieren und füge den Code ein."
+  },
+  "openSignInPage": {
+    "message": "Öffne die Anmeldeseite einer Website und klicke dann noch mal auf die Erweiterung."
+  },
+  "tryDesktopAgain": {
+    "message": "Desktop-App erneut versuchen"
+  },
+  "unpairPhone": {
+    "message": "Handy entkoppeln"
+  },
+  "pairWithApp": {
+    "message": "Mit Tanooki Auth koppeln"
+  },
+  "pairNote": {
+    "message": "Verbinde diesen Browser mit der Tanooki Auth-App auf diesem Computer. Das machst du nur einmal."
+  },
+  "pair": {
+    "message": "Koppeln"
+  },
+  "startAgain": {
+    "message": "Neu anfangen"
+  },
+  "typeSixDigit": {
+    "message": "Tanooki Auth zeigt jetzt einen 6-stelligen Code. Gib ihn hier ein:"
+  },
+  "showCode": {
+    "message": "Code anzeigen"
+  },
+  "fill": {
+    "message": "Ausfüllen"
+  },
+  "useHere": {
+    "message": "Hier nutzen"
+  },
+  "fillTitle": {
+    "message": "Code auf dieser Seite ausfüllen"
+  },
+  "useHereTitle": {
+    "message": "Auf dieser Seite ausfüllen und $1 für dieses Konto merken"
+  },
+  "scanPage": {
+    "message": "Seite nach QR-Code durchsuchen"
+  },
+  "scanPageTitle": {
+    "message": "Fügt den Zwei-Faktor-Einrichtungs-QR-Code auf dieser Seite hinzu"
+  },
+  "scanning": {
+    "message": "Suche nach einem QR-Code… bestätige dann in der Tanooki Auth-App."
+  },
+  "addAccountApp": {
+    "message": "Konto hinzufügen…"
+  },
+  "backupSettings": {
+    "message": "Backup & Einstellungen…"
+  },
+  "forHost": {
+    "message": "Für $1"
+  },
+  "noAccountHere": {
+    "message": "Für diese Website ist kein Konto gespeichert. Wähle unten eins aus und klicke auf „Hier nutzen“; beim nächsten Mal wird es automatisch ausgefüllt."
+  },
+  "otherAccounts": {
+    "message": "Andere Konten ($1)"
+  },
+  "allAccounts": {
+    "message": "Alle Konten ($1)"
+  },
+  "searchAccounts": {
+    "message": "Konten suchen…"
+  },
+  "noAccountsYet": {
+    "message": "Noch keine Konten. Öffne die Zwei-Faktor-Einrichtungsseite einer Website und klicke auf „Seite nach QR-Code durchsuchen“."
+  }
+}

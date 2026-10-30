@@ -1,0 +1,272 @@
+{
+  "extName": {
+    "message": "Tanooki Auth"
+  },
+  "extDescription": {
+    "message": "Fills two-factor codes from the Tanooki Auth desktop app, or from your phone, only on the website each account belongs to."
+  },
+  "errNoApp": {
+    "message": "Tanooki Auth isn't running. Open the Tanooki Auth app on this computer."
+  },
+  "errNotPaired": {
+    "message": "This browser isn't paired with Tanooki Auth yet."
+  },
+  "errLocked": {
+    "message": "Tanooki Auth is locked. Unlock it, then try again."
+  },
+  "errTimeout": {
+    "message": "Tanooki Auth didn't answer in time."
+  },
+  "errLookalike": {
+    "message": "This site looks like $1 but isn't. Tanooki Auth won't fill codes here."
+  },
+  "menuAddQr": {
+    "message": "Add to Tanooki Auth"
+  },
+  "errBadPage": {
+    "message": "Codes can only be filled on websites."
+  },
+  "errFramed": {
+    "message": "This page is inside another website, so Tanooki Auth won't fill it."
+  },
+  "errQuiet": {
+    "message": "Asked your phone a moment ago."
+  },
+  "errWrongSitePhone": {
+    "message": "Your phone sent a code for $1, which isn't this page. Nothing was filled."
+  },
+  "errWrongSitePhoneUnknown": {
+    "message": "Your phone sent a code for another website, which isn't this page. Nothing was filled."
+  },
+  "errSetupPageFirst": {
+    "message": "Open the website's two-factor setup page first."
+  },
+  "errMigration": {
+    "message": "That's a Google Authenticator transfer code. Use \"Add account…\" in the Tanooki Auth app to import it."
+  },
+  "errNoQrVisible": {
+    "message": "No setup QR code visible. Scroll so the whole QR code is on screen, then try again."
+  },
+  "errNotSavedHere": {
+    "message": "That account isn't saved for this website."
+  },
+  "errReload": {
+    "message": "Reload this page, then try again."
+  },
+  "errNoField": {
+    "message": "Couldn't find the code box on this page. Click into the box and try again, or use Copy and paste."
+  },
+  "errBadgeSeconds": {
+    "message": "Badge takes seconds only."
+  },
+  "noticeAdded": {
+    "message": "Added to Tanooki Auth."
+  },
+  "noticeDuplicate": {
+    "message": "That account is already in Tanooki Auth."
+  },
+  "noticeNotAdded": {
+    "message": "Not added."
+  },
+  "errNoQrInImage": {
+    "message": "Couldn't find a QR code in that image."
+  },
+  "errNotSetupQr": {
+    "message": "That QR code isn't a two-factor setup code."
+  },
+  "noticeCheckApp": {
+    "message": "Check Tanooki Auth to confirm."
+  },
+  "errOldApp": {
+    "message": "This version of Tanooki Auth can't add Google Authenticator transfer codes from the browser yet. Update Tanooki Auth, or use \"Add account…\" in the app."
+  },
+  "noticeCheckPhone": {
+    "message": "Check Tanooki Auth on your phone to confirm."
+  },
+  "linkOffline": {
+    "message": "Can't reach the Tanooki Auth server. Check your internet connection."
+  },
+  "linkUnpaired": {
+    "message": "Your phone is no longer paired. Pair it again."
+  },
+  "linkServerSaidNo": {
+    "message": "The Tanooki Auth server said no (HTTP $1)."
+  },
+  "linkNotLinked": {
+    "message": "No phone is paired with this browser."
+  },
+  "linkDenied": {
+    "message": "You tapped Deny on your phone."
+  },
+  "linkYourPhone": {
+    "message": "your phone"
+  },
+  "linkCodeTimeout": {
+    "message": "Your phone didn't answer in time. Open Tanooki Auth on your phone and try again."
+  },
+  "linkAddTimeout": {
+    "message": "Your phone didn't answer. Open Tanooki Auth on your phone. If it never asked you, update the app on your phone: older versions can't add accounts from the browser yet."
+  },
+  "toastFilled": {
+    "message": "Filled $1 code from Tanooki Auth"
+  },
+  "toastFilledNoName": {
+    "message": "Filled code from Tanooki Auth"
+  },
+  "dismiss": {
+    "message": "Dismiss"
+  },
+  "undo": {
+    "message": "Undo"
+  },
+  "addButton": {
+    "message": "+ Add to Tanooki Auth"
+  },
+  "checkTheApp": {
+    "message": "Check the Tanooki Auth app…"
+  },
+  "addedCheck": {
+    "message": "Added to Tanooki Auth ✓"
+  },
+  "alreadyIn": {
+    "message": "Already in Tanooki Auth"
+  },
+  "notAdded": {
+    "message": "Not added"
+  },
+  "connecting": {
+    "message": "Connecting…"
+  },
+  "tryAgain": {
+    "message": "Try again"
+  },
+  "usePhoneInstead": {
+    "message": "No desktop app here? Use my phone instead"
+  },
+  "pairingQrLabel": {
+    "message": "Pairing QR code. Scan it with Tanooki Auth on your phone."
+  },
+  "makingPairingCode": {
+    "message": "Making a pairing code…"
+  },
+  "waitingForPhone": {
+    "message": "Waiting for your phone…"
+  },
+  "phonePairSteps": {
+    "message": "On your phone, open Tanooki Auth, go to Settings, then \"Use with a browser\", and tap \"Pair a browser\". Point the camera at this code."
+  },
+  "cancel": {
+    "message": "Cancel"
+  },
+  "pairedPhoneHello": {
+    "message": "Paired. Your phone will ask you to approve each code."
+  },
+  "codeExpired": {
+    "message": "This code has expired."
+  },
+  "makeNewCode": {
+    "message": "Make a new code"
+  },
+  "usingYourPhone": {
+    "message": "Using your phone"
+  },
+  "yourPhone": {
+    "message": "Your phone"
+  },
+  "codesFromPhoneNoApp": {
+    "message": "The desktop app isn't running, so codes come from your phone."
+  },
+  "codesFromPhone": {
+    "message": "Codes come from your phone."
+  },
+  "getCodeFor": {
+    "message": "Get code for $1"
+  },
+  "checkPhoneApprove": {
+    "message": "Check your phone and tap Approve…"
+  },
+  "copy": {
+    "message": "Copy"
+  },
+  "copied": {
+    "message": "Copied"
+  },
+  "filledCode": {
+    "message": "Filled the $1 code ✓"
+  },
+  "noCodeBox": {
+    "message": "Couldn't find the code box on this page. Use Copy and paste it."
+  },
+  "openSignInPage": {
+    "message": "Open a website's sign-in page, then click the extension again."
+  },
+  "tryDesktopAgain": {
+    "message": "Try the desktop app again"
+  },
+  "unpairPhone": {
+    "message": "Unpair phone"
+  },
+  "pairWithApp": {
+    "message": "Pair with Tanooki Auth"
+  },
+  "pairNote": {
+    "message": "Connect this browser to the Tanooki Auth app on this computer. You only do this once."
+  },
+  "pair": {
+    "message": "Pair"
+  },
+  "startAgain": {
+    "message": "Start again"
+  },
+  "typeSixDigit": {
+    "message": "Tanooki Auth is now showing a 6-digit code. Type it here:"
+  },
+  "showCode": {
+    "message": "Show code"
+  },
+  "fill": {
+    "message": "Fill"
+  },
+  "useHere": {
+    "message": "Use here"
+  },
+  "fillTitle": {
+    "message": "Fill the code on this page"
+  },
+  "useHereTitle": {
+    "message": "Fill on this page, and remember $1 for this account"
+  },
+  "scanPage": {
+    "message": "Scan page for QR code"
+  },
+  "scanPageTitle": {
+    "message": "Adds the two-factor setup QR code showing on this page"
+  },
+  "scanning": {
+    "message": "Looking for a QR code… then check the Tanooki Auth app to confirm."
+  },
+  "addAccountApp": {
+    "message": "Add account…"
+  },
+  "backupSettings": {
+    "message": "Backup & settings…"
+  },
+  "forHost": {
+    "message": "For $1"
+  },
+  "noAccountHere": {
+    "message": "No account saved for this website. Pick one below and click \"Use here\"; it will be filled automatically next time."
+  },
+  "otherAccounts": {
+    "message": "Other accounts ($1)"
+  },
+  "allAccounts": {
+    "message": "All accounts ($1)"
+  },
+  "searchAccounts": {
+    "message": "Search accounts…"
+  },
+  "noAccountsYet": {
+    "message": "No accounts yet. Open a website's two-factor setup page and click \"Scan page for QR code\"."
+  }
+}

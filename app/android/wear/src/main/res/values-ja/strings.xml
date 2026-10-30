@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wear_empty">お気に入りはまだありません。\n\nスマホで Tanooki Auth を開き、アカウントに星を付けて、［設定］&gt;［ウィジェットとウォッチにコードを表示］をオンにしてください。</string>
+    <string name="wear_seconds">%1$d秒</string>
+</resources>

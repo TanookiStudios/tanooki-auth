@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import '../l10n/l10n.dart';
 
 /// Maddie's signature (the same signature.svg used across her apps), redrawn natively like
 /// Couchy's SignatureView: 330×116 viewBox, the SVG's rotate(-4 160 66) skewX(-8) flourish,
@@ -12,7 +13,7 @@ class Signature extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-        label: 'Signed, Maddie',
+        label: l10n.signatureLabel,
         image: true,
         child: CustomPaint(size: Size(width, width * 116 / 330), painter: _SignaturePainter(color)),
       );

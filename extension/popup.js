@@ -1,4 +1,7 @@
+const t = (key, ...subs) => chrome.i18n.getMessage(key, subs.map(String)); // _locales/<language>/messages.json
 const main = document.getElementById('main');
+main.firstElementChild.textContent = t('connecting');
+document.documentElement.lang = chrome.i18n.getUILanguage();
 const send = (msg) => chrome.runtime.sendMessage(msg);
 const el = (tag, attrs = {}, ...kids) => {
   const e = Object.assign(document.createElement(tag), attrs);
@@ -24,7 +27,7 @@ async function start() {
   if (s.state === 'noApp' && s.phone?.paired) return showPhone(s.phone, s.message);
   main.replaceChildren(
     el('p', { className: s.state === 'locked' ? 'msg' : 'err', textContent: s.message }),
-    el('button', { className: 'primary', textContent: 'Try again', onclick: start }),
+    el('button', { className: 'primary', textContent: t('tryAgain'), onclick: start }),
     ...(s.state === 'noApp' ? [usePhoneButton()] : []),
   );
 }
@@ -32,7 +35,7 @@ async function start() {
 // --- "Use my phone" (Premium in the app): codes come from Tanooki Auth on a paired phone. ---
 
 const usePhoneButton = () => el('div', { style: 'margin-top:12px' },
-  el('button', { className: 'link', textContent: 'No desktop app here? Use my phone instead', onclick: showPhonePairing }));
+  el('button', { className: 'link', textContent: t('usePhoneInstead'), onclick: showPhonePairing }));
 
 function drawQr(text) {
   const q = qrcode(0, 'M'); // smallest version that fits
@@ -47,33 +50,33 @@ function drawQr(text) {
   ctx.fillStyle = '#000';
   for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) ctx.fillRect(c * scale, r * scale, scale, scale);
   canvas.setAttribute('role', 'img');
-  canvas.setAttribute('aria-label', 'Pairing QR code. Scan it with Tanooki Auth on your phone.');
+  canvas.setAttribute('aria-label', t('pairingQrLabel'));
   return canvas;
 }
 
 async function showPhonePairing() {
-  main.replaceChildren(el('p', { className: 'msg', textContent: 'Making a pairing code…' }));
+  main.replaceChildren(el('p', { className: 'msg', textContent: t('makingPairingCode') }));
   const r = await send({ type: 'phoneStart' });
   if (r.error) {
-    main.replaceChildren(el('p', { className: 'err', textContent: r.message }), el('button', { className: 'primary', textContent: 'Try again', onclick: showPhonePairing }));
+    main.replaceChildren(el('p', { className: 'err', textContent: r.message }), el('button', { className: 'primary', textContent: t('tryAgain'), onclick: showPhonePairing }));
     return;
   }
-  const status = el('p', { className: 'msg', textContent: 'Waiting for your phone…' });
+  const status = el('p', { className: 'msg', textContent: t('waitingForPhone') });
   main.replaceChildren(
-    el('p', { className: 'msg', textContent: 'On your phone, open Tanooki Auth, go to Settings, then "Use with a browser", and tap "Pair a browser". Point the camera at this code.' }),
+    el('p', { className: 'msg', textContent: t('phonePairSteps') }),
     drawQr(r.qr),
     status,
-    el('button', { textContent: 'Cancel', onclick: async () => { await send({ type: 'phoneUnpair' }); start(); } }),
+    el('button', { textContent: t('cancel'), onclick: async () => { await send({ type: 'phoneUnpair' }); start(); } }),
   );
   for (;;) {
     await new Promise((res) => setTimeout(res, 2000));
     if (!document.body.contains(status)) return; // the user left this screen
     const c = await send({ type: 'phoneCheck' });
-    if (c.state === 'paired') return showPhone({ phoneName: c.phoneName }, null, 'Paired. Your phone will ask you to approve each code.');
+    if (c.state === 'paired') return showPhone({ phoneName: c.phoneName }, null, t('pairedPhoneHello'));
     if (c.state === 'expired' || c.error === 'unpaired') {
       status.className = 'err';
-      status.textContent = 'This code has expired.';
-      main.append(el('button', { className: 'primary', textContent: 'Make a new code', onclick: showPhonePairing }));
+      status.textContent = t('codeExpired');
+      main.append(el('button', { className: 'primary', textContent: t('makeNewCode'), onclick: showPhonePairing }));
       return;
     }
     if (c.error) { status.className = 'err'; status.textContent = c.message; }
@@ -84,43 +87,43 @@ function showPhone(phone, appMessage, hello) {
   const host = (() => { try { const u = new URL(tab?.url || ''); return /^https?:$/.test(u.protocol) ? u.hostname.replace(/^www\./, '') : ''; } catch { return ''; } })();
   const status = el('p', { className: 'msg', textContent: hello || '' });
   const parts = [
-    el('div', { className: 'caps', textContent: 'Using your phone' }),
+    el('div', { className: 'caps', textContent: t('usingYourPhone') }),
     el('div', { className: 'card' },
-      el('div', { className: 'title', textContent: phone.phoneName || 'Your phone' }),
-      el('div', { className: 'sub', textContent: appMessage ? 'The desktop app isn\'t running, so codes come from your phone.' : 'Codes come from your phone.' })),
+      el('div', { className: 'title', textContent: phone.phoneName || t('yourPhone') }),
+      el('div', { className: 'sub', textContent: appMessage ? t('codesFromPhoneNoApp') : t('codesFromPhone') })),
   ];
   if (host) {
-    const get = el('button', { className: 'primary', textContent: `Get code for ${host}` });
+    const get = el('button', { className: 'primary', textContent: t('getCodeFor', host) });
     const codeEl = el('div', { className: 'code' });
     get.onclick = async () => {
       get.disabled = true;
       codeEl.textContent = '';
       status.className = 'msg';
-      status.textContent = 'Check your phone and tap Approve…';
+      status.textContent = t('checkPhoneApprove');
       const r = await send({ type: 'phoneFillTab', tabId: tab.id, tabUrl: tab.url });
       get.disabled = false;
       if (r.error) { status.className = 'err'; status.textContent = r.message; return; }
       codeEl.textContent = group(r.code);
-      const copy = el('button', { textContent: 'Copy', onclick: async () => { await navigator.clipboard.writeText(r.code); copy.textContent = 'Copied'; } });
+      const copy = el('button', { textContent: t('copy'), onclick: async () => { await navigator.clipboard.writeText(r.code); copy.textContent = t('copied'); } });
       codeEl.after(copy);
-      status.textContent = r.filled ? `Filled the ${r.issuer || host} code ✓` : 'Couldn\'t find the code box on this page. Use Copy and paste it.';
+      status.textContent = r.filled ? t('filledCode', r.issuer || host) : t('noCodeBox');
     };
     parts.push(el('div', { className: 'row', style: 'margin-top:4px' }, get, codeEl));
   } else {
-    parts.push(el('p', { className: 'msg', textContent: 'Open a website\'s sign-in page, then click the extension again.' }));
+    parts.push(el('p', { className: 'msg', textContent: t('openSignInPage') }));
   }
   parts.push(status, el('div', { className: 'row', style: 'gap:6px;margin-top:12px' },
-    el('button', { textContent: 'Try the desktop app again', onclick: start }),
+    el('button', { textContent: t('tryDesktopAgain'), onclick: start }),
     el('button', {
-      textContent: 'Unpair phone',
+      textContent: t('unpairPhone'),
       onclick: async () => { await send({ type: 'phoneUnpair' }); start(); },
     })));
   main.replaceChildren(...parts);
 }
 
 function showPairing() {
-  const go = el('button', { className: 'primary', textContent: 'Pair with Tanooki Auth' });
-  const note = el('p', { className: 'msg', textContent: 'Connect this browser to the Tanooki Auth app on this computer. You only do this once.' });
+  const go = el('button', { className: 'primary', textContent: t('pairWithApp') });
+  const note = el('p', { className: 'msg', textContent: t('pairNote') });
   main.replaceChildren(note, go, usePhoneButton());
   go.onclick = async () => {
     go.disabled = true;
@@ -132,19 +135,19 @@ function showPairing() {
     }
     const input = el('input', { className: 'code-input', inputMode: 'numeric', maxLength: 7, placeholder: '000 000', autocomplete: 'off' });
     const err = el('p', { className: 'err' });
-    const ok = el('button', { className: 'primary', textContent: 'Pair' });
+    const ok = el('button', { className: 'primary', textContent: t('pair') });
     const submit = async () => {
       ok.disabled = true;
       const f = await send({ type: 'pairFinish', code: input.value });
       if (!f.error) return showAccounts();
       err.textContent = f.message;
       ok.disabled = false;
-      if (f.error === 'pairing') { input.disabled = true; main.append(el('button', { textContent: 'Start again', onclick: showPairing })); }
+      if (f.error === 'pairing') { input.disabled = true; main.append(el('button', { textContent: t('startAgain'), onclick: showPairing })); }
     };
     ok.onclick = submit;
     input.onkeydown = (e) => { if (e.key === 'Enter') submit(); };
     main.replaceChildren(
-      el('p', { className: 'msg', textContent: 'Tanooki Auth is now showing a 6-digit code. Type it here:' }),
+      el('p', { className: 'msg', textContent: t('typeSixDigit') }),
       input, err, el('div', { className: 'row' }, el('div', { className: 'grow' }), ok),
     );
     input.focus();
@@ -191,7 +194,7 @@ function accountCard(a, { matching, host }) {
   if (a.type === 'hotp') {
     // Each counter-based code is single-use, so don't spend one just because the popup opened.
     codeEl.replaceChildren(el('button', {
-      textContent: 'Show code',
+      textContent: t('showCode'),
       onclick: async () => {
         const r = await send({ type: 'code', accountId: a.id });
         c.code = r.code || '';
@@ -199,7 +202,7 @@ function accountCard(a, { matching, host }) {
       },
     }));
   }
-  const copy = el('button', { textContent: 'Copy' });
+  const copy = el('button', { textContent: t('copy') });
   copy.onclick = async () => {
     if (!c.code) {
       const r = await send({ type: 'code', accountId: a.id });
@@ -208,12 +211,12 @@ function accountCard(a, { matching, host }) {
       codeEl.textContent = group(r.code);
     }
     await navigator.clipboard.writeText(c.code);
-    copy.textContent = 'Copied';
+    copy.textContent = t('copied');
   };
   const buttons = [copy];
   if (host) {
-    const fill = el('button', { className: matching ? 'primary' : '', textContent: matching ? 'Fill' : 'Use here' });
-    fill.title = matching ? 'Fill the code on this page' : `Fill on this page, and remember ${host} for this account`;
+    const fill = el('button', { className: matching ? 'primary' : '', textContent: matching ? t('fill') : t('useHere') });
+    fill.title = matching ? t('fillTitle') : t('useHereTitle', host);
     fill.onclick = async () => {
       const r = await send({ type: 'fillTab', accountId: a.id, tabId: tab.id, tabUrl: tab.url, remember: !matching });
       if (r.error) showStatus(r.message, true);
@@ -238,16 +241,16 @@ function accountCard(a, { matching, host }) {
 
 function actions(host) {
   const status = statusEl;
-  const scan = el('button', { className: 'primary', textContent: 'Scan page for QR code' });
-  scan.title = 'Adds the two-factor setup QR code showing on this page';
+  const scan = el('button', { className: 'primary', textContent: t('scanPage') });
+  scan.title = t('scanPageTitle');
   scan.onclick = async () => {
     scan.disabled = true;
     status.className = 'msg';
-    status.textContent = 'Looking for a QR code… then check the Tanooki Auth app to confirm.';
+    status.textContent = t('scanning');
     const r = await send({ type: 'scanTab', windowId: tab.windowId, tabUrl: tab.url });
     scan.disabled = false;
     if (r.error) { status.className = 'err'; status.textContent = r.message; return; }
-    status.textContent = r.accepted ? 'Added to Tanooki Auth ✓' : r.reason === 'duplicate' ? 'That account is already in Tanooki Auth.' : 'Not added.';
+    status.textContent = r.accepted ? t('addedCheck') : r.reason === 'duplicate' ? t('noticeDuplicate') : t('noticeNotAdded');
     if (r.accepted) showAccounts();
   };
   const open = (screen, label) => el('button', {
@@ -259,7 +262,7 @@ function actions(host) {
   });
   return [
     el('div', { className: 'row', style: 'gap:6px;flex-wrap:wrap;margin-top:12px' },
-      scan, open('add', 'Add account…'), open('settings', 'Backup & settings…')),
+      scan, open('add', t('addAccountApp')), open('settings', t('backupSettings'))),
     status,
   ];
 }
@@ -276,23 +279,23 @@ async function showAccounts() {
 
   if (r.warning) parts.push(el('p', { className: 'err', textContent: r.warning }));
   if (host) {
-    parts.push(el('div', { className: 'caps', textContent: `For ${host}` }));
+    parts.push(el('div', { className: 'caps', textContent: t('forHost', host) }));
     parts.push(...(here.length
       ? here.map((a) => accountCard(a, { matching: true, host }))
-      : [el('p', { className: 'msg', textContent: 'No account saved for this website. Pick one below and click "Use here"; it will be filled automatically next time.' })]));
+      : [el('p', { className: 'msg', textContent: t('noAccountHere') })]));
   }
 
   const list = el('div', { className: 'list' }, ...rest.map((a) => accountCard(a, { matching: false, host })));
-  parts.push(el('div', { className: 'caps', textContent: `${host ? 'Other accounts' : 'All accounts'} (${rest.length})` }));
+  parts.push(el('div', { className: 'caps', textContent: host ? t('otherAccounts', rest.length) : t('allAccounts', rest.length) }));
   if (rest.length > 4) {
-    const search = el('input', { placeholder: 'Search accounts…', style: 'margin-bottom:8px' });
+    const search = el('input', { placeholder: t('searchAccounts'), style: 'margin-bottom:8px' });
     search.oninput = () => {
       const q = search.value.trim().toLowerCase();
       for (const card of list.children) card.style.display = card.dataset.search.includes(q) ? '' : 'none';
     };
     parts.push(search);
   }
-  if (!accounts.length) parts.push(el('p', { className: 'msg', textContent: 'No accounts yet. Open a website\'s two-factor setup page and click "Scan page for QR code".' }));
+  if (!accounts.length) parts.push(el('p', { className: 'msg', textContent: t('noAccountsYet') }));
   parts.push(list, ...actions(host));
   main.replaceChildren(...parts);
   refreshCodes();

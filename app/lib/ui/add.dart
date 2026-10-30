@@ -27,6 +27,7 @@ import 'premium.dart';
 import 'security_ui.dart' show proofName;
 import 'share_ui.dart';
 import 'theme.dart';
+import '../l10n/l10n.dart';
 
 bool get hasCamera => Platform.isIOS || Platform.isAndroid || Platform.isMacOS;
 bool get isPhone => Platform.isIOS || Platform.isAndroid;
@@ -40,25 +41,25 @@ List<String> folderNames(Iterable<Account> accounts) =>
 /// a list of names for a Google Authenticator transfer with many.
 Future<bool> confirmAddAccounts(BuildContext context, List<Account> accounts) async {
   if (accounts.length == 1) {
-    return showAccountDialog(context, accounts.single, title: 'Add from your browser?', confirm: 'Add');
+    return showAccountDialog(context, accounts.single, title: l10n.addFromBrowserOne, confirm: l10n.commonAdd);
   }
   String name(Account a) => a.issuer.isEmpty ? a.label : a.label.isEmpty ? a.issuer : '${a.issuer} (${a.label})';
   return await showDialog<bool>(
         context: context,
         barrierDismissible: false,
         builder: (c) => AlertDialog(
-          title: Text('Add ${accounts.length} accounts from your browser?'),
+          title: Text(l10n.addFromBrowserMany(accounts.length)),
           content: SizedBox(
             width: 360,
             child: ListView(shrinkWrap: true, children: [
-              const Text('From a Google Authenticator transfer code:'),
+              Text(l10n.addFromGoogleTransfer),
               const SizedBox(height: 8),
               for (final a in accounts) Padding(padding: const EdgeInsets.symmetric(vertical: 2), child: Text('• ${name(a)}')),
             ]),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-            FilledButton(onPressed: () => Navigator.pop(c, true), child: Text('Add ${accounts.length}')),
+            TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
+            FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(l10n.addCount(accounts.length))),
           ],
         ),
       ) ??
@@ -109,7 +110,7 @@ Future<bool> showAccountDialog(BuildContext context, Account a,
     return Semantics(
       button: true,
       selected: on,
-      label: value == null ? 'No color' : '$name color',
+      label: value == null ? l10n.addNoColor : l10n.addColorName(name),
       excludeSemantics: true,
       child: InkResponse(
         key: Key('color-${value ?? 'none'}'),
@@ -149,13 +150,13 @@ Future<bool> showAccountDialog(BuildContext context, Account a,
               Text(groupCode(draft().codeAt(DateTime.now())),
                   key: const Key('previewCode'), textAlign: TextAlign.center, style: Theme.of(c).textTheme.headlineMedium),
               const SizedBox(height: 8),
-              TextField(controller: issuer, decoration: const InputDecoration(labelText: 'Service (e.g. GitHub)')),
-              TextField(controller: label, decoration: const InputDecoration(labelText: 'Account (e.g. your email)')),
+              TextField(controller: issuer, decoration: InputDecoration(labelText: l10n.addServiceLabel)),
+              TextField(controller: label, decoration: InputDecoration(labelText: l10n.addAccountLabel)),
               TextField(
                 controller: domains,
-                decoration: const InputDecoration(
-                  labelText: 'Website (optional)',
-                  helperText: 'e.g. github.com. The browser extension only fills codes here.',
+                decoration: InputDecoration(
+                  labelText: l10n.addWebsiteLabel,
+                  helperText: l10n.addWebsiteHelp,
                   helperMaxLines: 2,
                 ),
               ),
@@ -168,25 +169,25 @@ Future<bool> showAccountDialog(BuildContext context, Account a,
               ),
               TextField(
                 controller: tags,
-                decoration: const InputDecoration(
-                  labelText: 'Tags (optional)',
-                  helperText: 'e.g. work, games. Separate with commas.',
+                decoration: InputDecoration(
+                  labelText: l10n.addTagsLabel,
+                  helperText: l10n.addTagsHelp,
                 ),
               ),
               TextField(
                 key: const Key('folderField'),
                 controller: folder,
                 decoration: InputDecoration(
-                  labelText: 'Folder (optional)',
-                  helperText: 'e.g. Work. Leave empty for no folder.',
+                  labelText: l10n.addFolderLabel,
+                  helperText: l10n.addFolderHelp,
                   suffixIcon: folders.isEmpty
                       ? null
                       : PopupMenuButton<String>(
-                          tooltip: 'Pick a folder',
+                          tooltip: l10n.addPickFolder,
                           icon: const Icon(Icons.folder_open),
                           onSelected: (f) => setState(() => folder.text = f),
                           itemBuilder: (_) => [
-                            const PopupMenuItem(value: '', child: Text('No folder')),
+                            PopupMenuItem(value: '', child: Text(l10n.addNoFolder)),
                             for (final f in folders) PopupMenuItem(value: f, child: Text(f)),
                           ],
                         ),
@@ -196,10 +197,10 @@ Future<bool> showAccountDialog(BuildContext context, Account a,
                 controller: notes,
                 minLines: 1,
                 maxLines: 4,
-                decoration: const InputDecoration(labelText: 'Notes (optional)'),
+                decoration: InputDecoration(labelText: l10n.addNotesLabel),
               ),
               const SizedBox(height: 12),
-              Text('Color (optional)', style: TextStyle(fontSize: 12, color: Palette.muted)),
+              Text(l10n.addColorLabel, style: TextStyle(fontSize: 12, color: Palette.muted)),
               Wrap(children: [
                 for (var i = 0; i < accountColors.length; i++) swatch(accountColors[i], accountColorNames[i], setState),
                 swatch(null, '', setState),
@@ -207,9 +208,9 @@ Future<bool> showAccountDialog(BuildContext context, Account a,
               TextField(
                 key: const Key('emojiField'),
                 controller: emoji,
-                decoration: const InputDecoration(
-                  labelText: 'Emoji (optional)',
-                  helperText: 'Shown instead of the logo, here and on widgets and the watch.',
+                decoration: InputDecoration(
+                  labelText: l10n.addEmojiLabel,
+                  helperText: l10n.addEmojiHelp,
                   helperMaxLines: 2,
                 ),
               ),
@@ -217,7 +218,7 @@ Future<bool> showAccountDialog(BuildContext context, Account a,
                 for (final e in emojiSuggestions)
                   Semantics(
                     button: true,
-                    label: 'Use $e',
+                    label: l10n.addUseEmoji(e),
                     excludeSemantics: true,
                     child: InkResponse(
                       radius: 24,
@@ -230,21 +231,21 @@ Future<bool> showAccountDialog(BuildContext context, Account a,
               SwitchListTile(
                 key: const Key('requireAuthSwitch'),
                 contentPadding: EdgeInsets.zero,
-                title: Text('Ask for $proofName before showing this code'),
-                subtitle: const Text('The code stays hidden on the list, and widgets, the watch and Quick pick never show it.'),
+                title: Text(l10n.addRequireAuth(proofName)),
+                subtitle: Text(l10n.addRequireAuthHelp),
                 value: requireAuth,
                 onChanged: (on) => setState(() => requireAuth = on),
               ),
               SwitchListTile(
                 key: const Key('travelHiddenSwitch'),
                 contentPadding: EdgeInsets.zero,
-                title: Text(premium.value ? 'Hide in travel mode' : 'Hide in travel mode (Premium)'),
-                subtitle: Text(travelNote ?? 'When travel mode is on (Settings), this account disappears from the app until you turn it off.',
+                title: Text(premium.value ? l10n.addTravelHide : l10n.addTravelHidePremium),
+                subtitle: Text(travelNote ?? l10n.addTravelHideHelp,
                     style: travelNote == null ? null : TextStyle(color: Palette.red)),
                 value: travelHidden,
                 onChanged: (on) => setState(() {
                   if (on && !premium.value) {
-                    travelNote = 'Travel mode is part of Premium. Get it in Settings > Get Premium.';
+                    travelNote = l10n.addTravelNeedsPremium;
                   } else {
                     travelHidden = on;
                   }
@@ -256,44 +257,44 @@ Future<bool> showAccountDialog(BuildContext context, Account a,
                 child: TextButton.icon(
                   onPressed: () => setState(() => advanced = !advanced),
                   icon: Icon(advanced ? Icons.expand_less : Icons.expand_more),
-                  label: const Text('Advanced'),
+                  label: Text(l10n.addAdvanced),
                 ),
               ),
               if (advanced) ...[
                 Text(
                   existing
-                      ? 'Only change these if the website told you to. Wrong settings make wrong codes, and the website will refuse them.'
-                      : 'Most websites use the normal settings. Only change these if the website told you to.',
+                      ? l10n.addAdvancedExisting
+                      : l10n.addAdvancedNew,
                   style: TextStyle(fontSize: 12, color: Palette.muted),
                 ),
-                choice<OtpType>('Type', type, const {
-                  OtpType.totp: 'Time-based (normal)',
-                  OtpType.hotp: 'Counter-based (new code when you ask)',
+                choice<OtpType>(l10n.addType, type, {
+                  OtpType.totp: l10n.addTypeTotp,
+                  OtpType.hotp: l10n.addTypeHotp,
                   OtpType.steam: 'Steam Guard',
                 }, (v) => setState(() => type = v)),
                 if (type != OtpType.steam) ...[
-                  choice<int>('Digits', digits, const {6: '6', 7: '7', 8: '8'}, (v) => setState(() => digits = v)),
-                  choice<OtpAlgorithm>('Algorithm', algorithm, const {
-                    OtpAlgorithm.sha1: 'SHA-1 (normal)',
+                  choice<int>(l10n.addDigits, digits, const {6: '6', 7: '7', 8: '8'}, (v) => setState(() => digits = v)),
+                  choice<OtpAlgorithm>(l10n.addAlgorithm, algorithm, {
+                    OtpAlgorithm.sha1: l10n.addSha1Normal,
                     OtpAlgorithm.sha256: 'SHA-256',
                     OtpAlgorithm.sha512: 'SHA-512',
                   }, (v) => setState(() => algorithm = v)),
                 ],
                 if (type != OtpType.hotp)
-                  choice<int>('New code every', period, {30: '30 seconds', 60: '60 seconds', if (period != 30 && period != 60) period: '$period seconds'},
+                  choice<int>(l10n.addPeriod, period, {for (final p in {30, 60, period}) p: l10n.addSeconds(p)},
                       (v) => setState(() => period = v)),
                 if (type == OtpType.hotp)
                   TextField(
                     controller: counter,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Counter', helperText: 'How many codes have been used so far'),
+                    decoration: InputDecoration(labelText: l10n.addCounter, helperText: l10n.addCounterHelp),
                     onChanged: (_) => setState(() {}),
                   ),
               ],
             ]),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
             FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(confirm)),
           ],
         ),
@@ -376,7 +377,7 @@ class _AddScreenState extends State<AddScreen> {
     if (shared != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => shared.trim().startsWith(sharePrefix)
           ? _fromText(shared)
-          : _say('That file isn\'t a Tanooki Auth shared account. Ask the person to share it again.'));
+          : _say(l10n.addNotASharedFile));
     }
   }
 
@@ -410,11 +411,11 @@ class _AddScreenState extends State<AddScreen> {
   Future<void> _confirmAndSave(Account a) async {
     final dupe = widget.vault.live.where((x) => x.secret == a.secret).firstOrNull;
     if (dupe != null) {
-      _say('${accountTitle(dupe)} is already in your list.');
+      _say(l10n.addAlreadyInList(accountTitle(dupe)));
       return;
     }
     if (!mounted) return;
-    if (!await showAccountDialog(context, a, title: 'Add this account?', confirm: 'Add', folders: folderNames(widget.vault.visible))) return;
+    if (!await showAccountDialog(context, a, title: l10n.addThisAccount, confirm: l10n.commonAdd, folders: folderNames(widget.vault.visible))) return;
     widget.vault.accounts
       ..removeWhere((x) => x.secret == a.secret) // an old copy in Trash
       ..add(a);
@@ -424,7 +425,7 @@ class _AddScreenState extends State<AddScreen> {
 
   Future<void> _scan() async {
     if (!hasCamera) {
-      _say('Windows can\'t use a camera in Tanooki Auth. Open a picture of the QR code or paste the setup link instead.');
+      _say(l10n.addNoCameraWindows);
       return;
     }
     final text = await Navigator.push<String>(context, MaterialPageRoute(builder: (_) => const ScanScreen()));
@@ -435,12 +436,11 @@ class _AddScreenState extends State<AddScreen> {
     final go = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Move from Google Authenticator'),
-        content: const Text(
-            'On the device with Google Authenticator:\n\n1. Open Google Authenticator.\n2. Tap the menu (☰ or ⋮), then "Transfer accounts", then "Export accounts".\n3. Pick the accounts and tap Next. It shows a QR code.\n\nThen scan that QR code here. If it shows several QR codes, scan each one.'),
+        title: Text(l10n.addFromGoogle),
+        content: Text(l10n.addFromGoogleSteps),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(hasCamera ? 'Scan' : 'Open picture')),
+          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(hasCamera ? l10n.addScan : l10n.addOpenPicture)),
         ],
       ),
     );
@@ -456,7 +456,7 @@ class _AddScreenState extends State<AddScreen> {
     try {
       text = await Isolate.run(() => decodeQrImage(bytes));
     } on FormatException catch (e) {
-      _say(e.message);
+      _say(qrImageError(e));
       return;
     }
     await _fromText(text);
@@ -475,7 +475,7 @@ class _AddScreenState extends State<AddScreen> {
   }
 
   Future<void> _scanScreen() async {
-    _say('Looking for a QR code on your screen…');
+    _say(l10n.addLookingOnScreen);
     final String text;
     try {
       text = await scanScreenForQr();
@@ -486,10 +486,9 @@ class _AddScreenState extends State<AddScreen> {
         await _explainScreenPermission();
       } else {
         _say(switch (e.failure) {
-          ScreenScanFailure.noQr =>
-            'No QR code found on your screen. Make sure the whole code is showing and not covered by another window, then try again.',
-          ScreenScanFailure.unsupported => 'Scanning the screen needs macOS 14 (Sonoma) or newer. Take a screenshot and use "Open a picture" instead.',
-          _ => 'Couldn\'t take a picture of the screen. Take a screenshot and use "Open a picture" instead.',
+          ScreenScanFailure.noQr => l10n.addScreenNoQr,
+          ScreenScanFailure.unsupported => l10n.addScreenUnsupported,
+          _ => l10n.addScreenFailed,
         });
       }
       return;
@@ -497,7 +496,7 @@ class _AddScreenState extends State<AddScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     if (!['otpauth://', 'otpauth-migration://', 'steam://', sharePrefix].any(text.startsWith)) {
-      _say('Found a QR code on your screen, but it isn\'t a two-factor setup code.');
+      _say(l10n.addScreenWrongQr);
       return;
     }
     await _fromText(text);
@@ -506,15 +505,9 @@ class _AddScreenState extends State<AddScreen> {
   Future<void> _explainScreenPermission() => showDialog<void>(
         context: context,
         builder: (c) => AlertDialog(
-          title: const Text('Let Tanooki Auth see your screen'),
-          content: const Text(
-              'To read a QR code off your screen, your Mac needs to let Tanooki Auth take a picture of it. Tanooki Auth only looks when you press "Scan my screen", and the picture never leaves this Mac.\n\n'
-              '1. Open System Settings (the gear icon in the Dock, or Apple menu > System Settings).\n'
-              '2. Click "Privacy & Security" in the left column.\n'
-              '3. Click "Screen & System Audio Recording".\n'
-              '4. Turn on the switch next to Tanooki Auth. If it isn\'t in the list, click +, pick Tanooki Auth from Applications, and turn it on.\n'
-              '5. Your Mac will ask to quit Tanooki Auth. Click "Quit & Reopen", then press "Scan my screen" again.'),
-          actions: [FilledButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
+          title: Text(l10n.addScreenPermissionTitle),
+          content: Text(l10n.addScreenPermissionSteps),
+          actions: [FilledButton(onPressed: () => Navigator.pop(c), child: Text(l10n.commonOk))],
         ),
       );
 
@@ -524,18 +517,18 @@ class _AddScreenState extends State<AddScreen> {
     final text = await showDialog<String>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Paste setup links'),
+        title: Text(l10n.addPasteLinksTitle),
         content: TextField(
           controller: field,
           autofocus: true,
           minLines: 3,
           maxLines: 10,
           keyboardType: TextInputType.multiline,
-          decoration: const InputDecoration(hintText: 'otpauth://totp/...\nOne link per line. You can paste many at once.'),
+          decoration: InputDecoration(hintText: l10n.addPasteLinksHint),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(c, field.text.trim()), child: const Text('Next')),
+          TextButton(onPressed: () => Navigator.pop(c), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(c, field.text.trim()), child: Text(l10n.commonNext)),
         ],
       ),
     );
@@ -548,8 +541,8 @@ class _AddScreenState extends State<AddScreen> {
   Future<void> _pasteMany(String text) async {
     final r = parseOtpauthLines(text, brandName: brandTitle);
     if (r.accounts.isNotEmpty &&
-        !await confirmImport(context, 'Add ${r.accounts.length} accounts?', r.accounts,
-            note: r.problems.isEmpty ? null : '${r.problems.length} line(s) can\'t be used; you\'ll see which after.')) {
+        !await confirmImport(context, l10n.addManyTitle(r.accounts.length), r.accounts,
+            note: r.problems.isEmpty ? null : l10n.addManyBadLines(r.problems.length))) {
       return;
     }
     if (!mounted) return;
@@ -563,20 +556,20 @@ class _AddScreenState extends State<AddScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Enter setup key'),
+        title: Text(l10n.addEnterKey),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(controller: issuer, decoration: const InputDecoration(labelText: 'Service (e.g. GitHub)')),
-          TextField(controller: label, decoration: const InputDecoration(labelText: 'Account (e.g. your email)')),
+          TextField(controller: issuer, decoration: InputDecoration(labelText: l10n.addServiceLabel)),
+          TextField(controller: label, decoration: InputDecoration(labelText: l10n.addAccountLabel)),
           TextField(
             controller: secret,
-            decoration: const InputDecoration(labelText: 'Setup key', helperText: 'The letters and numbers the website shows'),
+            decoration: InputDecoration(labelText: l10n.addSetupKey, helperText: l10n.addSetupKeyHelp),
             autocorrect: false,
             enableSuggestions: false,
           ),
         ]),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Next')),
+          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
+          FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(l10n.commonNext)),
         ],
       ),
     );
@@ -585,7 +578,7 @@ class _AddScreenState extends State<AddScreen> {
     try {
       base32Decode(key);
     } on FormatException {
-      _say('That setup key isn\'t valid. It should only contain letters A–Z and numbers 2–7.');
+      _say(l10n.addBadKey);
       return;
     }
     await _confirmAndSave(Account(id: newId(), issuer: issuer.text.trim(), label: label.text.trim(), secret: key));
@@ -594,64 +587,62 @@ class _AddScreenState extends State<AddScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add account')),
+      appBar: AppBar(title: Text(l10n.addTitle)),
       body: ListView(children: [
         ListTile(
           leading: Icon(Icons.qr_code_scanner, color: hasCamera ? null : Theme.of(context).disabledColor),
-          title: const Text('Scan QR code'),
-          subtitle: Text(hasCamera
-              ? 'Point the camera at the code the website shows'
-              : 'No camera support on ${Platform.isLinux ? 'Linux' : 'Windows'}'),
+          title: Text(l10n.addScanQr),
+          subtitle: Text(hasCamera ? l10n.addScanQrHelp : l10n.addNoCameraOn(Platform.isLinux ? 'Linux' : 'Windows')),
           onTap: _scan,
         ),
         if (canScanScreen)
           ListTile(
             leading: const Icon(Icons.screenshot_monitor),
-            title: const Text('Scan my screen'),
-            subtitle: const Text('Reads a QR code showing anywhere on your screen'),
+            title: Text(l10n.addScanScreen),
+            subtitle: Text(l10n.addScanScreenHelp),
             onTap: _scanScreen,
           ),
         if (Platform.isLinux)
-          const ListTile(
+          ListTile(
             enabled: false,
-            leading: Icon(Icons.screenshot_monitor),
-            title: Text('Scan my screen'),
-            subtitle: Text('Not available on Linux yet. Open a screenshot of the QR code instead.'),
+            leading: const Icon(Icons.screenshot_monitor),
+            title: Text(l10n.addScanScreen),
+            subtitle: Text(l10n.addScanScreenLinux),
           ),
         ListTile(
           leading: const Icon(Icons.image_outlined),
-          title: Text(isPhone ? 'Scan a QR code from your photos' : 'Open a picture of a QR code'),
-          subtitle: Text(isPhone ? 'Pick a screenshot of the setup page' : 'A screenshot of the setup page works'),
+          title: Text(isPhone ? l10n.addFromPhotos : l10n.addFromPicture),
+          subtitle: Text(isPhone ? l10n.addFromPhotosHelp : l10n.addFromPictureHelp),
           onTap: _image,
         ),
         ListTile(
           leading: const Icon(Icons.link),
-          title: const Text('Paste setup link'),
-          subtitle: const Text('Links starting with otpauth://, one or many'),
+          title: Text(l10n.addPasteLink),
+          subtitle: Text(l10n.addPasteLinkHelp),
           onTap: _paste,
         ),
         ListTile(
           leading: const Icon(Icons.people_outline),
-          title: const Text('Open a shared account'),
-          subtitle: const Text('A .$shareExtension file someone sent you'),
+          title: Text(l10n.addOpenShared),
+          subtitle: Text(l10n.addOpenSharedHelp(shareExtension)),
           onTap: _openShareFile,
         ),
         ListTile(
           leading: const Icon(Icons.swap_horiz),
-          title: const Text('Move from Google Authenticator'),
-          subtitle: const Text('Bring all your accounts across at once'),
+          title: Text(l10n.addFromGoogle),
+          subtitle: Text(l10n.addFromGoogleHelp),
           onTap: _fromGoogle,
         ),
         ListTile(
           leading: const Icon(Icons.move_down),
-          title: const Text('Move from another app'),
-          subtitle: const Text('Aegis, 2FAS, Authy, Bitwarden, 1Password, Apple Passwords, Microsoft'),
+          title: Text(l10n.addFromOtherApp),
+          subtitle: Text(l10n.addFromOtherAppHelp),
           onTap: _fromOtherApp,
         ),
         ListTile(
           leading: const Icon(Icons.keyboard_outlined),
-          title: const Text('Enter setup key'),
-          subtitle: const Text('Type the key shown under "can\'t scan the code?"'),
+          title: Text(l10n.addEnterKey),
+          subtitle: Text(l10n.addEnterKeyHelp),
           onTap: _manual,
         ),
       ]),
@@ -660,11 +651,11 @@ class _AddScreenState extends State<AddScreen> {
 }
 
 class ScanScreen extends StatefulWidget {
-  const ScanScreen({super.key, this.prefixes = const ['otpauth://', 'otpauth-migration://', 'steam://', sharePrefix], this.title = 'Scan QR code', this.wrongCode = 'That QR code isn\'t a two-factor setup code.'});
+  const ScanScreen({super.key, this.prefixes = const ['otpauth://', 'otpauth-migration://', 'steam://', sharePrefix], this.title, this.wrongCode});
   /// QR codes this scan accepts; anything else shows [wrongCode].
   final List<String> prefixes;
-  final String title;
-  final String wrongCode;
+  final String? title;
+  final String? wrongCode;
 
   @override
   State<ScanScreen> createState() => _ScanScreenState();
@@ -684,14 +675,14 @@ class _ScanScreenState extends State<ScanScreen> {
         Navigator.pop(context, v);
         return;
       }
-      setState(() => _hint = widget.wrongCode);
+      setState(() => _hint = widget.wrongCode ?? l10n.addWrongQr);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: AppBar(title: Text(widget.title ?? l10n.addScanQr)),
       body: Stack(children: [
         MobileScanner(
           onDetect: _onDetect,
@@ -700,8 +691,8 @@ class _ScanScreenState extends State<ScanScreen> {
               padding: const EdgeInsets.all(24),
               child: Text(
                 error.errorCode == MobileScannerErrorCode.permissionDenied
-                    ? 'Tanooki Auth isn\'t allowed to use the camera. Turn on camera access for Tanooki Auth in your device\'s Settings, or go back and use a picture or the setup key instead.'
-                    : 'The camera couldn\'t start (${error.errorCode.name}). Go back and use a picture or the setup key instead.',
+                    ? l10n.addCameraDenied
+                    : l10n.addCameraFailed(error.errorCode.name),
                 textAlign: TextAlign.center,
               ),
             ),

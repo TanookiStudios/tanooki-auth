@@ -17,6 +17,7 @@ import 'clipboard.dart';
 import 'premium.dart';
 import 'sync_ui.dart' show QrView, agoText;
 import 'theme.dart';
+import '../l10n/l10n.dart';
 
 /// One sync pass with the app's license renewal wired in. Returns a sentence when it failed, else null.
 Future<String?> runTeamSync(Vault v) async {
@@ -100,7 +101,7 @@ class _TeamScreenState extends State<TeamScreen> {
         title: Text(title),
         content: TextField(controller: field, autofocus: true, maxLines: 3, autocorrect: false, decoration: InputDecoration(hintText: hint)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(c), child: Text(l10n.commonCancel)),
           FilledButton(onPressed: () => Navigator.pop(c, field.text.trim()), child: Text(button)),
         ],
       ),
@@ -114,7 +115,7 @@ class _TeamScreenState extends State<TeamScreen> {
           title: Text(title),
           content: Text(body),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
             FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(button)),
           ],
         ),
@@ -122,11 +123,11 @@ class _TeamScreenState extends State<TeamScreen> {
       true;
 
   Future<void> _create() async {
-    final lic = await _ask('Create your team', 'TT1.…  (from the page after you subscribed)', 'Create team');
+    final lic = await _ask(l10n.teamUiCreateTitle, l10n.teamUiCreateHint, l10n.teamUiCreateButton);
     if (lic == null || lic.isEmpty) return;
     if (await _busy(() => TeamClient.create(v, lic, relay: widget.relay))) {
       await _sync();
-      _say('Your team is ready. Invite people with "Invite someone".');
+      _say(l10n.teamUiReady);
     }
   }
 
@@ -136,20 +137,20 @@ class _TeamScreenState extends State<TeamScreen> {
       link = await Navigator.push<String>(
         context,
         MaterialPageRoute(
-          builder: (_) => const ScanScreen(
-            prefixes: [teamLinkPrefix],
-            title: 'Scan the team invite',
-            wrongCode: 'That isn\'t a team invite. Ask the team admin to open Settings, Team vault, Invite someone.',
+          builder: (_) => ScanScreen(
+            prefixes: const [teamLinkPrefix],
+            title: l10n.teamUiScanTitle,
+            wrongCode: l10n.teamUiScanWrong,
           ),
         ),
       );
     } else {
-      link = await _ask('Join a team', 'tanookiauth://team?…  (the invite link from the team admin)', 'Join');
+      link = await _ask(l10n.teamUiJoinTitle, l10n.teamUiJoinHint, l10n.teamUiJoinButton);
     }
     if (link == null || link.isEmpty || !mounted) return;
     if (await _busy(() => TeamClient.join(v, link!))) {
       await _sync();
-      _say('You\'re in the team. Team accounts appear once the admin\'s app shares the team key with this device.');
+      _say(l10n.teamUiJoinedTeam);
     }
   }
 
@@ -159,11 +160,10 @@ class _TeamScreenState extends State<TeamScreen> {
     await showDialog<void>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Invite someone'),
+        title: Text(l10n.teamUiInvite),
         content: SingleChildScrollView(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Text('On their device: Settings, Team vault, then "Scan an invite QR code" or "Paste an invite link". '
-                'The invite works once and lasts 7 days.'),
+            Text(l10n.teamUiInviteHelp),
             const SizedBox(height: 12),
             QrView(link!),
             const SizedBox(height: 12),
@@ -179,17 +179,17 @@ class _TeamScreenState extends State<TeamScreen> {
                 await Clipboard.setData(ClipboardData(text: link!));
               }
             },
-            child: const Text('Share'),
+            child: Text(l10n.commonShare),
           ),
           TextButton(
             onPressed: () async {
               await Clipboard.setData(ClipboardData(text: link!));
               if (c.mounted) Navigator.pop(c);
-              _say('Invite link copied.');
+              _say(l10n.premiumInviteLinkCopied);
             },
-            child: const Text('Copy'),
+            child: Text(l10n.commonCopy),
           ),
-          FilledButton(onPressed: () => Navigator.pop(c), child: const Text('Done')),
+          FilledButton(onPressed: () => Navigator.pop(c), child: Text(l10n.commonDone)),
         ],
       ),
     );
@@ -198,44 +198,41 @@ class _TeamScreenState extends State<TeamScreen> {
 
   Future<void> _remove(TeamMember m) async {
     if (!await _confirm(
-        'Remove this person?',
-        'They lose access straight away, and the team gets a new key so they can\'t read anything added or changed from now on. '
-            'They may have kept copies of the codes they could already see, so change the two-factor setup of any account that matters.',
-        'Remove')) {
+        l10n.teamUiRemovePersonTitle,
+        l10n.teamUiRemovePersonBody,
+        l10n.commonRemove)) {
       return;
     }
     if (await _busy(() => TeamClient(v).removeMember(m.key))) {
       await _sync();
-      _say('Removed. The team has a new key.');
+      _say(l10n.teamUiRemoved);
     }
   }
 
   Future<void> _leaveOrDelete() async {
     final admin = isTeamAdmin(v);
     if (!await _confirm(
-        admin ? 'Delete the team?' : 'Leave the team?',
-        admin
-            ? 'Every team account is deleted for everyone in the team. Everyone\'s own accounts are not touched.'
-            : 'The team\'s accounts disappear from this device. Your own accounts are not touched.',
-        admin ? 'Delete team' : 'Leave')) {
+        admin ? l10n.teamUiDeleteTitle : l10n.teamUiLeaveTitle,
+        admin ? l10n.teamUiDeleteBody : l10n.teamUiLeaveBody,
+        admin ? l10n.teamUiDeleteButton : l10n.teamUiLeaveButton)) {
       return;
     }
     if (await _busy(() => admin ? TeamClient(v).deleteTeam() : TeamClient(v).leave())) {
       _status = null;
-      _say(admin ? 'Team deleted.' : 'You left the team.');
+      _say(admin ? l10n.teamUiDeleted : l10n.teamUiLeft);
     }
   }
 
   Future<void> _addFromMine() async {
     final mine = v.visible;
     if (mine.isEmpty) {
-      _say('Add the account to Tanooki Auth first, then copy it into the team here.');
+      _say(l10n.teamUiAddFirst);
       return;
     }
     final picked = await showDialog<Account>(
       context: context,
       builder: (c) => SimpleDialog(
-        title: const Text('Copy one of your accounts into the team'),
+        title: Text(l10n.teamUiCopyInTitle),
         children: [
           for (final a in mine)
             ListTile(title: Text(_title(a)), subtitle: a.label.isEmpty ? null : Text(a.label), onTap: () => Navigator.pop(c, a)),
@@ -246,11 +243,11 @@ class _TeamScreenState extends State<TeamScreen> {
     putTeamAccount(v, teamCopyOf(picked));
     await v.save();
     await _sync();
-    _say('${_title(picked)} is now in the team. Your own copy stays where it was.');
+    _say(l10n.teamUiCopiedIn(_title(picked)));
   }
 
   Future<void> _rename(Account a) async {
-    final name = await _ask('Rename team account', 'Name, e.g. AWS', 'Save');
+    final name = await _ask(l10n.teamUiRenameTitle, l10n.teamUiRenameHint, l10n.commonSave);
     if (name == null || name.isEmpty) return;
     a.issuer = name;
     putTeamAccount(v, a);
@@ -259,7 +256,7 @@ class _TeamScreenState extends State<TeamScreen> {
   }
 
   Future<void> _removeAccount(Account a) async {
-    if (!await _confirm('Remove ${_title(a)} from the team?', 'It disappears for everyone in the team.', 'Remove')) return;
+    if (!await _confirm(l10n.teamUiRemoveAccountTitle(_title(a)), l10n.teamUiRemoveAccountBody, l10n.commonRemove)) return;
     removeTeamAccount(v, a.id);
     await v.save();
     await _sync();
@@ -269,40 +266,38 @@ class _TeamScreenState extends State<TeamScreen> {
     final canBuy = storefront == Storefront.stripe;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Text(
-        'A team vault shares sign-in codes with up to 10 people, for \$20 a year. Everyone in the team can see, add and change '
-        'team accounts. They\'re encrypted on your devices with a key only the team has, so our server can\'t read them. '
-        'Team accounts sit in their own Team section and never mix with your own accounts.',
+        l10n.teamUiIntro,
         style: TextStyle(color: Palette.muted, height: 1.4),
       ),
       const SizedBox(height: 18),
-      const Text('Start a team', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+      Text(l10n.teamUiStart, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
       const SizedBox(height: 8),
       if (canBuy && teamCheckoutUrl.isNotEmpty)
         FilledButton.icon(
           onPressed: () => launchUrl(Uri.parse(teamCheckoutUrl)),
           icon: const Icon(Icons.groups_outlined),
-          label: const Text('Buy a team plan — \$20 a year'),
+          label: Text(l10n.teamUiBuy),
         )
       else if (canBuy)
-        Text('Team plan coming soon', key: const ValueKey('team-coming-soon'), style: TextStyle(color: Palette.muted)),
+        Text(l10n.teamUiPlanSoon, key: const ValueKey('team-coming-soon'), style: TextStyle(color: Palette.muted)),
       const SizedBox(height: 6),
       OutlinedButton(
         onPressed: _working ? null : _create,
-        child: const Text('I have a team license: create the team'),
+        child: Text(l10n.teamUiHaveLicense),
       ),
       const SizedBox(height: 22),
-      const Text('Join a team', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+      Text(l10n.teamUiJoinTitle, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
       const SizedBox(height: 4),
-      Text('Ask the team admin for an invite. Joining is free.', style: TextStyle(color: Palette.muted)),
+      Text(l10n.teamUiJoinHelp, style: TextStyle(color: Palette.muted)),
       const SizedBox(height: 8),
       if (hasCamera)
         FilledButton.icon(
           onPressed: _working ? null : () => _join(scan: true),
           icon: const Icon(Icons.qr_code_scanner),
-          label: const Text('Scan an invite QR code'),
+          label: Text(l10n.teamUiScanInvite),
         ),
       const SizedBox(height: 6),
-      OutlinedButton(onPressed: _working ? null : () => _join(scan: false), child: const Text('Paste an invite link')),
+      OutlinedButton(onPressed: _working ? null : () => _join(scan: false), child: Text(l10n.teamUiPasteInvite)),
     ]);
   }
 
@@ -316,13 +311,13 @@ class _TeamScreenState extends State<TeamScreen> {
       Card(
         child: ListTile(
           leading: const Icon(Icons.groups_outlined),
-          title: Text(admin ? 'You run this team' : 'You\'re in a team'),
+          title: Text(admin ? l10n.teamUiYouRun : l10n.teamUiYoureIn),
           subtitle: Text([
-            if (st != null) '${st.members.length} of $teamMaxMembers people',
-            'Last synced: ${agoText(lastSync)}',
-            if (admin && st != null) 'Paid until ${st.licenseEnd.month}/${st.licenseEnd.day}/${st.licenseEnd.year}',
+            if (st != null) l10n.teamUiPeopleCount(st.members.length, teamMaxMembers),
+            l10n.teamUiLastSynced(agoText(lastSync)),
+            if (admin && st != null) l10n.teamUiPaidUntil(st.licenseEnd),
           ].join(' · ')),
-          trailing: IconButton(tooltip: 'Sync now', icon: const Icon(Icons.sync), onPressed: _working ? null : _sync),
+          trailing: IconButton(tooltip: l10n.teamUiSyncNow, icon: const Icon(Icons.sync), onPressed: _working ? null : _sync),
         ),
       ),
       if (_problem != null)
@@ -330,58 +325,57 @@ class _TeamScreenState extends State<TeamScreen> {
       if (s['waitingForKey'] == true)
         Padding(
           padding: const EdgeInsets.only(top: 8),
-          child: Text('Waiting for the team admin\'s app to share the team key with this device. It happens the next time '
-              'the admin opens Tanooki Auth.', key: const ValueKey('team-waiting'), style: TextStyle(color: Palette.muted, height: 1.4)),
+          child: Text(l10n.teamUiWaitingForKey, key: const ValueKey('team-waiting'), style: TextStyle(color: Palette.muted, height: 1.4)),
         ),
       const SizedBox(height: 18),
       Row(children: [
-        const Expanded(child: Text('Team accounts', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16))),
-        TextButton.icon(onPressed: _working ? null : _addFromMine, icon: const Icon(Icons.add, size: 18), label: const Text('Add one of mine')),
+        Expanded(child: Text(l10n.teamUiAccounts, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16))),
+        TextButton.icon(onPressed: _working ? null : _addFromMine, icon: const Icon(Icons.add, size: 18), label: Text(l10n.teamUiAddMine)),
       ]),
-      if (accounts.isEmpty) Text('No team accounts yet.', style: TextStyle(color: Palette.muted)),
+      if (accounts.isEmpty) Text(l10n.teamUiNoAccounts, style: TextStyle(color: Palette.muted)),
       for (final a in accounts)
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: Text(_title(a)),
           subtitle: a.label.isEmpty ? null : Text(a.label),
           trailing: PopupMenuButton<String>(
-            tooltip: 'Change',
+            tooltip: l10n.teamUiChange,
             onSelected: (x) => x == 'rename' ? _rename(a) : _removeAccount(a),
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'rename', child: Text('Rename')),
-              PopupMenuItem(value: 'remove', child: Text('Remove from team')),
+            itemBuilder: (_) => [
+              PopupMenuItem(value: 'rename', child: Text(l10n.teamUiRename)),
+              PopupMenuItem(value: 'remove', child: Text(l10n.teamUiRemoveFromTeam)),
             ],
           ),
         ),
       if (admin) ...[
         const SizedBox(height: 18),
         Row(children: [
-          const Expanded(child: Text('People', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16))),
-          TextButton.icon(onPressed: _working ? null : _invite, icon: const Icon(Icons.person_add_alt, size: 18), label: const Text('Invite someone')),
+          Expanded(child: Text(l10n.teamUiPeople, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16))),
+          TextButton.icon(onPressed: _working ? null : _invite, icon: const Icon(Icons.person_add_alt, size: 18), label: Text(l10n.teamUiInvite)),
         ]),
         for (final m in st?.members ?? const <TeamMember>[])
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: Icon(m.admin ? Icons.shield_outlined : Icons.person_outline),
-            title: Text(m.key == _me ? 'This device (admin)' : 'Device ${m.key.substring(0, 6)}'),
-            subtitle: Text('Joined ${m.added.month}/${m.added.day}/${m.added.year}${m.hasKey ? '' : ' · getting the team key'}'),
+            title: Text(m.key == _me ? l10n.teamUiThisDevice : l10n.teamUiDevice(m.key.substring(0, 6))),
+            subtitle: Text(m.hasKey ? l10n.teamUiJoined(m.added) : l10n.teamUiJoinedGettingKey(m.added)),
             trailing: m.admin
                 ? null
-                : IconButton(tooltip: 'Remove from team', icon: const Icon(Icons.person_remove_outlined), onPressed: _working ? null : () => _remove(m)),
+                : IconButton(tooltip: l10n.teamUiRemoveFromTeam, icon: const Icon(Icons.person_remove_outlined), onPressed: _working ? null : () => _remove(m)),
           ),
       ],
       const SizedBox(height: 22),
       OutlinedButton(
         onPressed: _working ? null : _leaveOrDelete,
         style: OutlinedButton.styleFrom(foregroundColor: Palette.red),
-        child: Text(admin ? 'Delete the team' : 'Leave the team'),
+        child: Text(admin ? l10n.teamUiDeleteTeam : l10n.teamUiLeaveTeam),
       ),
     ]);
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Team vault')),
+        appBar: AppBar(title: Text(l10n.teamUiTitle)),
         body: ListView(padding: const EdgeInsets.all(20), children: [
           Center(
             child: ConstrainedBox(
@@ -447,7 +441,7 @@ class _TeamHomeSectionState extends State<TeamHomeSection> {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text('Copied ${_title(a)} code. The clipboard clears in 30 seconds.'), duration: const Duration(seconds: 2)));
+      ..showSnackBar(SnackBar(content: Text(l10n.teamUiCopiedCode(_title(a))), duration: const Duration(seconds: 2)));
   }
 
   @override
@@ -474,7 +468,7 @@ class _TeamHomeSectionState extends State<TeamHomeSection> {
               child: Row(children: [
                 Icon(Icons.groups_outlined, size: 20, color: Palette.muted),
                 const SizedBox(width: 8),
-                Text('Team · ${accounts.length}', style: const TextStyle(fontWeight: FontWeight.w700)),
+                Text(l10n.teamUiSection(accounts.length), style: const TextStyle(fontWeight: FontWeight.w700)),
                 const Spacer(),
                 Icon(collapsed ? Icons.expand_more : Icons.expand_less, color: Palette.muted),
               ]),
@@ -488,8 +482,8 @@ class _TeamHomeSectionState extends State<TeamHomeSection> {
                       padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
                       child: Text(
                           teamState(v)?['waitingForKey'] == true
-                              ? 'Waiting for the team admin to share the team key with this device.'
-                              : 'No team accounts yet. Add them in Settings, Team vault.',
+                              ? l10n.teamUiWaitingShort
+                              : l10n.teamUiNoAccountsHint,
                           style: TextStyle(color: Palette.muted)),
                     )
                   : ListView(shrinkWrap: true, padding: const EdgeInsets.only(bottom: 6), children: [

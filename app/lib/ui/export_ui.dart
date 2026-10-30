@@ -9,10 +9,10 @@ import '../core/exporters.dart';
 import '../core/google_migration.dart';
 import '../core/vault.dart';
 import 'backup_ui.dart';
-import 'home.dart';
 import 'security_ui.dart';
 import 'sync_ui.dart' show QrView;
 import 'theme.dart';
+import '../l10n/l10n.dart';
 
 void _say(BuildContext context, String msg) => ScaffoldMessenger.of(context)
   ..hideCurrentSnackBar()
@@ -23,55 +23,53 @@ String _today() => DateTime.now().toIso8601String().substring(0, 10);
 /// Settings > "Move to another app": pick where the accounts are going.
 Future<void> exportToAppFlow(BuildContext context, Vault vault) async {
   if (vault.visible.isEmpty) {
-    _say(context, 'There are no accounts to export yet.');
+    _say(context, l10n.backupUiNothingToExport);
     return;
   }
   final choice = await showDialog<String>(
     context: context,
-    builder: (c) => SimpleDialog(title: const Text('Move to another app'), children: [
-      for (final (id, title, sub) in const [
-        ('aegisLocked', 'Aegis, with a password', 'Safest. Aegis asks for the password when you import.'),
-        ('aegisPlain', 'Aegis, not encrypted', 'For apps that read Aegis files but can\'t open locked ones.'),
-        ('twoFas', '2FAS', 'A .2fas file without a password.'),
-        ('google', 'Google Authenticator', 'QR codes to scan with Google Authenticator.'),
-        ('links', 'Setup links (plain text)', 'One otpauth:// link per line, for any other app.'),
+    builder: (c) => SimpleDialog(title: Text(l10n.exportUiTitle), children: [
+      for (final (id, title, sub) in [
+        ('aegisLocked', l10n.exportUiAegisLocked, l10n.exportUiAegisLockedSub),
+        ('aegisPlain', l10n.exportUiAegisPlain, l10n.exportUiAegisPlainSub),
+        ('twoFas', '2FAS', l10n.exportUiTwoFasSub),
+        ('google', 'Google Authenticator', l10n.exportUiGoogleSub),
+        ('links', l10n.exportUiLinks, l10n.exportUiLinksSub),
       ])
         ListTile(title: Text(title), subtitle: Text(sub), onTap: () => Navigator.pop(c, id)),
     ]),
   );
   if (choice == null || !context.mounted) return;
   if (choice == 'links') return exportPlainFlow(context, vault);
-  if (!await confirmItsYou(context, vault, 'Export your accounts') || !context.mounted) return;
+  if (!await confirmItsYou(context, vault, l10n.exportUiConfirmReason) || !context.mounted) return;
   final accounts = vault.visible;
   Future<void> save(String name, String text) => _save(context, vault, name, text, accounts.length);
   switch (choice) {
     case 'aegisLocked':
       final pass = await askPassphrase(context, forExport: true);
       if (pass == null || !context.mounted) return;
-      final text = await busy(context, 'Encrypting for Aegis…', () => exportAegisEncrypted(accounts, pass));
+      final text = await busy(context, l10n.exportUiEncryptingAegis, () => exportAegisEncrypted(accounts, pass));
       if (!context.mounted) return;
       await save('Tanooki Auth for Aegis ${_today()}.json', text);
     case 'aegisPlain':
-      if (!await confirmPlainExport(context, what: 'This saves every setup key in an unencrypted Aegis file.') || !context.mounted) return;
+      if (!await confirmPlainExport(context, what: l10n.exportUiAegisPlainWhat) || !context.mounted) return;
       await save('Tanooki Auth for Aegis (not encrypted) ${_today()}.json', exportAegisPlain(accounts));
     case 'twoFas':
-      if (!await confirmPlainExport(context, what: 'This saves every setup key in a 2FAS file without a password.') || !context.mounted) return;
+      if (!await confirmPlainExport(context, what: l10n.exportUiTwoFasWhat) || !context.mounted) return;
       await save('Tanooki Auth for 2FAS ${_today()}.2fas', export2fas(accounts));
     case 'google':
       final ok = await showDialog<bool>(
         context: context,
         builder: (c) => AlertDialog(
           icon: Icon(Icons.warning_amber_rounded, color: Theme.of(c).colorScheme.error),
-          title: const Text('Show QR codes for Google Authenticator?'),
-          content: const Text(
-              'The next screen shows QR codes holding every setup key. Anyone who sees or photographs them can make your login codes. Do this somewhere private.\n\n'
-              'In Google Authenticator: tap +, then "Scan a QR code", and scan each code in turn.'),
+          title: Text(l10n.exportUiGoogleTitle),
+          content: Text(l10n.exportUiGoogleBody),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: Theme.of(c).colorScheme.error),
               onPressed: () => Navigator.pop(c, true),
-              child: const Text('Show the codes'),
+              child: Text(l10n.exportUiShowCodes),
             ),
           ],
         ),
@@ -91,7 +89,7 @@ Future<void> _save(BuildContext context, Vault vault, String name, String text, 
     await vault.save();
   }
   if (saved && context.mounted) {
-    _say(context, 'Exported $count accounts. Import the file in the other app, then delete it.');
+    _say(context, l10n.exportUiExported(count));
   }
 }
 
@@ -135,9 +133,9 @@ class _GoogleExportScreenState extends State<GoogleExportScreen> {
             constraints: const BoxConstraints(maxWidth: 460),
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               if (_codes.isEmpty)
-                const Text('None of your accounts can go into Google Authenticator.', textAlign: TextAlign.center)
+                Text(l10n.exportUiNoneForGoogle, textAlign: TextAlign.center)
               else ...[
-                Text(_codes.length == 1 ? 'Scan this code' : 'Code ${_page + 1} of ${_codes.length}',
+                Text(_codes.length == 1 ? l10n.exportUiScanThisCode : l10n.exportUiCodeOf(_page + 1, _codes.length),
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 12),
                 QrView(_codes[_page], size: 260),
@@ -147,25 +145,25 @@ class _GoogleExportScreenState extends State<GoogleExportScreen> {
                     TextButton.icon(
                       onPressed: _page == 0 ? null : () => setState(() => _page--),
                       icon: const Icon(Icons.chevron_left),
-                      label: const Text('Back'),
+                      label: Text(l10n.commonBack),
                     ),
                     const SizedBox(width: 12),
                     FilledButton.icon(
                       onPressed: _page == _codes.length - 1 ? null : () => setState(() => _page++),
                       icon: const Icon(Icons.chevron_right),
-                      label: const Text('Next code'),
+                      label: Text(l10n.exportUiNextCode),
                     ),
                   ]),
               ],
               if (_left.isNotEmpty) ...[
                 const SizedBox(height: 20),
-                Text('Left out (${_left.length}). Google Authenticator can\'t make these codes, so add them to another app:',
+                Text(l10n.exportUiLeftOut(_left.length),
                     style: const TextStyle(fontWeight: FontWeight.w600)),
                 const SizedBox(height: 6),
                 for (final a in _left)
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: Text('• ${accountTitle(a)}${a.issuer.isNotEmpty && a.label.isNotEmpty ? ' (${a.label})' : ''}: ${googleCantTake(a)}',
+                    child: Text(l10n.exportUiLeftOutLine(accountNameWithLabel(a), googleCantTake(a) ?? ''),
                         style: TextStyle(color: Palette.muted)),
                   ),
               ],

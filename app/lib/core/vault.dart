@@ -6,6 +6,7 @@ import 'package:cryptography/cryptography.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'account.dart';
+import '../l10n/l10n.dart';
 
 enum VaultFailure { fileMissing, keyMissing, decryptFailed, badJson }
 
@@ -16,14 +17,10 @@ class VaultException implements Exception {
   final Object? detail;
 
   String get message => switch (failure) {
-        VaultFailure.fileMissing =>
-          'Your accounts file is missing. If you have a backup, restore it. Otherwise you can start a new, empty vault.',
-        VaultFailure.keyMissing =>
-          'The key that unlocks your accounts is missing from this device\'s secure storage. Restore a backup to get your accounts back.',
-        VaultFailure.decryptFailed =>
-          'Your accounts file could not be unlocked. It may be damaged or was changed outside the app. Restore a backup.',
-        VaultFailure.badJson =>
-          'Your accounts file unlocked but its contents are damaged. Restore a backup.',
+        VaultFailure.fileMissing => l10n.vaultFileMissing,
+        VaultFailure.keyMissing => l10n.vaultKeyMissing,
+        VaultFailure.decryptFailed => l10n.vaultDecryptFailed,
+        VaultFailure.badJson => l10n.vaultBadJson,
       };
 
   @override

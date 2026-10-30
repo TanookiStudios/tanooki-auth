@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'account.dart';
 import 'totp.dart';
+import '../l10n/l10n.dart';
 
 /// "https://www.GitHub.com/login" -> "github.com".
 String normalizeDomain(String s) {
@@ -25,23 +26,23 @@ Account parseOtpauthUri(String input) {
   try {
     uri = Uri.parse(input.trim());
   } on FormatException {
-    throw const FormatException('That is not an otpauth:// link.');
+    throw FormatException(l10n.otpauthNotALink);
   }
   if (uri.scheme == 'steam') {
     final secret = input.trim().substring('steam://'.length).toUpperCase().replaceAll(RegExp(r'[\s=-]'), '');
-    if (secret.isEmpty) throw const FormatException('The link has no secret.');
+    if (secret.isEmpty) throw FormatException(l10n.otpauthNoSecret);
     base32Decode(secret);
     return Account(id: newId(), type: OtpType.steam, issuer: 'Steam', secret: secret, digits: 5);
   }
-  if (uri.scheme != 'otpauth') throw const FormatException('That is not an otpauth:// link.');
+  if (uri.scheme != 'otpauth') throw FormatException(l10n.otpauthNotALink);
   var type = switch (uri.host.toLowerCase()) {
     'totp' => OtpType.totp,
     'hotp' => OtpType.hotp,
-    _ => throw FormatException('Unsupported code type "${uri.host}".'),
+    _ => throw FormatException(l10n.otpauthUnsupportedType(uri.host)),
   };
   final q = uri.queryParameters;
   final secret = q['secret'];
-  if (secret == null || secret.isEmpty) throw const FormatException('The link has no secret.');
+  if (secret == null || secret.isEmpty) throw FormatException(l10n.otpauthNoSecret);
   base32Decode(secret); // validates
 
   // Path is "/Issuer:label" or "/label"; the spec allows the colon as ":" or "%3A".
@@ -60,18 +61,18 @@ Account parseOtpauthUri(String input) {
     'SHA1' => OtpAlgorithm.sha1,
     'SHA256' => OtpAlgorithm.sha256,
     'SHA512' => OtpAlgorithm.sha512,
-    final a => throw FormatException('Unsupported algorithm "$a".'),
+    final a => throw FormatException(l10n.otpauthUnsupportedAlgorithm(a)),
   };
   final issuer = (q['issuer']?.trim().isNotEmpty ?? false) ? q['issuer']!.trim() : labelIssuer;
   // Steam Guard: Aegis and others write encoder=steam; nobody else uses issuer "Steam" with plain codes.
   if (type == OtpType.totp && (q['encoder']?.toLowerCase() == 'steam' || issuer.toLowerCase() == 'steam')) type = OtpType.steam;
   final steam = type == OtpType.steam;
   final digits = steam ? 5 : int.tryParse(q['digits'] ?? '6');
-  if (!steam && (digits == null || digits < 6 || digits > 8)) throw const FormatException('Digits must be 6, 7 or 8.');
+  if (!steam && (digits == null || digits < 6 || digits > 8)) throw FormatException(l10n.otpauthBadDigits);
   final period = int.tryParse(q['period'] ?? '30');
-  if (period == null || period <= 0) throw const FormatException('Period must be a positive number.');
+  if (period == null || period <= 0) throw FormatException(l10n.otpauthBadPeriod);
   final counter = int.tryParse(q['counter'] ?? '0');
-  if (counter == null || counter < 0) throw const FormatException('Counter must be zero or more.');
+  if (counter == null || counter < 0) throw FormatException(l10n.otpauthBadCounter);
 
   return Account(
     id: newId(),

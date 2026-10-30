@@ -33,6 +33,7 @@ import 'sync_ui.dart' show syncAndLinkSection;
 import 'theme.dart';
 import 'tidy_ui.dart';
 import 'trash.dart';
+import '../l10n/l10n.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key, required this.vault});
@@ -66,7 +67,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } on PlatformException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Couldn\'t change the app icon${e.message == null ? '' : ' (${e.message})'}. Try again, or restart the app.')));
+          content: Text(e.message == null ? l10n.settingsIconFailed : l10n.settingsIconFailedWhy(e.message!))));
       return;
     }
     if (mounted) setState(() => _appIcon = id);
@@ -79,7 +80,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return Semantics(
         button: true,
         selected: selected,
-        label: '$name app icon${locked ? ', Premium' : ''}',
+        label: locked ? l10n.settingsIconSemanticPremium(name) : l10n.settingsIconSemantic(name),
         excludeSemantics: true,
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
@@ -110,14 +111,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(premium.value ? 'App icon' : 'App icon (Premium)', style: const TextStyle(fontWeight: FontWeight.w600)),
+          Text(premium.value ? l10n.settingsAppIcon : l10n.settingsAppIconPremium, style: const TextStyle(fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
           Text(
             Platform.isIOS || Platform.isAndroid
-                ? 'The icon on your home screen.${Platform.isAndroid ? ' It may disappear for a moment while your phone swaps it.' : ''}'
+                ? (Platform.isAndroid ? l10n.settingsAppIconAndroid : l10n.settingsAppIconIos)
                 : Platform.isMacOS
-                    ? 'Changes the Dock icon while Tanooki Auth is open. Macs can\'t keep a different icon after the app quits, so Finder and Launchpad keep the blue one.'
-                    : 'App icons can be changed on iPhone and Android.',
+                    ? l10n.settingsAppIconMac
+                    : l10n.settingsAppIconOther,
             style: TextStyle(color: Palette.muted, height: 1.4),
           ),
           if (appIconsSupported) ...[
@@ -140,8 +141,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String get _lockName => Platform.isWindows
       ? 'Windows Hello'
       : Platform.isMacOS
-      ? 'Touch ID or your Mac password'
-      : 'Face ID, fingerprint, or passcode';
+      ? l10n.settingsLockNameMac
+      : l10n.settingsLockNamePhone;
 
   Future<void> _setLock(bool on) async {
     if (on && !await _auth.isDeviceSupported()) {
@@ -149,7 +150,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'This device has no $_lockName set up, so the app can\'t be locked. Set one up in your system settings first.',
+            l10n.settingsNoLockSetUp(_lockName),
           ),
         ),
       );
@@ -159,7 +160,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     bool ok;
     try {
       ok = await _auth.authenticate(
-        localizedReason: on ? 'Turn on the app lock' : 'Turn off the app lock',
+        localizedReason: on ? l10n.settingsLockReasonOn : l10n.settingsLockReasonOff,
       );
     } catch (_) {
       ok = false;
@@ -180,25 +181,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final v = widget.vault;
     if (_s[passcodeKey] == null) {
       final pin = await askNewPasscode(context,
-          title: 'Set an app passcode',
-          intro: 'Type this to open Tanooki Auth. It also works when Face ID or your fingerprint doesn\'t. If you forget it, the only way back in is a backup.');
+          title: l10n.settingsSetPasscode,
+          intro: l10n.settingsSetPasscodeIntro);
       if (pin == null) return;
       _s[passcodeKey] = await hashPasscode(pin);
       await v.save();
       setState(() {});
-      _tell('App passcode on.');
+      _tell(l10n.settingsPasscodeOn);
       return;
     }
     final choice = await showDialog<String>(
       context: context,
-      builder: (c) => SimpleDialog(title: const Text('App passcode'), children: [
-        SimpleDialogOption(onPressed: () => Navigator.pop(c, 'change'), child: const Text('Change passcode')),
-        SimpleDialogOption(onPressed: () => Navigator.pop(c, 'off'), child: const Text('Turn passcode off')),
+      builder: (c) => SimpleDialog(title: Text(l10n.settingsPasscode), children: [
+        SimpleDialogOption(onPressed: () => Navigator.pop(c, 'change'), child: Text(l10n.settingsChangePasscode)),
+        SimpleDialogOption(onPressed: () => Navigator.pop(c, 'off'), child: Text(l10n.settingsPasscodeOff)),
       ]),
     );
     if (choice == null || !mounted || !await confirmCurrentPasscode(context, _s[passcodeKey]) || !mounted) return;
     if (choice == 'change') {
-      final pin = await askNewPasscode(context, title: 'New app passcode', notThis: _s[decoyPasscodeKey]);
+      final pin = await askNewPasscode(context, title: l10n.settingsNewPasscode, notThis: _s[decoyPasscodeKey]);
       if (pin == null) return;
       _s[passcodeKey] = await hashPasscode(pin);
     } else {
@@ -211,7 +212,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
     await v.save();
     setState(() {});
-    _tell(choice == 'change' ? 'Passcode changed.' : 'App passcode off.');
+    _tell(choice == 'change' ? l10n.settingsPasscodeChanged : l10n.settingsPasscodeIsOff);
   }
 
   Future<void> _removeDecoy() async {
@@ -223,11 +224,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final off = await showDialog<bool>(
         context: context,
         builder: (c) => AlertDialog(
-          title: const Text('Remove the decoy passcode?'),
-          content: const Text('The decoy accounts are erased. Your real accounts aren\'t touched.'),
+          title: Text(l10n.settingsRemoveDecoyTitle),
+          content: Text(l10n.settingsRemoveDecoyBody),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-            FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Remove')),
+            TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
+            FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(l10n.commonRemove)),
           ],
         ),
       );
@@ -238,13 +239,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
     final pin = await askNewPasscode(context,
-        title: 'Set a decoy passcode',
-        intro: 'If someone forces you to open Tanooki Auth, type this one instead. It opens a separate, empty set of accounts, and nothing on screen shows it isn\'t the real one. Add a couple of harmless accounts there so it looks used.\n\nYour real passcode keeps opening your real accounts.',
+        title: l10n.settingsSetDecoy,
+        intro: l10n.settingsSetDecoyIntro,
         notThis: _s[passcodeKey]);
     if (pin == null) return;
     await createDecoyVault(widget.vault, await hashPasscode(pin));
     setState(() {});
-    _tell('Decoy passcode set.');
+    _tell(l10n.settingsDecoySet);
   }
 
   Future<void> _panicWipe(bool on) async {
@@ -263,7 +264,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: Text(title),
             content: Text(body),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+              TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
               FilledButton(
                 style: FilledButton.styleFrom(backgroundColor: Theme.of(c).colorScheme.error),
                 onPressed: () => Navigator.pop(c, true),
@@ -273,15 +274,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ) ==
         true;
-    if (!await warn('Erase everything after $panicWipeAttempts wrong passcodes?',
-        'If anyone types the wrong app passcode $panicWipeAttempts times in a row, Tanooki Auth erases every account on this device. There is no undo and no way to stop it once it starts.',
-        'Continue')) {
+    if (!await warn(l10n.settingsWipeTitle(panicWipeAttempts), l10n.settingsWipeBody(panicWipeAttempts), l10n.commonContinueLabel)) {
       return;
     }
     if (!mounted ||
-        !await warn('Are you sure?',
-            'A child playing with your phone, or you on a bad day, can trigger this. After an erase, the only way back is your backup file. Without it you could be locked out of every website that uses these codes.',
-            'Turn on panic wipe')) {
+        !await warn(l10n.settingsWipeSureTitle, l10n.settingsWipeSureBody, l10n.settingsWipeTurnOn)) {
       return;
     }
     _s[panicWipeKey] = true;
@@ -299,15 +296,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await _open(PremiumScreen(vault: widget.vault));
       if (!premium.value) return;
     }
-    if (!mounted || (!on && !await confirmItsYou(context, widget.vault, 'Turn off travel mode'))) return;
+    if (!mounted || (!on && !await confirmItsYou(context, widget.vault, l10n.settingsTravelOffReason))) return;
     await _set(Vault.travelModeKey, on);
     if (!mounted) return;
     final hidden = widget.vault.live.where((a) => a.travelHidden).length;
     _tell(on
-        ? (hidden == 0
-            ? 'Travel mode on, but no account is marked "Hide in travel mode" yet. Mark them with ⋯ > Edit first.'
-            : 'Travel mode on. $hidden account${hidden == 1 ? ' is' : 's are'} hidden.')
-        : 'Travel mode off. Every account is back.');
+        ? (hidden == 0 ? l10n.settingsTravelOnNone : l10n.settingsTravelOn(hidden))
+        : l10n.settingsTravelOff);
   }
 
   Future<void> _monthlyNotify(bool on) async {
@@ -321,12 +316,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _checkClock() async {
-    _tell('Checking your clock…');
+    _tell(l10n.settingsCheckingClock);
     try {
       final w = await ClockCheck.instance.runNow();
-      if (mounted) _tell(w ?? 'Your clock is right, so that\'s not it. Check the account\'s settings (⋯ > Edit > Advanced) match what the website said.');
+      if (mounted) _tell(w ?? l10n.settingsClockRight);
     } on RelayException catch (e) {
-      if (mounted) _tell('Couldn\'t check the clock: ${e.message}');
+      if (mounted) _tell(l10n.settingsClockFailed(e.message));
     }
   }
 
@@ -342,45 +337,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
       Card(
         child: Column(children: [
           SwitchListTile(
-            title: const Text('Lock the app'),
-            subtitle: Text('Ask for $_lockName when the app opens'),
+            title: Text(l10n.settingsLockApp),
+            subtitle: Text(l10n.settingsLockAppHelp(_lockName)),
             value: _s['lock'] == true,
             onChanged: _setLock,
           ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.pin_outlined),
-            title: const Text('App passcode'),
-            subtitle: Text(hasPasscode ? 'On. Tap to change or turn off.' : 'Off. Numbers you type to open the app, instead of or as well as $_lockName.'),
+            title: Text(l10n.settingsPasscode),
+            subtitle: Text(hasPasscode ? l10n.settingsPasscodeOnHelp : l10n.settingsPasscodeOffHelp(_lockName)),
             onTap: _passcode,
           ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.timer_outlined),
-            title: const Text('Lock again'),
-            subtitle: Text(isLockOn(_s)
-                ? '${lockAfterChoices[lockAfterSeconds(_s)]} in the background'
-                : 'Turn on the lock or a passcode first'),
-            trailing: DropdownButton<int>(
-              value: lockAfterSeconds(_s),
-              onChanged: (v) => v == null ? null : _set(lockAfterKey, v),
-              items: [for (final e in lockAfterChoices.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
-            ),
+            title: Text(l10n.settingsLockAgain),
+            // The picker sits under the text, not beside it, so long words and large text still fit a phone.
+            subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(isLockOn(_s)
+                  ? l10n.settingsLockAgainHelp(lockAfterChoices[lockAfterSeconds(_s)] ?? '')
+                  : l10n.settingsLockFirst),
+              DropdownButton<int>(
+                isExpanded: true, // long choices wrap to the tile's width
+                value: lockAfterSeconds(_s),
+                onChanged: (v) => v == null ? null : _set(lockAfterKey, v),
+                items: [for (final e in lockAfterChoices.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
+              ),
+            ]),
           ),
           if (hasPasscode) ...[
             const Divider(),
             ListTile(
               leading: const Icon(Icons.theater_comedy_outlined),
-              title: const Text('Decoy passcode'),
-              subtitle: Text(_s[decoyPasscodeKey] != null
-                  ? 'On. Opens a separate set of accounts. Tap to remove.'
-                  : 'A second passcode that opens a separate, empty set of accounts'),
+              title: Text(l10n.settingsDecoy),
+              subtitle: Text(_s[decoyPasscodeKey] != null ? l10n.settingsDecoyOn : l10n.settingsDecoyOff),
               onTap: _decoy,
             ),
             const Divider(),
             SwitchListTile(
-              title: Text('Erase after $panicWipeAttempts wrong passcodes'),
-              subtitle: const Text('Panic wipe. Needs a backup made in the last 30 days.'),
+              title: Text(l10n.settingsWipe(panicWipeAttempts)),
+              subtitle: Text(l10n.settingsWipeHelp),
               value: _s[panicWipeKey] == true,
               onChanged: _panicWipe,
             ),
@@ -388,79 +385,73 @@ class _SettingsScreenState extends State<SettingsScreen> {
           if (desktop && !Platform.isLinux) ...[
             const Divider(),
             SwitchListTile(
-              title: const Text('Lock when the computer sleeps'),
-              subtitle: Text(isLockOn(_s)
-                  ? 'Also when the screen locks or you log out for a moment'
-                  : 'Turn on the lock or a passcode first'),
+              title: Text(l10n.settingsLockOnSleep),
+              subtitle: Text(isLockOn(_s) ? l10n.settingsLockOnSleepHelp : l10n.settingsLockFirst),
               value: lockOnSleep(_s),
-              onChanged: (on) => isLockOn(_s) ? _set(lockOnSleepKey, on) : _tell('Turn on "Lock the app" or an app passcode first, so there is something to lock.'),
+              onChanged: (on) => isLockOn(_s) ? _set(lockOnSleepKey, on) : _tell(l10n.settingsLockOnSleepNeedsLock),
             ),
           ],
           const Divider(),
           SwitchListTile(
             key: const Key('travelModeSwitch'),
-            title: Text(premium.value ? 'Travel mode' : 'Travel mode (Premium)'),
-            subtitle: Text(widget.vault.travelMode
-                ? 'On. Accounts marked "Hide in travel mode" are gone from this device\'s screens, widgets, watch, extension and exports until you turn it off. They aren\'t deleted.'
-                : 'Before a border crossing: hides the accounts you marked "Hide in travel mode" (⋯ > Edit). Turning it off asks for $proofName.'),
+            title: Text(premium.value ? l10n.settingsTravel : l10n.settingsTravelPremium),
+            subtitle: Text(widget.vault.travelMode ? l10n.settingsTravelOnHelp : l10n.settingsTravelOffHelp(proofName)),
             value: widget.vault.travelMode,
             onChanged: _travelMode,
           ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.key_outlined),
-            title: Text(premium.value ? 'Security keys' : 'Security keys (Premium)'),
-            subtitle: const Text('Unlock with a YubiKey or other security key'),
+            title: Text(premium.value ? l10n.settingsKeys : l10n.settingsKeysPremium),
+            subtitle: Text(l10n.settingsKeysHelp),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _open(SecurityKeyScreen(vault: widget.vault)),
           ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.history),
-            title: Text(premium.value ? 'Activity history' : 'Activity history (Premium)'),
-            subtitle: const Text('Which codes were copied, filled, typed or exported, and when. Kept on this device only.'),
+            title: Text(premium.value ? l10n.settingsActivity : l10n.settingsActivityPremium),
+            subtitle: Text(l10n.settingsActivityHelp),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _open(ActivityScreen(vault: widget.vault)),
           ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.emergency_outlined),
-            title: Text(premium.value ? 'Emergency access' : 'Emergency access (Premium)'),
-            subtitle: const Text('Let one trusted person get your accounts if something happens to you, after a 7-day wait you can stop'),
+            title: Text(premium.value ? l10n.settingsEmergency : l10n.settingsEmergencyPremium),
+            subtitle: Text(l10n.settingsEmergencyHelp),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _open(EmergencyScreen(vault: widget.vault)),
           ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.groups_outlined),
-            title: const Text('Team vault'),
-            subtitle: const Text('Share sign-in codes with up to 10 people, end-to-end encrypted'),
+            title: Text(l10n.teamUiTitle),
+            subtitle: Text(l10n.settingsTeamHelp),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _open(TeamScreen(vault: widget.vault)),
           ),
           if (monthlyNotificationSupported) ...[
             const Divider(),
             SwitchListTile(
-              title: Text(premium.value ? 'Monthly summary notification' : 'Monthly summary notification (Premium)'),
-              subtitle: const Text('A reminder on the 1st of each month to look at your summary card. It never says anything about your accounts.'),
+              title: Text(premium.value ? l10n.settingsMonthly : l10n.settingsMonthlyPremium),
+              subtitle: Text(l10n.settingsMonthlyHelp),
               value: premium.value && _s[summaryNotifyKey] == true,
               onChanged: _monthlyNotify,
             ),
           ],
           const Divider(),
           SwitchListTile(
-            title: const Text('Block screenshots'),
-            subtitle: Text(desktop
-                ? 'Hides this window from screenshots, screen recording and screen sharing'
-                : 'Keeps codes out of screenshots, screen recording and the app switcher'),
+            title: Text(l10n.settingsBlockShots),
+            subtitle: Text(desktop ? l10n.settingsBlockShotsDesktop : l10n.settingsBlockShotsPhone),
             value: blockScreenshotsOn(_s),
             onChanged: _blockScreenshots,
           ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.health_and_safety_outlined),
-            title: const Text('Security check-up'),
-            subtitle: const Text('Things worth fixing, and your recovery kit'),
+            title: Text(l10n.settingsCheckup),
+            subtitle: Text(l10n.settingsCheckupHelp),
             trailing: const Icon(Icons.chevron_right),
             onTap: () async {
               await Navigator.push(context, MaterialPageRoute(builder: (_) => CheckupScreen(vault: widget.vault)));
@@ -470,10 +461,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(),
           ListTile(
             leading: const Icon(Icons.report_gmailerrorred_outlined),
-            title: Text(premium.value ? 'Breach alerts' : 'Breach alerts (Premium)'),
-            subtitle: Text(_s[breachAlertsKey] == true
-                ? 'On. Checks the public breach list weekly.'
-                : 'Off. When on, the app downloads the public breach list once a week.'),
+            title: Text(premium.value ? l10n.premiumPerkBreach : l10n.settingsBreachPremium),
+            subtitle: Text(_s[breachAlertsKey] == true ? l10n.settingsBreachOn : l10n.settingsBreachOff),
             trailing: const Icon(Icons.chevron_right),
             onTap: () async {
               await Navigator.push(context, MaterialPageRoute(builder: (_) => BreachScreen(vault: widget.vault)));
@@ -503,7 +492,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return Semantics(
         button: true,
         selected: selected,
-        label: '${p?.name ?? 'Auto'} theme${locked ? ', Premium' : ''}',
+        label: locked ? l10n.settingsThemeSemanticPremium(themeName(id)) : l10n.settingsThemeSemantic(themeName(id)),
         child: InkWell(
           borderRadius: BorderRadius.circular(10),
           onTap: () => _pickTheme(id),
@@ -526,7 +515,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     : Container(width: 18, height: 18, decoration: BoxDecoration(shape: BoxShape.circle, color: (p ?? darkPalette).accent)),
               ),
               const SizedBox(height: 6),
-              Text(p?.name ?? 'Auto', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: Palette.text)),
+              Text(themeName(id), textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: Palette.text)),
             ]),
           ),
         ),
@@ -537,8 +526,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       Card(
         child: ListTile(
           leading: Icon(premium.value ? Icons.workspace_premium : Icons.workspace_premium_outlined, color: Palette.accent),
-          title: Text(premium.value ? 'Premium: thank you!' : 'Get Premium'),
-          subtitle: Text(premium.value ? 'Every theme and future Premium feature is yours.' : '$payOnce: every theme, sync across your devices, and more.'),
+          title: Text(premium.value ? l10n.settingsPremiumThanks : l10n.settingsGetPremium),
+          subtitle: Text(premium.value ? l10n.settingsPremiumThanksHelp : l10n.settingsGetPremiumHelp(payOnce)),
           trailing: const Icon(Icons.chevron_right),
           onTap: () async {
             await Navigator.push(context, MaterialPageRoute(builder: (_) => PremiumScreen(vault: widget.vault)));
@@ -546,7 +535,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           },
         ),
       ),
-      const Padding(padding: EdgeInsets.fromLTRB(4, 20, 4, 8), child: CapsLabel('Appearance')),
+      Padding(padding: const EdgeInsets.fromLTRB(4, 20, 4, 8), child: CapsLabel(l10n.settingsAppearance)),
       Card(
         child: Padding(
           padding: const EdgeInsets.all(14),
@@ -560,9 +549,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       const SizedBox(height: 10),
       Card(
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          const ListTile(
-            title: Text('Countdown style'),
-            subtitle: Text('How the time left on each code is shown'),
+          ListTile(
+            title: Text(l10n.settingsCountdown),
+            subtitle: Text(l10n.settingsCountdownHelp),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
@@ -577,18 +566,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(),
           SwitchListTile(
             key: const Key('easyFontSwitch'),
-            title: const Text('Easy-to-read font'),
-            subtitle: const Text('Atkinson Hyperlegible, made by the Braille Institute so letters and numbers are hard to mix up'),
+            title: Text(l10n.settingsEasyFont),
+            subtitle: Text(l10n.settingsEasyFontHelp),
             value: easyFont.value,
             onChanged: (on) async {
               easyFont.value = on;
               await _set(easyFontKey, on);
             },
           ),
+          const Divider(),
+          ListTile(
+            title: Text(l10n.settingsLanguage),
+            subtitle: DropdownButton<String>(
+              key: const Key('languagePicker'),
+              isExpanded: true,
+              value: appLanguage.value ?? '',
+              onChanged: (v) => v == null ? null : _setLanguage(v),
+              items: [
+                DropdownMenuItem(value: '', child: Text(l10n.settingsLanguageSystem)),
+                for (final e in languageNames.entries) DropdownMenuItem(value: e.key, child: Text(e.value)),
+              ],
+            ),
+          ),
         ]),
       ),
       const SizedBox(height: 20),
     ];
+  }
+
+  /// '' follows the device again. The app rebuilds in the new language (main.dart listens to appLanguage).
+  Future<void> _setLanguage(String v) async {
+    appLanguage.value = v.isEmpty ? null : v;
+    if (v.isNotEmpty) return _set(languageKey, v);
+    setState(() => widget.vault.settings.remove(languageKey));
+    await widget.vault.save();
   }
 
   Future<void> _set(String key, Object value) async {
@@ -600,32 +611,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final s = widget.vault.settings;
     final trashed = widget.vault.trash.length;
     return [
-      const Padding(padding: EdgeInsets.fromLTRB(4, 0, 4, 8), child: CapsLabel('Accounts list')),
+      Padding(padding: const EdgeInsets.fromLTRB(4, 0, 4, 8), child: CapsLabel(l10n.settingsAccountsList)),
       Card(
         child: Column(children: [
           SwitchListTile(
-            title: const Text('Compact cards'),
-            subtitle: const Text('Smaller cards, so more accounts fit on screen'),
+            title: Text(l10n.settingsCompact),
+            subtitle: Text(l10n.settingsCompactHelp),
             value: s[layoutKey] == 'compact',
             onChanged: (on) => _set(layoutKey, on ? 'compact' : 'roomy'),
           ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.sort),
-            title: const Text('Sort accounts'),
-            subtitle: Text('${sortChoices[sortOf(s)]}. Favorites always come first.'),
+            title: Text(l10n.settingsSort),
+            subtitle: Text(l10n.settingsSortHelp(sortChoices[sortOf(s)] ?? '')),
             onTap: () async {
               final pick = await showDialog<String>(
                 context: context,
-                builder: (c) => SimpleDialog(title: const Text('Sort accounts'), children: [
+                builder: (c) => SimpleDialog(title: Text(l10n.settingsSort), children: [
                   for (final e in sortChoices.entries)
                     ListTile(
                       leading: Icon(e.key == sortOf(s) ? Icons.radio_button_checked : Icons.radio_button_off),
                       title: Text(e.value),
                       subtitle: Text(switch (e.key) {
-                        'custom' => 'Your own order. Press and hold a card, then drag it.',
-                        'recent' => 'Accounts you just copied a code from move to the top',
-                        _ => 'By service name',
+                        'custom' => l10n.settingsSortCustom,
+                        'recent' => l10n.settingsSortRecent,
+                        _ => l10n.settingsSortName,
                       }),
                       onTap: () => Navigator.pop(c, e.key),
                     ),
@@ -637,8 +648,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(),
           ListTile(
             leading: const Icon(Icons.auto_fix_high),
-            title: const Text('Tidy account names'),
-            subtitle: const Text('Turns names like "google.com:you@gmail.com" into "Google". You see every change first.'),
+            title: Text(l10n.tidyTitle),
+            subtitle: Text(l10n.settingsTidyHelp),
             trailing: const Icon(Icons.chevron_right),
             onTap: () async {
               await Navigator.push(context, MaterialPageRoute(builder: (_) => TidyNamesScreen(vault: widget.vault)));
@@ -647,17 +658,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const Divider(),
           SwitchListTile(
-            title: const Text('Hide codes until tapped'),
-            subtitle: const Text('Shows dots instead of codes, so people nearby can\'t read them'),
+            title: Text(l10n.settingsHideCodes),
+            subtitle: Text(l10n.settingsHideCodesHelp),
             value: s[hideCodesKey] == true,
             onChanged: (on) => _set(hideCodesKey, on),
           ),
           if (Platform.isIOS || Platform.isAndroid) ...[
             const Divider(),
             SwitchListTile(
-              title: const Text('Show codes on widgets and watch'),
-              subtitle: const Text(
-                  'Your favorites\' codes show on your Home Screen, Lock Screen and watch without opening this app, so anyone holding your unlocked phone or your watch can read them. Star an account to make it a favorite.'),
+              title: Text(l10n.settingsShareCodes),
+              subtitle: Text(l10n.settingsShareCodesHelp),
               value: s[shareCodesKey] == true,
               onChanged: (on) => _set(shareCodesKey, on),
             ),
@@ -665,8 +675,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(),
           ListTile(
             leading: const Icon(Icons.delete_outline),
-            title: Text(trashed == 0 ? 'Trash' : 'Trash ($trashed)'),
-            subtitle: const Text('Deleted accounts stay here for 30 days'),
+            title: Text(trashed == 0 ? l10n.settingsTrash : l10n.settingsTrashCount(trashed)),
+            subtitle: Text(l10n.settingsTrashHelp),
             trailing: const Icon(Icons.chevron_right),
             onTap: () async {
               await Navigator.push(context, MaterialPageRoute(builder: (_) => TrashScreen(vault: widget.vault)));
@@ -693,11 +703,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final favorites = [for (final a in widget.vault.visible) if (a.favorite && a.timeBased && !a.requireAuth) a];
     final pick = await showDialog<String>(
       context: context,
-      builder: (c) => SimpleDialog(title: const Text('Watch face favorite'), children: [
+      builder: (c) => SimpleDialog(title: Text(l10n.settingsWatchFace), children: [
         if (favorites.isEmpty)
-          const Padding(
-            padding: EdgeInsets.fromLTRB(24, 8, 24, 16),
-            child: Text('Star an account on the main list first. Only favorites can go on the watch face.'),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+            child: Text(l10n.settingsWatchFaceNoFavorites),
           ),
         for (final a in favorites)
           ListTile(
@@ -708,7 +718,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ListTile(
           leading: Icon(s[complicationKey] == null ? Icons.radio_button_checked : Icons.radio_button_off),
-          title: const Text('None'),
+          title: Text(l10n.settingsNone),
           onTap: () => Navigator.pop(c, ''),
         ),
       ]),
@@ -726,22 +736,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final s = widget.vault.settings;
     final chosen = widget.vault.visible.where((a) => a.id == s[complicationKey]).firstOrNull;
     return [
-      const Padding(padding: EdgeInsets.fromLTRB(4, 0, 4, 8), child: CapsLabel('Copying and shortcuts')),
+      Padding(padding: const EdgeInsets.fromLTRB(4, 0, 4, 8), child: CapsLabel(l10n.settingsCopying)),
       Card(
         child: Column(children: [
           SwitchListTile(
-            title: const Text('Copy on open'),
-            subtitle: const Text(
-                'Opening or unlocking the app copies the code of the account you used last. Accounts that ask before showing their code are skipped.'),
+            title: Text(l10n.settingsCopyOnOpen),
+            subtitle: Text(l10n.settingsCopyOnOpenHelp),
             value: s[copyOnOpenKey] == true,
             onChanged: (on) => _set(copyOnOpenKey, on),
           ),
           if (Platform.isMacOS) ...[
             const Divider(),
             SwitchListTile(
-              title: const Text('Clear after one paste'),
-              subtitle: const Text(
-                  'The copied code works for one paste, then the clipboard empties. Clipboard history apps can count as that one paste. On Windows, codes clear after 30 seconds instead.'),
+              title: Text(l10n.settingsPasteOnce),
+              subtitle: Text(l10n.settingsPasteOnceHelp),
               value: s[pasteOnceKey] == true,
               onChanged: (on) {
                 pasteOnce = on;
@@ -752,8 +760,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           if (Platform.isIOS || Platform.isMacOS) ...[
             const Divider(),
             SwitchListTile(
-              title: const Text('Show accounts in Spotlight'),
-              subtitle: const Text('Search for an account\'s name from anywhere and jump straight to it. Only names are shared, never codes.'),
+              title: Text(l10n.settingsSpotlight),
+              subtitle: Text(l10n.settingsSpotlightHelp),
               value: s[spotlightKey] != false,
               onChanged: (on) => _set(spotlightKey, on),
             ),
@@ -761,19 +769,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           if (Platform.isIOS) ...[
             const Divider(),
             SwitchListTile(
-              title: Text(premium.value ? 'Code on Lock Screen after copying' : 'Code on Lock Screen after copying (Premium)'),
-              subtitle: const Text(
-                  'After you copy a code, it shows on your Lock Screen and Dynamic Island with a countdown until it expires.'),
+              title: Text(premium.value ? l10n.settingsLiveActivity : l10n.settingsLiveActivityPremium),
+              subtitle: Text(l10n.settingsLiveActivityHelp),
               value: premium.value && s[liveActivityKey] == true,
               onChanged: (on) => _setPremium(liveActivityKey, on),
             ),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.watch_outlined),
-              title: Text(premium.value ? 'Watch face favorite' : 'Watch face favorite (Premium)'),
-              subtitle: Text(chosen == null
-                  ? 'Pick one favorite whose code shows on your Apple Watch face. Needs "Show codes on widgets and watch" on.'
-                  : '${accountTitle(chosen)}. Add the Tanooki Auth complication to your watch face to see it.'),
+              title: Text(premium.value ? l10n.settingsWatchFace : l10n.settingsWatchFacePremium),
+              subtitle: Text(chosen == null ? l10n.settingsWatchFaceHelp : l10n.settingsWatchFaceChosen(accountTitle(chosen))),
               trailing: const Icon(Icons.chevron_right),
               onTap: _pickComplication,
             ),
@@ -788,28 +793,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final b = activeBridge;
     final paired = b?.pairedOrigins ?? [];
     return [
-      const Padding(padding: EdgeInsets.fromLTRB(4, 20, 4, 8), child: CapsLabel('Browser extension and launchers')),
+      Padding(padding: const EdgeInsets.fromLTRB(4, 20, 4, 8), child: CapsLabel(l10n.settingsBrowserSection)),
       Card(
         child: Column(children: [
           ListTile(
             leading: Icon(b == null ? Icons.link_off : Icons.link, color: b == null ? Palette.red : Palette.green),
-            title: Text(b == null ? 'Not running' : 'Ready for the browser extension'),
+            title: Text(b == null ? l10n.settingsBridgeOff : l10n.settingsBridgeOn),
             subtitle: Text(b == null
-                ? 'Ports ${bridgePorts.first}–${bridgePorts.last} are all in use by other programs, so the extension can\'t connect. Restart your computer and try again.'
-                : 'Listening on this computer only (127.0.0.1:${b.port}). Works while Tanooki Auth is open.'),
+                ? l10n.settingsBridgeOffHelp('${bridgePorts.first}', '${bridgePorts.last}')
+                : l10n.settingsBridgeOnHelp('${b.port}')),
           ),
           for (final origin in paired) ...[
             const Divider(),
             ListTile(
               leading: const Icon(Icons.extension_outlined),
-              title: Text(integrationOrigins.contains(origin) ? 'Paired: ${bridgeClientName(origin)}' : 'Paired browser'),
-              subtitle: integrationOrigins.contains(origin) ? null : Text('Extension ${origin.substring(origin.length - 8)}'),
+              title: Text(integrationOrigins.contains(origin) ? l10n.settingsPairedClient(bridgeClientName(origin)) : l10n.settingsPairedBrowser),
+              subtitle: integrationOrigins.contains(origin) ? null : Text(l10n.settingsExtensionId(origin.substring(origin.length - 8))),
               trailing: TextButton(
                 onPressed: () async {
                   await b!.unpair(origin);
                   setState(() {});
                 },
-                child: const Text('Unpair'),
+                child: Text(l10n.phoneUiUnpair),
               ),
             ),
           ],
@@ -823,7 +828,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final now = DateTime.now();
     String two(int n) => n.toString().padLeft(2, '0');
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -831,25 +836,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ..._listSection(),
           ..._copyingSection(),
           ...syncAndLinkSection(context, widget.vault, () => setState(() {})),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(4, 0, 4, 8),
-            child: CapsLabel('Security'),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+            child: CapsLabel(l10n.settingsSecurity),
           ),
           ..._securitySection(),
           if (Platform.isMacOS || Platform.isWindows) ..._browserSection(),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(4, 20, 4, 8),
-            child: CapsLabel('Backup'),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
+            child: CapsLabel(l10n.settingsBackup),
           ),
           Card(
             child: Column(
               children: [
                 ListTile(
                   leading: const Icon(Icons.save_alt),
-                  title: const Text('Export backup'),
-                  subtitle: const Text(
-                    'An encrypted file, locked with a passphrase you choose',
-                  ),
+                  title: Text(l10n.settingsExport),
+                  subtitle: Text(l10n.settingsExportHelp),
                   onTap: () => exportBackupFlow(context, widget.vault),
                 ),
                 const Divider(),
@@ -857,10 +860,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.restore),
-                  title: const Text('Import backup'),
-                  subtitle: const Text(
-                    'Adds accounts from a backup file; skips ones you already have',
-                  ),
+                  title: Text(l10n.settingsImport),
+                  subtitle: Text(l10n.settingsImportHelp),
                   onTap: () async {
                     await importBackupFlow(context, widget.vault);
                     setState(() {});
@@ -869,71 +870,69 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.fact_check_outlined),
-                  title: const Text('Test a backup'),
-                  subtitle: const Text('Checks a backup file opens with your passphrase. Changes nothing.'),
+                  title: Text(l10n.settingsTestBackup),
+                  subtitle: Text(l10n.settingsTestBackupHelp),
                   onTap: () => testBackupFlow(context),
                 ),
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.output),
-                  title: const Text('Move to another app'),
-                  subtitle: const Text(
-                    'Aegis, 2FAS, Google Authenticator, or plain setup links',
-                  ),
+                  title: Text(l10n.settingsMoveOut),
+                  subtitle: Text(l10n.settingsMoveOutHelp),
                   onTap: () => exportToAppFlow(context, widget.vault),
                 ),
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.print_outlined),
-                  title: const Text('Print paper backup'),
-                  subtitle: const Text('A PDF of QR codes and recovery codes to keep somewhere locked'),
+                  title: Text(l10n.settingsPaper),
+                  subtitle: Text(l10n.settingsPaperHelp),
                   onTap: () => paperBackupFlow(context, widget.vault),
                 ),
               ],
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(4, 20, 4, 8),
-            child: CapsLabel('Help'),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
+            child: CapsLabel(l10n.settingsHelp),
           ),
           Card(
             child: Column(
               children: [
                 ListTile(
                   leading: const Icon(Icons.menu_book_outlined),
-                  title: const Text('All 2FA guides'),
-                  subtitle: const Text('Step-by-step help turning on 2FA at popular sites, on our website'),
+                  title: Text(l10n.helpAllGuides),
+                  subtitle: Text(l10n.settingsGuidesHelp),
                   trailing: const Icon(Icons.open_in_new, size: 18),
                   onTap: () => openLink(context, guidesIndexUrl),
                 ),
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.tour_outlined),
-                  title: const Text('Show the welcome tour'),
+                  title: Text(l10n.settingsTour),
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TourScreen(vault: widget.vault))),
                 ),
                 const Divider(),
                 ListTile(
                   key: const Key('sendFeedback'),
                   leading: const Icon(Icons.feedback_outlined),
-                  title: const Text('Send feedback'),
-                  subtitle: const Text('Tell Maddie about a bug or an idea. Never includes your accounts or codes.'),
+                  title: Text(l10n.helpFeedbackTitle),
+                  subtitle: Text(l10n.settingsFeedbackHelp),
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeedbackScreen())),
                 ),
               ],
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(4, 20, 4, 8),
-            child: CapsLabel('About'),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
+            child: CapsLabel(l10n.settingsAbout),
           ),
           Card(
             child: Column(
               children: [
                 ListTile(
                   leading: const Icon(Icons.favorite_outline),
-                  title: const Text('About Maddie'),
-                  subtitle: const Text('A note from the person who makes Tanooki Auth'),
+                  title: Text(l10n.aboutTitle),
+                  subtitle: Text(l10n.settingsAboutMaddieHelp),
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const AboutMaddieScreen()),
@@ -942,28 +941,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.new_releases_outlined),
-                  title: const Text('What\'s new'),
-                  subtitle: const Text('Version $appVersion'),
+                  title: Text(l10n.helpWhatsNew),
+                  subtitle: Text(l10n.helpVersion(appVersion)),
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WhatsNewScreen())),
                 ),
                 const Divider(),
                 ListTile(
                   key: const Key('codesNotWorking'),
                   leading: const Icon(Icons.schedule),
-                  title: const Text('Codes not working?'),
-                  subtitle: Text(
-                    'Device time ${two(now.hour)}:${two(now.minute)}:${two(now.second)}. Codes depend on the clock: tap to check it against the internet.',
-                  ),
+                  title: Text(l10n.settingsCodesNotWorking),
+                  subtitle: Text(l10n.settingsCodesNotWorkingHelp('${two(now.hour)}:${two(now.minute)}:${two(now.second)}')),
                   onTap: _checkClock,
                 ),
                 const Divider(),
-                const AboutListTile(
-                  icon: Icon(Icons.info_outline),
+                AboutListTile(
+                  icon: const Icon(Icons.info_outline),
                   applicationName: 'Tanooki Auth',
                   applicationVersion: appVersion,
                   applicationLegalese: '© 2026 Tanooki Studios',
                   aboutBoxChildren: [
-                    SizedBox(height: 12),
+                    const SizedBox(height: 12),
                     Text(
                       privacyText,
                     ),
