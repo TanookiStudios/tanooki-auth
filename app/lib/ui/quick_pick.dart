@@ -115,9 +115,15 @@ class _QuickPickScreenState extends State<QuickPickScreen> {
           actions: [
             TextButton(onPressed: () => Navigator.pop(c), child: const Text('Not now')),
             FilledButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.pop(c);
-                launchUrl(Uri.parse('x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility'));
+                // Asking the system here (not on the first Type) lists the app under Accessibility so the switch is there.
+                try {
+                  await _window.invokeMethod<void>('requestTypeAccess');
+                } on MissingPluginException {
+                  // Older native side: Settings still opens.
+                }
+                await launchUrl(Uri.parse('x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility'));
               },
               child: const Text('Open System Settings'),
             ),

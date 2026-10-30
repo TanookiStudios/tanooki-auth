@@ -32,6 +32,23 @@ class MainFlutterWindow: NSWindow {
           MainFlutterWindow.captureScreens(result)
         case "typeText":
           MainFlutterWindow.typeText(call.arguments as? String ?? "", result)
+        case "typePlan":
+          // What typeText would do, without pressing anything: lets tests check the keys and the permission state.
+          result([
+            "trusted": MainFlutterWindow.canType(),
+            "axTrusted": AXIsProcessTrusted(),
+            "events": MainFlutterWindow.keyEvents(call.arguments as? String ?? "").map { [Int($0.unit), $0.down] as [Any] },
+          ])
+        case "requestTypeAccess":
+          // Only after the user clicked "Open System Settings": shows the system prompt and lists the app under Accessibility.
+          CGRequestPostEventAccess()
+          result(nil)
+        case "trayStatus":
+          result(self?.statusItem?.button?.image != nil && self?.statusItem?.isVisible == true)
+        case "trayClick":
+          // Same path as a real click on the menu bar icon.
+          self?.statusItem?.button?.performClick(nil)
+          result(nil)
         case "setDockIcon":
           // Premium app icon: changes the Dock icon while the app runs (nil puts the bundle icon back).
           // macOS has no lasting switch for this, so the app sets it again at every launch.
@@ -67,8 +84,8 @@ class MainFlutterWindow: NSWindow {
   /// Types [text] into the app that was in front before Tanooki Auth. Needs the Accessibility permission
   /// ("denied" until the user allows it). Never types into Tanooki Auth itself ("self").
   static func typeText(_ text: String, _ result: @escaping FlutterResult) {
-    if !CGPreflightPostEventAccess() {
-      CGRequestPostEventAccess() // the system asks once; after that the app explains where the switch is
+    // No system prompt here: the app explains first, and asks the system only if the user agrees (requestTypeAccess).
+    if !canType() {
       return result(FlutterError(code: "denied", message: nil, details: nil))
     }
     NSApp.hide(nil)
@@ -82,16 +99,22 @@ class MainFlutterWindow: NSWindow {
         return result(FlutterError(code: "self", message: nil, details: nil))
       }
       let source = CGEventSource(stateID: .hidSystemState)
-      for unit in text.utf16 {
-        var c = unit
-        for down in [true, false] {
-          let event = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: down)
-          event?.keyboardSetUnicodeString(stringLength: 1, unicodeString: &c)
-          event?.post(tap: .cghidEventTap)
-        }
+      for key in keyEvents(text) {
+        var c = key.unit
+        let event = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: key.down)
+        event?.keyboardSetUnicodeString(stringLength: 1, unicodeString: &c)
+        event?.post(tap: .cghidEventTap)
       }
       result(nil)
     }
+  }
+
+  /// Whether macOS lets the app press keys (System Settings > Privacy & Security > Accessibility).
+  static func canType() -> Bool { CGPreflightPostEventAccess() }
+
+  /// One key down and one key up per UTF-16 unit, carrying the character itself.
+  static func keyEvents(_ text: String) -> [(unit: UniChar, down: Bool)] {
+    text.utf16.flatMap { [(unit: $0, down: true), (unit: $0, down: false)] }
   }
 
   /// PNGs of every display, without Tanooki Auth's own windows. Needs the Screen Recording permission.

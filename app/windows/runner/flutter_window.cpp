@@ -128,6 +128,13 @@ bool FlutterWindow::OnCreate() {
         return;
       }
       result->Success();
+    } else if (call.method_name() == "trayStatus") {
+      // NIM_MODIFY only succeeds while our icon is really in the notification area.
+      result->Success(flutter::EncodableValue(Shell_NotifyIcon(NIM_MODIFY, &tray_) != FALSE));
+    } else if (call.method_name() == "trayClick") {
+      // Same path as a real click on the tray icon.
+      PostMessage(hwnd, kTrayMessage, tray_.uID, WM_LBUTTONUP);
+      result->Success();
     } else {
       result->NotImplemented();
     }

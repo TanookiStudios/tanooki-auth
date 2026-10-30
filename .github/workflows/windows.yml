@@ -24,6 +24,8 @@ jobs:
       - run: flutter analyze
       - run: flutter test
       - run: flutter test integration_test/app_test.dart -d windows --dart-define=TA_STORAGE=itest
+      # Tray icon, Quick pick copy, and Type code into a separate text box window.
+      - run: flutter test integration_test/quick_pick_test.dart -d windows --dart-define=TA_STORAGE=itest
       - run: flutter build windows --release
       - name: Build installer
         shell: pwsh
