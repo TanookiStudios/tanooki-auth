@@ -168,7 +168,7 @@ $form.Add_Shown({
   $box.Focus() | Out-Null
   [IO.File]::WriteAllText("$Out.ready", "shown front=$([Fg]::GetForegroundWindow() -eq $form.Handle)")
 })
-$form.Add_Activated({ $box.Focus() | Out-Null; [IO.File]::AppendAllText("$Out.ready", ' activated') })
+$form.Add_Activated({ $box.Focus() | Out-Null })
 $quit = New-Object Windows.Forms.Timer
 $quit.Interval = 120000
 $quit.Add_Tick({ $form.Close() })
