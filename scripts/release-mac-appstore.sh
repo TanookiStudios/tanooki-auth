@@ -44,7 +44,8 @@ API GET "/v1/profiles/$PROFILE_ID?fields[profiles]=profileContent" |
   node -e 'process.stdout.write(Buffer.from(JSON.parse(require("fs").readFileSync(0)).data.attributes.profileContent,"base64"))' > "$PROFILE"
 security cms -D -i "$PROFILE" | grep -q "iCloud.com.tanookistudios.auth" || { echo "The profile doesn't grant the iCloud container" >&2; exit 1; }
 
-flutter build macos --release
+# TA_MAC_APP_STORE makes Premium use App Store purchases and hides the Stripe links (store rules).
+flutter build macos --release --dart-define=TA_MAC_APP_STORE=true
 VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //; s/+.*//')
 BUILD=$(grep '^version:' pubspec.yaml | sed 's/.*+//')
 SRC="build/macos/Build/Products/Release/Tanooki Auth.app"

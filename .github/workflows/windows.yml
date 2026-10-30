@@ -4,7 +4,7 @@ name: Windows
 # vault on disk), and a release build uploaded as an artifact.
 on:
   push:
-    branches: [main, platforms-day]
+    branches: [main, platforms-day, pay-day]
   workflow_dispatch:
 
 jobs:

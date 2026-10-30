@@ -24,6 +24,7 @@ import 'emergency_ui.dart';
 import 'export_ui.dart';
 import 'home.dart';
 import 'premium.dart';
+import 'team_ui.dart';
 import 'security_extras.dart';
 import 'security_ui.dart';
 import 'sync_ui.dart' show syncAndLinkSection;
@@ -427,6 +428,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _open(EmergencyScreen(vault: widget.vault)),
           ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.groups_outlined),
+            title: const Text('Team vault'),
+            subtitle: const Text('Share sign-in codes with up to 10 people, end-to-end encrypted'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _open(TeamScreen(vault: widget.vault)),
+          ),
           if (monthlyNotificationSupported) ...[
             const Divider(),
             SwitchListTile(
@@ -527,7 +536,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: ListTile(
           leading: Icon(premium.value ? Icons.workspace_premium : Icons.workspace_premium_outlined, color: Palette.accent),
           title: Text(premium.value ? 'Premium: thank you!' : 'Get Premium'),
-          subtitle: Text(premium.value ? 'Every theme and future Premium feature is yours.' : '\$5 once: every theme, sync across your devices, and more.'),
+          subtitle: Text(premium.value ? 'Every theme and future Premium feature is yours.' : '$payOnce: every theme, sync across your devices, and more.'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () async {
             await Navigator.push(context, MaterialPageRoute(builder: (_) => PremiumScreen(vault: widget.vault)));

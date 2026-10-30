@@ -50,6 +50,7 @@ dependencies:
   tanooki_cloud:
     path: packages/tanooki_cloud
   flutter_tts: ^4.2.5
+  in_app_purchase: ^3.3.1
 
 dev_dependencies:
   flutter_test:
