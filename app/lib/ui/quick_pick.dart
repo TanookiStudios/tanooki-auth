@@ -147,6 +147,11 @@ class _QuickPickScreenState extends State<QuickPickScreen> {
             onSubmitted: (_) => list.isEmpty ? null : _copy(list.first),
           ),
         ),
+        if (Platform.isLinux)
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Text('Typing codes into other apps isn\'t available on Linux. Click an account to copy its code.'),
+          ),
         Expanded(
           child: list.isEmpty
               ? const Center(child: Text('No matching accounts'))

@@ -489,7 +489,9 @@ class _AddScreenState extends State<AddScreen> {
         ListTile(
           leading: Icon(Icons.qr_code_scanner, color: hasCamera ? null : Theme.of(context).disabledColor),
           title: const Text('Scan QR code'),
-          subtitle: Text(hasCamera ? 'Point the camera at the code the website shows' : 'No camera support on Windows'),
+          subtitle: Text(hasCamera
+              ? 'Point the camera at the code the website shows'
+              : 'No camera support on ${Platform.isLinux ? 'Linux' : 'Windows'}'),
           onTap: _scan,
         ),
         if (canScanScreen)
@@ -498,6 +500,13 @@ class _AddScreenState extends State<AddScreen> {
             title: const Text('Scan my screen'),
             subtitle: const Text('Reads a QR code showing anywhere on your screen'),
             onTap: _scanScreen,
+          ),
+        if (Platform.isLinux)
+          const ListTile(
+            enabled: false,
+            leading: Icon(Icons.screenshot_monitor),
+            title: Text('Scan my screen'),
+            subtitle: Text('Not available on Linux yet. Open a screenshot of the QR code instead.'),
           ),
         ListTile(
           leading: const Icon(Icons.image_outlined),
