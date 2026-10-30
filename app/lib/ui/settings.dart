@@ -12,6 +12,7 @@ import '../core/widget_share.dart';
 import '../main.dart' show createDecoyVault, deleteDecoyVault, isDecoyVault;
 import 'about_maddie.dart';
 import 'app_icon.dart';
+import 'auto_backup_ui.dart';
 import 'backup_ui.dart';
 import 'home.dart';
 import 'premium.dart';
@@ -570,6 +571,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   onTap: () => exportBackupFlow(context, widget.vault),
                 ),
+                const Divider(),
+                autoBackupTile(context, widget.vault, () => setState(() {})),
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.restore),

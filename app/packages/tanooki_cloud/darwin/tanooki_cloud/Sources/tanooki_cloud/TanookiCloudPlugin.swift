@@ -3,6 +3,7 @@
 //                   (iCloud.com.tanookistudios.auth, folder Documents/TanookiAuthSync). Files hold only
 //                   ciphertext; the app encrypts before it writes.
 //   tanooki/push:   register -> APNs device token (hex), iOS only.
+//   tanooki/folder: see FolderAccess.swift.
 #if os(iOS)
 import Flutter
 import UIKit
@@ -33,6 +34,7 @@ public class TanookiCloudPlugin: NSObject, FlutterPlugin {
     #endif
     let instance = TanookiCloudPlugin()
     registrar.addMethodCallDelegate(instance, channel: FlutterMethodChannel(name: "tanooki/icloud", binaryMessenger: messenger))
+    FolderAccess.register(with: registrar) // tanooki/folder: automatic backups' folder (FolderAccess.swift)
     #if os(iOS)
     registrar.addMethodCallDelegate(instance, channel: FlutterMethodChannel(name: "tanooki/push", binaryMessenger: messenger))
     registrar.addApplicationDelegate(instance)

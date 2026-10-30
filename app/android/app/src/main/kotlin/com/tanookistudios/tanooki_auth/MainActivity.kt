@@ -3,11 +3,16 @@ package com.tanookistudios.tanooki_auth
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.provider.DocumentsContract
 import android.view.WindowManager
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import java.io.FileNotFoundException
+import java.io.IOException
 import com.google.android.gms.wearable.PutDataRequest
 import com.google.android.gms.wearable.Wearable
 import com.tanookistudios.shared.FavoriteStore
@@ -97,6 +102,7 @@ class MainActivity : FlutterFragmentActivity() {
                 else -> result.notImplemented()
             }
         }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "tanooki/folder").setMethodCallHandler(::onFolderCall)
         extras = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "tanooki/extras").apply {
             setMethodCallHandler { call, result ->
                 when (call.method) {
@@ -132,6 +138,123 @@ class MainActivity : FlutterFragmentActivity() {
                     else -> result.notImplemented()
                 }
             }
+        }
+    }
+
+    // ---- tanooki/folder: the automatic-backup folder, through the Storage Access Framework ----
+    // pick -> {ref (tree URI), name} or null; list/write/delete {ref, name, bytes}. Error codes are the Dart
+    // AutoBackupFailure names: folderGone, permissionLost, diskFull, other.
+
+    private val pickFolderRequest = 4141
+    private var pickFolderResult: MethodChannel.Result? = null
+
+    private class FolderError(val code: String, message: String?) : Exception(message)
+
+    private fun onFolderCall(call: MethodCall, result: MethodChannel.Result) {
+        if (call.method == "pick") {
+            pickFolderResult?.success(null)
+            pickFolderResult = result
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                    Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+            )
+            @Suppress("DEPRECATION")
+            startActivityForResult(intent, pickFolderRequest)
+            return
+        }
+        val ref = call.argument<String>("ref") ?: return result.error("folderGone", "no folder", null)
+        val name = call.argument<String>("name")
+        val bytes = call.argument<ByteArray>("bytes")
+        Thread {
+            val reply: Result<Any?> = try {
+                val tree = Uri.parse(ref)
+                checkFolder(tree)
+                Result.success(
+                    when (call.method) {
+                        "list" -> children(tree).keys.toList()
+                        "write" -> writeChild(tree, name!!, bytes!!).let { null }
+                        "delete" -> children(tree)[name]?.let { DocumentsContract.deleteDocument(contentResolver, it) }.let { null }
+                        else -> throw FolderError("notImplemented", call.method)
+                    }
+                )
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+            runOnUiThread {
+                reply.fold({ result.success(it) }) { e ->
+                    when {
+                        e is FolderError && e.code == "notImplemented" -> result.notImplemented()
+                        e is FolderError -> result.error(e.code, e.message, null)
+                        e is SecurityException -> result.error("permissionLost", e.message, null)
+                        e is FileNotFoundException -> result.error("folderGone", e.message, null)
+                        e is IOException && (e.message ?: "").let { it.contains("ENOSPC") || it.contains("No space") } ->
+                            result.error("diskFull", e.message, null)
+                        else -> result.error("other", e.message ?: e.javaClass.simpleName, null)
+                    }
+                }
+            }
+        }.start()
+    }
+
+    /** Still allowed to write there (the user can revoke it), and the folder still exists. */
+    private fun checkFolder(tree: Uri) {
+        val granted = contentResolver.persistedUriPermissions.any { it.uri == tree && it.isWritePermission }
+        if (!granted) throw FolderError("permissionLost", "no write permission for $tree")
+        val doc = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree))
+        val exists = try {
+            contentResolver.query(doc, arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID), null, null, null)?.use { it.moveToFirst() } == true
+        } catch (e: Exception) {
+            false
+        }
+        if (!exists) throw FolderError("folderGone", "$tree")
+    }
+
+    /** File name -> document URI for everything directly inside the folder. */
+    private fun children(tree: Uri): Map<String, Uri> {
+        val parent = DocumentsContract.getTreeDocumentId(tree)
+        val list = DocumentsContract.buildChildDocumentsUriUsingTree(tree, parent)
+        val out = mutableMapOf<String, Uri>()
+        contentResolver.query(
+            list,
+            arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE),
+            null, null, null
+        )?.use { c ->
+            while (c.moveToNext()) {
+                if (c.getString(2) == DocumentsContract.Document.MIME_TYPE_DIR) continue
+                out[c.getString(1)] = DocumentsContract.buildDocumentUriUsingTree(tree, c.getString(0))
+            }
+        }
+        return out
+    }
+
+    /** Replaces the file if it's there (truncating), else creates it, so there are never "name (1)" copies. */
+    private fun writeChild(tree: Uri, name: String, bytes: ByteArray) {
+        val doc = children(tree)[name] ?: DocumentsContract.createDocument(
+            contentResolver,
+            DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree)),
+            "application/octet-stream",
+            name
+        ) ?: throw FolderError("other", "couldn't create $name")
+        (contentResolver.openOutputStream(doc, "wt") ?: throw FolderError("other", "couldn't open $name")).use { it.write(bytes) }
+    }
+
+    @Deprecated("startActivityForResult is enough for one folder picker")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        @Suppress("DEPRECATION")
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != pickFolderRequest) return
+        val result = pickFolderResult ?: return
+        pickFolderResult = null
+        val tree = data?.data
+        if (resultCode != RESULT_OK || tree == null) return result.success(null)
+        try {
+            contentResolver.takePersistableUriPermission(tree, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            val doc = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree))
+            val name = contentResolver.query(doc, arrayOf(DocumentsContract.Document.COLUMN_DISPLAY_NAME), null, null, null)
+                ?.use { if (it.moveToFirst()) it.getString(0) else null } ?: "Backup folder"
+            result.success(mapOf("ref" to tree.toString(), "name" to name))
+        } catch (e: Exception) {
+            result.error("permissionLost", e.message, null)
         }
     }
 

@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'bridge/server.dart';
 import 'core/account.dart';
+import 'core/auto_backup.dart';
 import 'core/security.dart';
 import 'core/vault.dart';
 import 'core/widget_share.dart';
@@ -72,8 +73,12 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   // Widgets and the watch follow the real vault only; the decoy never reaches them.
   Vault.onSaved = (v) {
-    if (!isDecoyVault(v)) publishSharedFavorites(v);
+    if (!isDecoyVault(v)) {
+      publishSharedFavorites(v);
+      autoBackup.vaultChanged(v);
+    }
   };
+  autoBackup.isPremium = () => premium.value;
   runApp(const TanookiAuthApp());
 }
 
@@ -338,6 +343,7 @@ class _GateState extends State<Gate> implements BridgeHost {
       await v.save();
       if (mounted) await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => RecoveryKitScreen(vault: v)));
     }
+    autoBackup.appOpened(v); // runs in the background; a failure shows in Settings and the check-up
     if (mounted) await weeklyBreachCheck(context, v);
     await _runPendingAction();
   }

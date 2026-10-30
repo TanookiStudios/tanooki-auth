@@ -3,6 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:tanooki_auth/core/auto_backup.dart';
+import 'package:tanooki_auth/core/backup.dart';
 import 'package:tanooki_auth/core/otpauth_uri.dart';
 import 'package:tanooki_auth/core/security.dart';
 import 'package:tanooki_auth/core/totp.dart';
@@ -164,4 +167,54 @@ void main() {
     expect(after.settings[failedPasscodesKey], isNull, reason: 'right passcode resets the wrong-try count');
     stdout.writeln('PROOF passcode-wrong=refused decoy=empty real=GitHub platform=${Platform.operatingSystem}');
   });
+
+  // macOS: the real native bookmark path (create, resolve, start/stop security-scoped access) on a test folder inside
+  // the app's own container, injected by path so no folder picker is shown.
+  testWidgets('automatic backup through a security-scoped bookmark', (t) async {
+    expect(storageName, isNotEmpty, reason: 'refusing to run against the real vault; pass --dart-define=TA_STORAGE=itest');
+    final vault = await openVault();
+    await vault.resetToEmpty();
+    vault.accounts.add(parseOtpauthUri(uri));
+    vault.settings.addAll({lockKey: false, kitShownKey: true});
+    final dir = Directory('${(await getApplicationSupportDirectory()).path}/$storageName/auto-backup-folder');
+    if (dir.existsSync()) dir.deleteSync(recursive: true);
+    dir.createSync(recursive: true);
+    for (var d = 1; d <= 12; d++) {
+      File('${dir.path}/${autoBackupName(DateTime(2020, 1, d))}').writeAsStringSync('old');
+    }
+    File('${dir.path}/notes.txt').writeAsStringSync('not ours');
+
+    final picked = (await folderCall<Map>('bookmark', {'path': dir.path}))!;
+    expect(picked['name'], 'auto-backup-folder');
+    vault.settings[autoBackupKey] = {'folder': picked['ref'], 'folderName': picked['name'], 'passphrase': 'itest passphrase'};
+    await vault.save();
+
+    final runner = AutoBackupRunner(iterations: 1000)..isPremium = () => true;
+    expect(await runner.runNow(vault), isTrue, reason: '${runner.failure.value}');
+    final today = File('${dir.path}/${autoBackupName(DateTime.now())}');
+    expect(today.existsSync(), isTrue);
+    expect((await importBackup(today.readAsStringSync(), 'itest passphrase')).single.secret, vault.live.single.secret);
+    final names = dir.listSync().map((e) => e.uri.pathSegments.last).toList();
+    expect(names.where(isAutoBackupName).length, autoBackupsKept);
+    expect(names, contains('notes.txt'));
+    final reloaded = await openVault();
+    await reloaded.load();
+    expect(backupIsRecent(reloaded.settings, DateTime.now()), isTrue, reason: 'panic wipe and the check-up see the backup');
+
+    // The Settings row shows the folder and the time.
+    await t.pumpWidget(const TanookiAuthApp(key: ValueKey('autobackup')));
+    await waitFor(t, find.text('GitHub'));
+    await t.tap(find.byTooltip('Settings').evaluate().isNotEmpty ? find.byTooltip('Settings') : find.text('Settings'));
+    await settle(t);
+    final row = find.textContaining('On, to auto-backup-folder. Last backup: Today at');
+    await t.scrollUntilVisible(row, 300,
+        scrollable: find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).first);
+    expect(row, findsOneWidget);
+
+    // Folder deleted: the bookmark no longer resolves and the failure says so.
+    dir.deleteSync(recursive: true);
+    expect(await runner.runNow(vault), isFalse);
+    expect(runner.failure.value!.failure, AutoBackupFailure.folderGone, reason: runner.failure.value!.detail);
+    stdout.writeln('PROOF auto-backup bookmark=ok file=${today.path} kept=$autoBackupsKept notes=kept gone=folderGone platform=${Platform.operatingSystem}');
+  }, skip: !Platform.isMacOS);
 }

@@ -1,5 +1,5 @@
 name: tanooki_cloud
-description: "Tanooki Auth's own native bits for sync and the phone link: iCloud Drive folder access (iOS, macOS) and the APNs token (iOS). Used only by the app in ../.."
+description: "Tanooki Auth's own native bits: iCloud Drive folder access for sync (iOS, macOS), the APNs token (iOS), and the automatic-backup folder bookmark (iOS, macOS). Used only by the app in ../.."
 publish_to: 'none'
 version: 0.1.0
 

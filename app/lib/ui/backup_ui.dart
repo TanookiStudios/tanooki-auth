@@ -38,7 +38,7 @@ Future<T> busy<T>(BuildContext context, String text, Future<T> Function() work) 
   }
 }
 
-Future<String?> _askPassphrase(BuildContext context, {required bool forExport}) async {
+Future<String?> askPassphrase(BuildContext context, {required bool forExport}) async {
   final first = TextEditingController(), second = TextEditingController();
   String? error;
   return showDialog<String>(
@@ -108,7 +108,7 @@ Future<void> exportBackupFlow(BuildContext context, Vault vault) async {
     _say(context, 'There are no accounts to back up yet.');
     return;
   }
-  final pass = await _askPassphrase(context, forExport: true);
+  final pass = await askPassphrase(context, forExport: true);
   if (pass == null || !context.mounted) return;
   final text = await busy(context, 'Encrypting backup…', () => exportBackup(vault.live, pass));
   if (!context.mounted) return;
@@ -133,7 +133,7 @@ Future<List<Account>?> pickAndOpenBackup(BuildContext context) async {
   }
   while (true) {
     if (!context.mounted) return null;
-    final pass = await _askPassphrase(context, forExport: false);
+    final pass = await askPassphrase(context, forExport: false);
     if (pass == null || !context.mounted) return null;
     try {
       return await busy(context, 'Unlocking backup…', () => importBackup(text, pass));

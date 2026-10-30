@@ -6,6 +6,9 @@
 	<true/>
 	<key>com.apple.security.device.camera</key>
 	<true/>
+	<!-- Automatic backups: keep access to the folder the user picked across restarts. -->
+	<key>com.apple.security.files.bookmarks.app-scope</key>
+	<true/>
 	<key>com.apple.security.files.user-selected.read-write</key>
 	<true/>
 	<key>com.apple.security.network.client</key>

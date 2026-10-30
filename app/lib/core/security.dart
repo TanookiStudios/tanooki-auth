@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:cryptography/cryptography.dart';
 
 import 'account.dart';
+import 'auto_backup.dart';
 import 'vault.dart';
 
 // Keys in vault.settings. The real vault's settings are the only ones the lock screen reads.
@@ -123,7 +124,7 @@ bool backupIsRecent(Map<String, dynamic> s, DateTime now) {
 
 // ---------- security check-up ----------
 
-enum CheckupIssue { lockOff, noPasscode, noBackup, noRecoveryCodes }
+enum CheckupIssue { lockOff, noPasscode, autoBackupFailed, noBackup, noRecoveryCodes }
 
 class CheckupFinding {
   CheckupFinding(this.issue, [this.accounts = const []]);
@@ -138,6 +139,7 @@ List<CheckupFinding> securityCheckup(Vault vault, DateTime now) {
   return [
     if (!isLockOn(s)) CheckupFinding(CheckupIssue.lockOff),
     if (s[passcodeKey] == null) CheckupFinding(CheckupIssue.noPasscode),
+    if (autoBackup.failure.value != null && autoBackup.enabled(vault)) CheckupFinding(CheckupIssue.autoBackupFailed),
     if (!backupIsRecent(s, now)) CheckupFinding(CheckupIssue.noBackup),
     if (missingCodes.isNotEmpty) CheckupFinding(CheckupIssue.noRecoveryCodes, missingCodes),
   ];

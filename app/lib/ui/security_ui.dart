@@ -3,9 +3,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../core/auto_backup.dart';
 import '../core/breaches.dart';
 import '../core/security.dart';
 import '../core/vault.dart';
+import 'auto_backup_ui.dart';
 import 'backup_ui.dart';
 import 'home.dart';
 import 'premium.dart';
@@ -173,6 +175,11 @@ class _CheckupScreenState extends State<CheckupScreen> {
                 'Anyone who picks up your unlocked device can see your codes. Turn on "Lock the app" or an app passcode in Settings.'),
             CheckupIssue.noPasscode => item(Icons.pin_outlined, 'No app passcode',
                 'A passcode lets you open Tanooki Auth even if Face ID or your fingerprint stops working. Set one in Settings.'),
+            CheckupIssue.autoBackupFailed => item(Icons.cloud_off_outlined, 'Automatic backup failed', autoBackup.failure.value?.message ?? '',
+                action: 'Open automatic backups', onAction: () async {
+                await Navigator.push(context, MaterialPageRoute(builder: (_) => AutoBackupScreen(vault: widget.vault)));
+                setState(() {});
+              }),
             CheckupIssue.noBackup => item(Icons.save_alt, 'No backup in the last 30 days',
                 'If this device is lost or broken, a backup is the only way to get your accounts back.',
                 action: 'Make a backup now', onAction: () async {
