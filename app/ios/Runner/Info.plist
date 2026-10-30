@@ -32,6 +32,19 @@
 	<string>Tanooki Auth uses the camera to scan two-factor setup QR codes.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Tanooki Auth uses Face ID to keep your codes private.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.tanookistudios.auth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>tanookiauth</string>
+			</array>
+		</dict>
+	</array>
+	<key>TAKeychainGroup</key>
+	<string>$(AppIdentifierPrefix)com.tanookistudios.auth.shared</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

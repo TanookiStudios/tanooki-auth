@@ -1,11 +1,17 @@
 #include "flutter_window.h"
 
 #include <optional>
+#include <string>
 #include <vector>
 
 #include <flutter/standard_method_codec.h>
 
 #include "flutter/generated_plugin_registrant.h"
+#include "resource.h"
+
+namespace {
+constexpr UINT kTrayMessage = WM_APP + 1;
+}
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
@@ -83,10 +89,58 @@ bool FlutterWindow::OnCreate() {
           {flutter::EncodableValue("bgra"), flutter::EncodableValue(std::move(pixels))},
       };
       result->Success(flutter::EncodableValue(flutter::EncodableList{flutter::EncodableValue(shot)}));
+    } else if (call.method_name() == "typeText") {
+      // Types the code into the window that was in front before ours, as if typed on the keyboard.
+      const auto* text = std::get_if<std::string>(call.arguments());
+      if (text == nullptr || text->empty()) {
+        result->Error("failed", "Nothing to type");
+        return;
+      }
+      ShowWindow(hwnd, SW_MINIMIZE);  // hands focus back to the window you were in
+      Sleep(300);
+      HWND front = GetForegroundWindow();
+      DWORD pid = 0;
+      if (front != nullptr) GetWindowThreadProcessId(front, &pid);
+      if (front == nullptr || pid == GetCurrentProcessId()) {
+        // Never type into Tanooki Auth itself.
+        ShowWindow(hwnd, SW_RESTORE);
+        SetForegroundWindow(hwnd);
+        result->Error("self");
+        return;
+      }
+      const int len = MultiByteToWideChar(CP_UTF8, 0, text->c_str(), -1, nullptr, 0);
+      std::wstring wide(len > 0 ? len - 1 : 0, L'\0');
+      if (len > 1) MultiByteToWideChar(CP_UTF8, 0, text->c_str(), -1, wide.data(), len);
+      std::vector<INPUT> keys;
+      for (wchar_t c : wide) {
+        INPUT down = {};
+        down.type = INPUT_KEYBOARD;
+        down.ki.wScan = c;
+        down.ki.dwFlags = KEYEVENTF_UNICODE;
+        INPUT up = down;
+        up.ki.dwFlags |= KEYEVENTF_KEYUP;
+        keys.push_back(down);
+        keys.push_back(up);
+      }
+      const UINT sent = SendInput(static_cast<UINT>(keys.size()), keys.data(), sizeof(INPUT));
+      if (sent != keys.size()) {
+        result->Error("failed", "Windows blocked the key presses");
+        return;
+      }
+      result->Success();
     } else {
       result->NotImplemented();
     }
   });
+
+  tray_.cbSize = sizeof(tray_);
+  tray_.hWnd = GetHandle();
+  tray_.uID = 1;
+  tray_.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+  tray_.uCallbackMessage = kTrayMessage;
+  tray_.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_APP_ICON));
+  wcscpy_s(tray_.szTip, L"Tanooki Auth");
+  Shell_NotifyIcon(NIM_ADD, &tray_);
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
@@ -102,6 +156,7 @@ bool FlutterWindow::OnCreate() {
 }
 
 void FlutterWindow::OnDestroy() {
+  Shell_NotifyIcon(NIM_DELETE, &tray_);
   window_channel_ = nullptr;
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
@@ -128,6 +183,14 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
     case WM_FONTCHANGE:
       flutter_controller_->engine()->ReloadSystemFonts();
       break;
+    case kTrayMessage:
+      if (LOWORD(lparam) == WM_LBUTTONUP || LOWORD(lparam) == WM_RBUTTONUP) {
+        if (IsIconic(hwnd)) ShowWindow(hwnd, SW_RESTORE);
+        ShowWindow(hwnd, SW_SHOW);
+        SetForegroundWindow(hwnd);
+        if (window_channel_) window_channel_->InvokeMethod("trayClicked", nullptr);
+      }
+      return 0;
   }
 
   return Win32Window::MessageHandler(hwnd, message, wparam, lparam);

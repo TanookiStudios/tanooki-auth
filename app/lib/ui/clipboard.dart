@@ -8,6 +8,7 @@ Timer? _clearTimer;
 /// Copies a code and clears the clipboard 30 s later if it still holds that code.
 Future<void> copyCode(String code) async {
   await Clipboard.setData(ClipboardData(text: code));
+  if (Platform.isIOS || Platform.isAndroid) await HapticFeedback.lightImpact(); // a small tap so you feel it worked
   _clearTimer?.cancel();
   _clearTimer = Timer(const Duration(seconds: 30), () async {
     // Reading the clipboard on iOS pops a "paste from" banner, so clear without checking there.

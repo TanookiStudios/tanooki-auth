@@ -24,3 +24,4 @@ plugins {
 }
 
 include(":app")
+include(":wear") // Wear OS app: favorites' codes on the watch

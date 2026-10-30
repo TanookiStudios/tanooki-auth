@@ -9,12 +9,14 @@ import 'bridge/server.dart';
 import 'core/account.dart';
 import 'core/security.dart';
 import 'core/vault.dart';
+import 'core/widget_share.dart';
 import 'ui/add.dart';
 import 'ui/backup_ui.dart';
 import 'ui/brand_icon.dart';
 import 'ui/home.dart';
 import 'ui/phone_link_ui.dart' show resumeSyncAndLink, startSyncAndLink, stopSyncAndLink;
 import 'ui/premium.dart';
+import 'ui/quick_pick.dart';
 import 'ui/security_ui.dart';
 import 'ui/settings.dart';
 import 'ui/theme.dart';
@@ -67,6 +69,10 @@ Future<void> deleteDecoyVault() async {
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  // Widgets and the watch follow the real vault only; the decoy never reaches them.
+  Vault.onSaved = (v) {
+    if (!isDecoyVault(v)) publishSharedFavorites(v);
+  };
   runApp(const TanookiAuthApp());
 }
 
@@ -165,6 +171,8 @@ class _GateState extends State<Gate> implements BridgeHost {
   DateTime? _backgroundedAt;
   late final AppLifecycleListener _lifecycle;
   final _auth = LocalAuthentication();
+  /// "scan" (Control Center / quick settings) or "pick" (menu bar / tray), run once the app is unlocked.
+  String? _pendingAction;
 
   bool get _lockOn => _real != null && isLockOn(_real!.settings);
   bool get _biometricOn => _real?.settings[lockKey] == true;
@@ -260,6 +268,15 @@ class _GateState extends State<Gate> implements BridgeHost {
   void initState() {
     super.initState();
     _lifecycle = AppLifecycleListener(onStateChange: _onLifecycle);
+    listenForPlatformActions(() async {
+      _pendingAction = await takePendingAction() ?? _pendingAction;
+      await _runPendingAction();
+    });
+    _window.setMethodCallHandler((call) async {
+      if (call.method != 'trayClicked') return;
+      _pendingAction = 'pick';
+      await _runPendingAction();
+    });
     _load();
   }
 
@@ -282,6 +299,8 @@ class _GateState extends State<Gate> implements BridgeHost {
       setState(() => _error = e);
       return;
     }
+    await publishSharedFavorites(vault);
+    _pendingAction = await takePendingAction() ?? _pendingAction;
     await loadPremiumAndTheme(vault);
     await loadBrandIcons();
     await applyScreenshotBlocking(blockScreenshotsOn(vault.settings));
@@ -311,13 +330,26 @@ class _GateState extends State<Gate> implements BridgeHost {
       _pinError = null;
     });
     if (mounted) startSyncAndLink(context, v, bringToFront);
-    if (v != _real) return;
+    if (v != _real) return _runPendingAction();
     if (v.settings[kitShownKey] != true) {
       v.settings[kitShownKey] = true;
       await v.save();
       if (mounted) await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => RecoveryKitScreen(vault: v)));
     }
     if (mounted) await weeklyBreachCheck(context, v);
+    await _runPendingAction();
+  }
+
+  Future<void> _runPendingAction() async {
+    final action = _pendingAction;
+    if (action == null || !mounted || _locked || _vault == null) return; // runs after unlock instead
+    _pendingAction = null;
+    final nav = Navigator.of(context);
+    nav.popUntil((r) => r.isFirst);
+    await nav.push(MaterialPageRoute<void>(
+      builder: (_) => action == 'pick' ? QuickPickScreen(vault: _vault!) : AddScreen(vault: _vault!, scanOnOpen: true),
+    ));
+    if (mounted) setState(() {});
   }
 
   Future<void> _submitPasscode() async {

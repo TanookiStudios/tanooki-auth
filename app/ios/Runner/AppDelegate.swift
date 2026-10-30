@@ -1,5 +1,7 @@
 import Flutter
 import UIKit
+import WatchConnectivity
+import WidgetKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -19,6 +21,93 @@ import UIKit
         ScreenShield.set(call.arguments as? Bool ?? false)
         result(nil)
       }
+    guard let extrasRegistrar = engineBridge.pluginRegistry.registrar(forPlugin: "TanookiExtras") else { return }
+    Extras.shared.attach(extrasRegistrar)
+  }
+}
+
+/// Widgets, watch and the Control Center button: the native half of app/lib/core/widget_share.dart.
+final class Extras: NSObject, FlutterSceneLifeCycleDelegate, WCSessionDelegate {
+  static let shared = Extras()
+  private var channel: FlutterMethodChannel?
+  private var pendingAction: String?
+  private var lastFavorites: Data?
+
+  func attach(_ registrar: FlutterPluginRegistrar) {
+    let channel = FlutterMethodChannel(name: "tanooki/extras", binaryMessenger: registrar.messenger())
+    channel.setMethodCallHandler { [weak self] call, result in
+      guard let self else { return }
+      switch call.method {
+      case "setFavorites":
+        let json = Data((call.arguments as? String ?? "[]").utf8)
+        let status = FavoriteStore.save(json, group: FavoriteStore.sharedGroup)
+        WidgetCenter.shared.reloadAllTimelines()
+        self.sendToWatch(json)
+        status == errSecSuccess
+          ? result(nil)
+          : result(FlutterError(code: "keychain\(status)", message: nil, details: nil))
+      case "takeAction":
+        result(self.pendingAction)
+        self.pendingAction = nil
+      #if DEBUG
+      case "debugWidgetCodes":
+        // Test-only: the codes the widgets would show right now, worked out by the widget code (never secrets).
+        let now = Date()
+        result(FavoriteStore.load(group: FavoriteStore.sharedGroup).map { [$0.title, $0.code(at: now)] })
+      #endif
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+    self.channel = channel
+    registrar.addSceneDelegate(self)
+    if WCSession.isSupported() {
+      WCSession.default.delegate = self
+      WCSession.default.activate()
+    }
+  }
+
+  // MARK: Control Center button -> tanookiauth://scan
+
+  private func handle(_ urls: Set<UIOpenURLContext>) -> Bool {
+    guard urls.contains(where: { $0.url.scheme == "tanookiauth" && $0.url.host == "scan" }) else { return false }
+    pendingAction = "scan"
+    channel?.invokeMethod("action", arguments: nil)
+    return true
+  }
+
+  func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions?) -> Bool {
+    handle(connectionOptions?.urlContexts ?? [])
+  }
+
+  func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) -> Bool {
+    handle(URLContexts)
+  }
+
+  // MARK: Apple Watch
+
+  /// The latest favorites (or an empty list) go to the watch app; WatchConnectivity keeps only the newest.
+  private func sendToWatch(_ json: Data) {
+    lastFavorites = json
+    // Not gated on isWatchAppInstalled: it can read false for a moment after an update, and a missed
+    // "turned off" message would leave codes on the watch. If it fails, the watch-state callback resends.
+    guard WCSession.isSupported(), WCSession.default.activationState == .activated, WCSession.default.isPaired
+    else { return }
+    try? WCSession.default.updateApplicationContext(["favorites": json])
+  }
+
+  func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {
+    if state == .activated, let json = lastFavorites { DispatchQueue.main.async { self.sendToWatch(json) } }
+  }
+
+  func sessionDidBecomeInactive(_ session: WCSession) {}
+
+  func sessionDidDeactivate(_ session: WCSession) {
+    session.activate() // switched to another watch
+  }
+
+  func sessionWatchStateDidChange(_ session: WCSession) {
+    if let json = lastFavorites { DispatchQueue.main.async { self.sendToWatch(json) } }
   }
 }
 

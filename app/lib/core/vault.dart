@@ -71,6 +71,9 @@ class Vault {
     return before - accounts.length;
   }
 
+  /// Runs after every successful save. The app uses it to keep widgets and the watch in step.
+  static void Function(Vault vault)? onSaved;
+
   static final _aes = AesGcm.with256bits();
   static final _aad = utf8.encode('tanooki-auth-vault-v1');
 
@@ -221,5 +224,6 @@ class Vault {
     await tmp.writeAsString(env, flush: true);
     await tmp.rename(file.path);
     if (edited) afterLocalEdit?.call();
+    onSaved?.call(this);
   }
 }

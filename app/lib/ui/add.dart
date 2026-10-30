@@ -85,14 +85,22 @@ Future<bool> showAccountDialog(BuildContext context, Account a,
 }
 
 class AddScreen extends StatefulWidget {
-  const AddScreen({super.key, required this.vault});
+  const AddScreen({super.key, required this.vault, this.scanOnOpen = false});
   final Vault vault;
+  /// Opens the camera straight away (from the Control Center button or quick settings tile).
+  final bool scanOnOpen;
 
   @override
   State<AddScreen> createState() => _AddScreenState();
 }
 
 class _AddScreenState extends State<AddScreen> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.scanOnOpen) WidgetsBinding.instance.addPostFrameCallback((_) => _scan());
+  }
+
   void _say(String msg) => ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
     ..showSnackBar(SnackBar(content: Text(msg)));

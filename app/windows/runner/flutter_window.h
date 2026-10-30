@@ -7,6 +7,8 @@
 #include <flutter/encodable_value.h>
 
 #include <memory>
+#include <windows.h>
+#include <shellapi.h>
 
 #include "win32_window.h"
 
@@ -35,6 +37,8 @@ class FlutterWindow : public Win32Window {
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> window_channel_;
   // Whether the user asked to keep the window out of screenshots (Settings).
   bool secure_ = false;
+  // Notification-area (tray) icon: a click opens the quick pick list.
+  NOTIFYICONDATA tray_ = {};
 };
 
 #endif  // RUNNER_FLUTTER_WINDOW_H_

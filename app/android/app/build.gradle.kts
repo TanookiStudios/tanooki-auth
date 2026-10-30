@@ -47,6 +47,9 @@ android {
         }
     }
 
+    // TOTP and the encrypted favorites store, shared with the Wear OS app (../wear).
+    sourceSets["main"].java.srcDir("../shared/src")
+
     buildTypes {
         release {
             // Machines without the key (CI) fall back to debug signing so release builds still compile.
@@ -63,4 +66,9 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Sends favorites to a paired Wear OS watch (only when the user turns that on).
+    implementation("com.google.android.gms:play-services-wearable:19.0.0")
 }

@@ -7,6 +7,7 @@ import 'package:local_auth/local_auth.dart';
 import '../bridge/server.dart';
 import '../core/security.dart';
 import '../core/vault.dart';
+import '../core/widget_share.dart';
 import '../main.dart' show createDecoyVault, deleteDecoyVault, isDecoyVault;
 import 'about_maddie.dart';
 import 'backup_ui.dart';
@@ -392,6 +393,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: s[hideCodesKey] == true,
             onChanged: (on) => _set(hideCodesKey, on),
           ),
+          if (Platform.isIOS || Platform.isAndroid) ...[
+            const Divider(),
+            SwitchListTile(
+              title: const Text('Show codes on widgets and watch'),
+              subtitle: const Text(
+                  'Your favorites\' codes show on your Home Screen, Lock Screen and watch without opening this app, so anyone holding your unlocked phone or your watch can read them. Star an account to make it a favorite.'),
+              value: s[shareCodesKey] == true,
+              onChanged: (on) => _set(shareCodesKey, on),
+            ),
+          ],
           const Divider(),
           ListTile(
             leading: const Icon(Icons.delete_outline),
