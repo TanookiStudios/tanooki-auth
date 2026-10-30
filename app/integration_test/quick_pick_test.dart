@@ -112,8 +112,8 @@ void main() {
         for (var i = 0; i < 150 && !ready.existsSync(); i++) {
           await t.pump(const Duration(milliseconds: 100));
         }
-        step('target ready=${ready.existsSync()}');
-        expect(ready.existsSync(), isTrue, reason: 'the target text box never came to the front');
+        step('target window: ${ready.existsSync() ? ready.readAsStringSync() : 'not shown'}');
+        expect(ready.existsSync(), isTrue, reason: 'the target text box window never opened');
         await awayFromRollover(t);
         final typed = code();
         step('tapping Type');
@@ -122,10 +122,12 @@ void main() {
           await t.pump(const Duration(milliseconds: 100));
         }
         step('typed: ${out.existsSync() ? out.readAsStringSync() : '<none>'}');
+        step('target window after Type: ${ready.readAsStringSync()}');
         expect(out.existsSync() ? out.readAsStringSync() : '<nothing typed>', typed);
         step('PROOF windows-type=$typed');
       } finally {
         target.kill();
+        step('target output: ${await target.stdout.transform(systemEncoding.decoder).join()} ${await target.stderr.transform(systemEncoding.decoder).join()}');
         await window.invokeMethod<void>('focus');
       }
     }
@@ -144,8 +146,8 @@ $box = New-Object Windows.Forms.TextBox
 $box.Dock = 'Fill'
 $form.Controls.Add($box)
 $box.Add_TextChanged({ [IO.File]::WriteAllText($Out, $box.Text) })
-$form.Add_Shown({ $form.Activate() })
-$form.Add_Activated({ $box.Focus() | Out-Null; [IO.File]::WriteAllText("$Out.ready", 'ready') })
+$form.Add_Shown({ $form.Activate(); [IO.File]::WriteAllText("$Out.ready", 'shown') })
+$form.Add_Activated({ $box.Focus() | Out-Null; [IO.File]::AppendAllText("$Out.ready", ' activated') })
 $quit = New-Object Windows.Forms.Timer
 $quit.Interval = 120000
 $quit.Add_Tick({ $form.Close() })
