@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -46,5 +48,27 @@ void main() {
     final screen2 = img.Image(width: 5120, height: 2880)..clear(img.ColorRgb8(255, 255, 255));
     img.compositeImage(screen2, tiny, dstX: 4000, dstY: 2000);
     expect(decodeQr(screen2), uri);
+  });
+
+  test('reads 1-bit and grayscale pictures (what qrencode and many screenshot tools save)', () {
+    final qr = renderQr(uri);
+    expect(decodeQrImage(img.encodePng(qr.convert(format: img.Format.uint1, numChannels: 1))), uri);
+    expect(decodeQrImage(img.encodePng(qr.convert(numChannels: 1))), uri);
+  });
+
+  test('reads a colored QR code by its brightness', () {
+    final qr = renderQr(uri);
+    for (final p in qr) {
+      if (p.r == 0) p.setRgb(30, 60, 160); // dark blue modules on white
+    }
+    expect(decodeQrImage(img.encodePng(qr)), uri);
+  });
+
+  test('dense share-sized codes read every time (zxing alone misses about 1 in 20)', () {
+    final r = Random(1); // zxing alone fails on some of this seed's first 200 codes
+    for (var i = 0; i < 200; i++) {
+      final text = 'tanookiauth-share:${base64Url.encode(List.generate(240, (_) => r.nextInt(256))).replaceAll('=', '')}';
+      expect(decodeQr(renderQr(text)), text, reason: 'code $i');
+    }
   });
 }

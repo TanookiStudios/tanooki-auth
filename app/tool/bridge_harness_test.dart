@@ -42,6 +42,12 @@ class HarnessHost implements BridgeHost {
   }
 
   @override
+  Future<bool> confirmReveal(Account account, String client) async {
+    stdout.writeln('REVEAL ${account.issuer} $client');
+    return true;
+  }
+
+  @override
   void vaultChanged() {}
   @override
   void openScreen(String screen) => stdout.writeln('OPEN $screen');

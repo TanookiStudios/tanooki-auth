@@ -72,6 +72,15 @@ class MainFlutterWindow: NSWindow {
         }
       }
 
+    // Lock on sleep: the screen locking, the Mac going to sleep, or the display sleeping tells the app, which
+    // locks itself if "Lock when the computer sleeps" is on.
+    let lockNow: (Notification) -> Void = { [weak self] _ in self?.channel?.invokeMethod("screenLocked", arguments: nil) }
+    DistributedNotificationCenter.default().addObserver(
+      forName: NSNotification.Name("com.apple.screenIsLocked"), object: nil, queue: .main, using: lockNow)
+    for name in [NSWorkspace.willSleepNotification, NSWorkspace.screensDidSleepNotification, NSWorkspace.sessionDidResignActiveNotification] {
+      NSWorkspace.shared.notificationCenter.addObserver(forName: name, object: nil, queue: .main, using: lockNow)
+    }
+
     // Menu bar icon: a click opens the quick pick list (search, click to copy, Type).
     let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     item.button?.image = NSImage(systemSymbolName: "lock.shield", accessibilityDescription: "Tanooki Auth")

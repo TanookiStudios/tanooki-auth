@@ -31,6 +31,15 @@ Future<void> applyScreenshotBlocking(bool on) async {
 
 // ---------- "is it you?" before showing a setup key ----------
 
+/// What this device asks for to prove it's you, in the words its owner knows.
+String get proofName => Platform.isWindows
+    ? 'Windows Hello'
+    : Platform.isMacOS
+        ? 'Touch ID or your password'
+        : Platform.isIOS
+            ? 'Face ID or passcode'
+            : 'fingerprint or PIN';
+
 /// Tests replace this to skip the system Face ID / passcode prompt.
 @visibleForTesting
 Future<bool> Function(BuildContext context, Vault vault, String reason)? confirmItsYouOverride;
@@ -252,7 +261,7 @@ const _breachSeenKey = 'breachSeen';
 
 /// Fetches the public breach list; returns every match and the ones not shown before. Remembers what it has shown.
 Future<(List<BreachMatch>, List<BreachMatch>)> checkBreaches(Vault vault, {BreachFetch? fetch}) async {
-  final all = matchBreaches(await (fetch == null ? fetchBreaches() : fetchBreaches(fetch: fetch)), vault.live);
+  final all = matchBreaches(await (fetch == null ? fetchBreaches() : fetchBreaches(fetch: fetch)), vault.visible);
   final seen = {...(vault.settings[_breachSeenKey] as List? ?? const []).cast<String>()};
   final fresh = all.where((m) => !seen.contains('${m.account.id}:${m.breach.name}')).toList();
   vault.settings[_breachCheckedKey] = DateTime.now().toUtc().toIso8601String();
@@ -320,7 +329,7 @@ class _BreachScreenState extends State<BreachScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final withSite = widget.vault.live.where((a) => a.domains.isNotEmpty).length;
+    final withSite = widget.vault.visible.where((a) => a.domains.isNotEmpty).length;
     return Scaffold(
       appBar: AppBar(title: const Text('Breach alerts')),
       body: ListView(padding: const EdgeInsets.all(16), children: [
@@ -339,11 +348,11 @@ class _BreachScreenState extends State<BreachScreen> {
               'Nothing about you or your accounts is sent: it\'s the same download for everyone. '
               'This is the only time the app goes on the internet, apart from sync and buying Premium.'),
         ),
-        if (withSite < widget.vault.live.length)
+        if (withSite < widget.vault.visible.length)
           Padding(
             padding: const EdgeInsets.all(8),
             child: Text(
-                '${widget.vault.live.length - withSite} of your accounts have no website saved, so they can\'t be checked. Add one with ⋯ > Edit.',
+                '${widget.vault.visible.length - withSite} of your accounts have no website saved, so they can\'t be checked. Add one with ⋯ > Edit.',
                 style: TextStyle(color: Palette.muted)),
           ),
         if (_on) ...[

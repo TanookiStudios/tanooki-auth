@@ -35,6 +35,8 @@ class FlutterWindow : public Win32Window {
 
   // Lets the app come to the front when the browser extension asks for a confirmation.
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> window_channel_;
+  // YubiKey / security key unlock (security_key.cpp).
+  std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> security_key_channel_;
   // Whether the user asked to keep the window out of screenshots (Settings).
   bool secure_ = false;
   // Notification-area (tray) icon: a click opens the quick pick list.

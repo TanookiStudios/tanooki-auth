@@ -39,6 +39,15 @@ class FakeHost implements BridgeHost {
     return approve;
   }
 
+  /// Answers for "ask first" accounts; [revealAsked] records which were asked about.
+  bool reveal = true;
+  final revealAsked = <String>[];
+  @override
+  Future<bool> confirmReveal(Account account, String client) async {
+    revealAsked.add('${account.id} $client');
+    return reveal;
+  }
+
   @override
   void vaultChanged() {}
   @override
@@ -97,6 +106,41 @@ void main() {
     final r = await c.send({'type': 'pair', 'code': host.shownCode});
     return r['token'] as String;
   }
+
+  test('travel mode: hidden accounts vanish from the extension (list, codes and single code)', () async {
+    final c = await Client.connect(port);
+    final token = await pair(c);
+    final hidden = parseOtpauthUri('otpauth://totp/Bank:me?secret=GEZDGNBVGY3TQOJQ')..travelHidden = true;
+    host.vault.accounts.add(hidden);
+    Future<List> ids() async => [for (final a in (await c.send({'type': 'accounts', 'token': token}))['accounts'] as List) a['id']];
+    expect(await ids(), hasLength(2), reason: 'travel mode off: an ordinary account');
+    host.vault.settings[Vault.travelModeKey] = true;
+    expect(await ids(), isNot(contains(hidden.id)));
+    final codes = await c.send({'type': 'codes', 'token': token, 'accountIds': [hidden.id]});
+    expect(codes['codes'], isEmpty);
+    final one = await c.send({'type': 'code', 'token': token, 'accountId': hidden.id});
+    expect(one['error'], 'notFound');
+  });
+
+  test('ask-first accounts: no code in the popup list; a single code only after the app says yes', () async {
+    final c = await Client.connect(port);
+    final token = await pair(c);
+    final a = host.vault.accounts.single..requireAuth = true;
+    final list = (await c.send({'type': 'accounts', 'token': token}))['accounts'] as List;
+    expect(list.single['requireAuth'], isTrue);
+    expect((await c.send({'type': 'codes', 'token': token, 'accountIds': [a.id]}))['codes'], isEmpty);
+    host.reveal = false;
+    final denied = await c.send({'type': 'code', 'token': token, 'accountId': a.id});
+    expect(denied['error'], 'denied');
+    expect(denied.containsKey('code'), isFalse);
+    host.reveal = true;
+    final ok = await c.send({'type': 'code', 'token': token, 'accountId': a.id});
+    expect(ok['code'], a.codeAt(DateTime.now()));
+    expect(host.revealAsked, ['${a.id} Browser extension', '${a.id} Browser extension']);
+    a.requireAuth = false;
+    await c.send({'type': 'code', 'token': token, 'accountId': a.id});
+    expect(host.revealAsked, hasLength(2), reason: 'ordinary accounts never ask');
+  });
 
   test('binds loopback only', () {
     expect(server.port, port);

@@ -7,6 +7,8 @@ import 'package:local_auth/local_auth.dart';
 
 import '../bridge/server.dart';
 import '../core/account.dart';
+import '../core/clock_check.dart';
+import '../core/sync/relay_client.dart' show RelayException;
 import '../core/security.dart';
 import '../core/spotlight.dart';
 import '../core/vault.dart';
@@ -17,9 +19,11 @@ import 'app_icon.dart';
 import 'auto_backup_ui.dart';
 import 'backup_ui.dart';
 import 'clipboard.dart';
+import 'emergency_ui.dart';
 import 'export_ui.dart';
 import 'home.dart';
 import 'premium.dart';
+import 'security_extras.dart';
 import 'security_ui.dart';
 import 'sync_ui.dart' show syncAndLinkSection;
 import 'theme.dart';
@@ -281,6 +285,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {});
   }
 
+  Future<void> _open(Widget screen) async {
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _travelMode(bool on) async {
+    if (on && !premium.value) {
+      await _open(PremiumScreen(vault: widget.vault));
+      if (!premium.value) return;
+    }
+    if (!mounted || (!on && !await confirmItsYou(context, widget.vault, 'Turn off travel mode'))) return;
+    await _set(Vault.travelModeKey, on);
+    if (!mounted) return;
+    final hidden = widget.vault.live.where((a) => a.travelHidden).length;
+    _tell(on
+        ? (hidden == 0
+            ? 'Travel mode on, but no account is marked "Hide in travel mode" yet. Mark them with ⋯ > Edit first.'
+            : 'Travel mode on. $hidden account${hidden == 1 ? ' is' : 's are'} hidden.')
+        : 'Travel mode off. Every account is back.');
+  }
+
+  Future<void> _monthlyNotify(bool on) async {
+    if (on && !premium.value) {
+      await _open(PremiumScreen(vault: widget.vault));
+      if (!premium.value) return;
+    }
+    final problem = await setMonthlyNotification(on);
+    if (problem != null) return _tell(problem);
+    await _set(summaryNotifyKey, on);
+  }
+
+  Future<void> _checkClock() async {
+    _tell('Checking your clock…');
+    try {
+      final w = await ClockCheck.instance.runNow();
+      if (mounted) _tell(w ?? 'Your clock is right, so that\'s not it. Check the account\'s settings (⋯ > Edit > Advanced) match what the website said.');
+    } on RelayException catch (e) {
+      if (mounted) _tell('Couldn\'t check the clock: ${e.message}');
+    }
+  }
+
   Future<void> _blockScreenshots(bool on) async {
     await applyScreenshotBlocking(on);
     await _set(blockScreenshotsKey, on);
@@ -336,6 +381,60 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onChanged: _panicWipe,
             ),
           ],
+          if (desktop && !Platform.isLinux) ...[
+            const Divider(),
+            SwitchListTile(
+              title: const Text('Lock when the computer sleeps'),
+              subtitle: Text(isLockOn(_s)
+                  ? 'Also when the screen locks or you log out for a moment'
+                  : 'Turn on the lock or a passcode first'),
+              value: lockOnSleep(_s),
+              onChanged: (on) => isLockOn(_s) ? _set(lockOnSleepKey, on) : _tell('Turn on "Lock the app" or an app passcode first, so there is something to lock.'),
+            ),
+          ],
+          const Divider(),
+          SwitchListTile(
+            key: const Key('travelModeSwitch'),
+            title: Text(premium.value ? 'Travel mode' : 'Travel mode (Premium)'),
+            subtitle: Text(widget.vault.travelMode
+                ? 'On. Accounts marked "Hide in travel mode" are gone from this device\'s screens, widgets, watch, extension and exports until you turn it off. They aren\'t deleted.'
+                : 'Before a border crossing: hides the accounts you marked "Hide in travel mode" (⋯ > Edit). Turning it off asks for $proofName.'),
+            value: widget.vault.travelMode,
+            onChanged: _travelMode,
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.key_outlined),
+            title: Text(premium.value ? 'Security keys' : 'Security keys (Premium)'),
+            subtitle: const Text('Unlock with a YubiKey or other security key'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _open(SecurityKeyScreen(vault: widget.vault)),
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.history),
+            title: Text(premium.value ? 'Activity history' : 'Activity history (Premium)'),
+            subtitle: const Text('Which codes were copied, filled, typed or exported, and when. Kept on this device only.'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _open(ActivityScreen(vault: widget.vault)),
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.emergency_outlined),
+            title: Text(premium.value ? 'Emergency access' : 'Emergency access (Premium)'),
+            subtitle: const Text('Let one trusted person get your accounts if something happens to you, after a 7-day wait you can stop'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _open(EmergencyScreen(vault: widget.vault)),
+          ),
+          if (monthlyNotificationSupported) ...[
+            const Divider(),
+            SwitchListTile(
+              title: Text(premium.value ? 'Monthly summary notification' : 'Monthly summary notification (Premium)'),
+              subtitle: const Text('A reminder on the 1st of each month to look at your summary card. It never says anything about your accounts.'),
+              value: premium.value && _s[summaryNotifyKey] == true,
+              onChanged: _monthlyNotify,
+            ),
+          ],
           const Divider(),
           SwitchListTile(
             title: const Text('Block screenshots'),
@@ -362,7 +461,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: Text(premium.value ? 'Breach alerts' : 'Breach alerts (Premium)'),
             subtitle: Text(_s[breachAlertsKey] == true
                 ? 'On. Checks the public breach list weekly.'
-                : 'Off. When on, this is the app\'s only internet use besides sync and purchases.'),
+                : 'Off. When on, the app downloads the public breach list once a week.'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () async {
               await Navigator.push(context, MaterialPageRoute(builder: (_) => BreachScreen(vault: widget.vault)));
@@ -549,7 +648,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _pickComplication() async {
     final s = widget.vault.settings;
-    final favorites = [for (final a in widget.vault.live) if (a.favorite && a.timeBased && !a.travelHidden) a];
+    final favorites = [for (final a in widget.vault.visible) if (a.favorite && a.timeBased && !a.requireAuth) a];
     final pick = await showDialog<String>(
       context: context,
       builder: (c) => SimpleDialog(title: const Text('Watch face favorite'), children: [
@@ -583,7 +682,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   List<Widget> _copyingSection() {
     final s = widget.vault.settings;
-    final chosen = widget.vault.live.where((a) => a.id == s[complicationKey]).firstOrNull;
+    final chosen = widget.vault.visible.where((a) => a.id == s[complicationKey]).firstOrNull;
     return [
       const Padding(padding: EdgeInsets.fromLTRB(4, 0, 4, 8), child: CapsLabel('Copying and shortcuts')),
       Card(
@@ -727,6 +826,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const Divider(),
                 ListTile(
+                  leading: const Icon(Icons.fact_check_outlined),
+                  title: const Text('Test a backup'),
+                  subtitle: const Text('Checks a backup file opens with your passphrase. Changes nothing.'),
+                  onTap: () => testBackupFlow(context),
+                ),
+                const Divider(),
+                ListTile(
                   leading: const Icon(Icons.output),
                   title: const Text('Move to another app'),
                   subtitle: const Text(
@@ -762,13 +868,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const Divider(),
                 ListTile(
+                  key: const Key('codesNotWorking'),
                   leading: const Icon(Icons.schedule),
-                  title: Text(
-                    'Device time ${two(now.hour)}:${two(now.minute)}:${two(now.second)}',
+                  title: const Text('Codes not working?'),
+                  subtitle: Text(
+                    'Device time ${two(now.hour)}:${two(now.minute)}:${two(now.second)}. Codes depend on the clock: tap to check it against the internet.',
                   ),
-                  subtitle: const Text(
-                    'Codes rejected? Codes depend on the clock. Make sure your device sets its time automatically.',
-                  ),
+                  onTap: _checkClock,
                 ),
                 const Divider(),
                 const AboutListTile(
@@ -779,7 +885,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   aboutBoxChildren: [
                     SizedBox(height: 12),
                     Text(
-                      'No account, no tracking. Your setup keys are stored encrypted on this device and never leave it. The app only goes online if you turn on breach alerts (to download the public breach list) or sync, or to buy Premium.',
+                      privacyText,
                     ),
                   ],
                 ),

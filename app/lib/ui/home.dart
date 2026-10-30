@@ -5,12 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../core/account.dart';
+import '../core/activity.dart';
+import '../core/clock_check.dart';
 import '../core/otpauth_uri.dart';
 import '../core/totp.dart';
 import '../core/vault.dart';
 import '../core/widget_share.dart' show showCopiedCodeActivity;
 import 'add.dart';
 import 'brand_icon.dart';
+import 'home_cards.dart';
 import 'clipboard.dart';
 import 'recovery_codes.dart';
 import 'security_ui.dart';
@@ -56,6 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String _query = '';
   String? _tag;
   final _revealed = <String, DateTime>{}; // account id -> when its hidden code was tapped
+  final _proved = <String, DateTime>{}; // account id -> when Face ID etc. let an "ask first" account show its code
   final _focus = FocusNode();
   final _searchText = TextEditingController();
   bool _selecting = false;
@@ -67,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool get _compact => _settings[layoutKey] == 'compact';
   double get _cardHeight => _compact ? 92 : 196; // roomy needs room for the "Next" line in the last 5 s
 
-  List<Account> get _live => widget.vault.live;
+  List<Account> get _live => widget.vault.visible;
 
   List<String> get _allTags => {for (final a in _live) ...a.tags}.toList()..sort();
 
@@ -78,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
   /// Everything matching the search and tag, in list order (folders included, collapsed or not).
   List<Account> get _filtered {
     final q = _query.trim().toLowerCase();
-    return homeOrder(widget.vault.accounts, sort: _sort)
+    return homeOrder(_live, sort: _sort)
         .where((a) => _tag == null || a.tags.contains(_tag))
         .where((a) => q.isEmpty || [a.issuer, a.label, ...a.domains, ...a.tags, ?a.folder].any((f) => f.toLowerCase().contains(q)))
         .toList();
@@ -107,7 +111,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _tick = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
+    _tick = Timer.periodic(const Duration(seconds: 1), (_) {
+      setState(() {});
+      ClockCheck.instance.maybeRun(); // at most hourly, while codes are on screen
+    });
+    ClockCheck.instance.maybeRun();
     openAccountRequest.addListener(_showRequested);
     WidgetsBinding.instance.addPostFrameCallback((_) => _showRequested());
   }
@@ -138,10 +146,26 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  /// How long a code stays shown after Face ID (or a tap, with "Hide codes until tapped").
+  static const _showFor = Duration(seconds: 20);
+
   bool _isHidden(Account a, DateTime now) {
+    if (a.requireAuth) {
+      final t = _proved[a.id];
+      return t == null || now.difference(t) > _showFor;
+    }
     if (!_hideCodes) return false;
     final t = _revealed[a.id];
-    return t == null || now.difference(t) > const Duration(seconds: 20);
+    return t == null || now.difference(t) > _showFor;
+  }
+
+  /// For accounts set to "ask first": Face ID / Touch ID / passcode before the code is shown, copied or shared.
+  /// True when it's fine to go ahead.
+  Future<bool> _prove(Account a, String why) async {
+    if (!a.requireAuth || !_isHidden(a, DateTime.now())) return true;
+    if (!await confirmItsYou(context, widget.vault, '$why ${accountTitle(a)}')) return false;
+    _proved[a.id] = DateTime.now();
+    return true;
   }
 
   void _say(String msg, {SnackBarAction? action}) => ScaffoldMessenger.of(context)
@@ -149,6 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ..showSnackBar(SnackBar(content: Text(msg), action: action));
 
   Future<void> _copy(Account a) async {
+    if (!await _prove(a, 'Copy the code for') || !mounted) return;
     final now = DateTime.now();
     _revealed[a.id] = now;
     await copyCode(a.codeAt(now));
@@ -161,6 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
         duration: const Duration(seconds: 2),
       ));
     a.lastUsedAt = DateTime.now().toUtc();
+    logActivity(widget.vault, ActivityKind.copied, accountId: a.id, where: 'This app');
     await widget.vault.save();
     if (mounted) setState(() => _selected = _visible.indexOf(a).clamp(0, 1 << 30));
   }
@@ -171,6 +197,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _edit(Account a) async {
+    // The edit window previews the code, so "ask first" accounts ask here too (also stops turning it off unseen).
+    if (!await _prove(a, 'Edit') || !mounted) return;
     final changed = await showAccountDialog(context, a,
         title: 'Edit account', confirm: 'Save', folders: folderNames(_live), existing: true);
     if (changed) {
@@ -192,7 +220,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _showQr(Account a) async {
     if (!await confirmItsYou(context, widget.vault, 'Show the QR code for ${accountTitle(a)}') || !mounted) return;
+    final shownAt = DateTime.now();
     await Navigator.push(context, MaterialPageRoute(builder: (_) => AccountQrScreen(account: a)));
+    logActivity(widget.vault, ActivityKind.shownQr, accountId: a.id, where: 'This app', now: shownAt);
+    await widget.vault.save();
   }
 
   Future<void> _delete(Account a) async {
@@ -473,7 +504,9 @@ class _HomeScreenState extends State<HomeScreen> {
         onNext: () => _nextHotp(a),
         onFavorite: () => _toggleFavorite(a),
         onRecoveryCodes: () => _recoveryCodes(a),
-        onShare: () => shareAccountFlow(context, widget.vault, a),
+        onShare: () async {
+          if (await _prove(a, 'Share') && mounted) await shareAccountFlow(context, widget.vault, a);
+        },
         onShowQr: () => _showQr(a),
         onMove: _canReorder ? (_, d) => _reorder(visible, i, i + d) : null,
       ),
@@ -685,6 +718,7 @@ class _HomeScreenState extends State<HomeScreen> {
           if (live.length > 3) Padding(padding: const EdgeInsets.fromLTRB(16, 12, 16, 8), child: _search()),
           if (live.length <= 3) const SizedBox(height: 12),
           _tagChips(const EdgeInsets.fromLTRB(16, 0, 16, 8)),
+          HomeNotices(vault: widget.vault, padding: const EdgeInsets.fromLTRB(16, 0, 16, 8), onChanged: () => setState(() {})),
           if (_selecting) _selectionBar(const EdgeInsets.fromLTRB(16, 0, 16, 8)),
           Expanded(child: list),
         ]),
@@ -721,6 +755,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ]),
             ),
             _tagChips(const EdgeInsets.fromLTRB(20, 12, 20, 0)),
+            HomeNotices(vault: widget.vault, padding: const EdgeInsets.fromLTRB(20, 12, 20, 0), onChanged: () => setState(() {})),
             if (_selecting) _selectionBar(const EdgeInsets.fromLTRB(20, 12, 20, 0)),
             Expanded(child: list),
             Container(

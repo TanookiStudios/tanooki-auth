@@ -6,11 +6,16 @@
 
 #include <flutter/standard_method_codec.h>
 
+#include <wtsapi32.h>
+
 #include "flutter/generated_plugin_registrant.h"
 #include "resource.h"
+#include "security_key.h"
 
 namespace {
 constexpr UINT kTrayMessage = WM_APP + 1;
+// lparam is a heap-allocated std::function<void()> to run on the platform thread (see RunOnPlatformThread).
+constexpr UINT kRunOnPlatformThread = WM_APP + 2;
 }
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
@@ -140,6 +145,19 @@ bool FlutterWindow::OnCreate() {
     }
   });
 
+  security_key_channel_ = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+      flutter_controller_->engine()->messenger(), "tanooki/securitykey",
+      &flutter::StandardMethodCodec::GetInstance());
+  security_key_channel_->SetMethodCallHandler([this](const auto& call, auto result) {
+    HWND hwnd = GetHandle();
+    HandleSecurityKey(call, std::move(result), hwnd, [hwnd](std::function<void()> work) {
+      PostMessage(hwnd, kRunOnPlatformThread, 0, reinterpret_cast<LPARAM>(new std::function<void()>(std::move(work))));
+    });
+  });
+
+  // Lock on sleep: Windows tells us when the session locks; the app locks itself if that setting is on.
+  WTSRegisterSessionNotification(GetHandle(), NOTIFY_FOR_THIS_SESSION);
+
   tray_.cbSize = sizeof(tray_);
   tray_.hWnd = GetHandle();
   tray_.uID = 1;
@@ -164,7 +182,9 @@ bool FlutterWindow::OnCreate() {
 
 void FlutterWindow::OnDestroy() {
   Shell_NotifyIcon(NIM_DELETE, &tray_);
+  WTSUnRegisterSessionNotification(GetHandle());
   window_channel_ = nullptr;
+  security_key_channel_ = nullptr;
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }
@@ -189,6 +209,17 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
   switch (message) {
     case WM_FONTCHANGE:
       flutter_controller_->engine()->ReloadSystemFonts();
+      break;
+    case kRunOnPlatformThread: {
+      std::unique_ptr<std::function<void()>> work(reinterpret_cast<std::function<void()>*>(lparam));
+      (*work)();
+      return 0;
+    }
+    case WM_WTSSESSION_CHANGE:
+      if (wparam == WTS_SESSION_LOCK && window_channel_) window_channel_->InvokeMethod("screenLocked", nullptr);
+      break;
+    case WM_POWERBROADCAST:
+      if (wparam == PBT_APMSUSPEND && window_channel_) window_channel_->InvokeMethod("screenLocked", nullptr);
       break;
     case kTrayMessage:
       if (LOWORD(lparam) == WM_LBUTTONUP || LOWORD(lparam) == WM_RBUTTONUP) {

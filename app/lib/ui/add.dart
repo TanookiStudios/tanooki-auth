@@ -20,6 +20,8 @@ import 'backup_ui.dart';
 import 'brand_icon.dart';
 import 'home.dart';
 import 'import_ui.dart';
+import 'premium.dart';
+import 'security_ui.dart' show proofName;
 import 'share_ui.dart';
 import 'theme.dart';
 
@@ -74,6 +76,8 @@ Future<bool> showAccountDialog(BuildContext context, Account a,
   // Advanced settings are tried on a copy, so the live preview never touches the real account until Save.
   var type = a.type, digits = a.digits, period = a.period, algorithm = a.algorithm;
   var advanced = false;
+  var requireAuth = a.requireAuth, travelHidden = a.travelHidden;
+  String? travelNote;
   Account draft() => Account(
         id: a.id,
         secret: a.secret,
@@ -147,6 +151,30 @@ Future<bool> showAccountDialog(BuildContext context, Account a,
                 maxLines: 4,
                 decoration: const InputDecoration(labelText: 'Notes (optional)'),
               ),
+              const SizedBox(height: 4),
+              SwitchListTile(
+                key: const Key('requireAuthSwitch'),
+                contentPadding: EdgeInsets.zero,
+                title: Text('Ask for $proofName before showing this code'),
+                subtitle: const Text('The code stays hidden on the list, and widgets, the watch and Quick pick never show it.'),
+                value: requireAuth,
+                onChanged: (on) => setState(() => requireAuth = on),
+              ),
+              SwitchListTile(
+                key: const Key('travelHiddenSwitch'),
+                contentPadding: EdgeInsets.zero,
+                title: Text(premium.value ? 'Hide in travel mode' : 'Hide in travel mode (Premium)'),
+                subtitle: Text(travelNote ?? 'When travel mode is on (Settings), this account disappears from the app until you turn it off.',
+                    style: travelNote == null ? null : TextStyle(color: Palette.red)),
+                value: travelHidden,
+                onChanged: (on) => setState(() {
+                  if (on && !premium.value) {
+                    travelNote = 'Travel mode is part of Premium. Get it in Settings > Get Premium.';
+                  } else {
+                    travelHidden = on;
+                  }
+                }),
+              ),
               const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerLeft,
@@ -209,6 +237,9 @@ Future<bool> showAccountDialog(BuildContext context, Account a,
   a.notes = notes.text.trim();
   final f = folder.text.trim();
   a.folder = f.isEmpty ? null : f;
+  a
+    ..requireAuth = requireAuth
+    ..travelHidden = travelHidden;
   final d = draft();
   a
     ..type = d.type
@@ -304,7 +335,7 @@ class _AddScreenState extends State<AddScreen> {
       return;
     }
     if (!mounted) return;
-    if (!await showAccountDialog(context, a, title: 'Add this account?', confirm: 'Add', folders: folderNames(widget.vault.live))) return;
+    if (!await showAccountDialog(context, a, title: 'Add this account?', confirm: 'Add', folders: folderNames(widget.vault.visible))) return;
     widget.vault.accounts
       ..removeWhere((x) => x.secret == a.secret) // an old copy in Trash
       ..add(a);

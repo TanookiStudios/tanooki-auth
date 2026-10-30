@@ -59,7 +59,16 @@ class Vault {
 
   /// Accounts not in Trash, in the user's order. Everything except the Trash screen uses these.
   List<Account> get live => accounts.where((a) => !a.trashed).toList();
-  List<Account> get trash => accounts.where((a) => a.trashed).toList();
+  List<Account> get trash => accounts.where((a) => a.trashed && !_travelHides(a)).toList();
+
+  /// Travel mode (this device only): accounts marked "Hide in travel mode" vanish from every screen and every
+  /// outside surface (widgets, watch, extension, Spotlight, exports). They stay in the vault and keep syncing.
+  static const travelModeKey = 'travelMode';
+  bool get travelMode => settings[travelModeKey] == true;
+  bool _travelHides(Account a) => travelMode && a.travelHidden;
+
+  /// What the app may show or hand out: [live] minus what travel mode hides.
+  List<Account> get visible => accounts.where((a) => !a.trashed && !_travelHides(a)).toList();
 
   static const trashDays = 30;
 

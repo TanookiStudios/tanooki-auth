@@ -13,6 +13,7 @@ Download: **https://auth.tanookistudios.com**
 | Nothing leaves your device. Codes sit in one file, locked with AES-256-GCM; the key is in the system's secure storage (Keychain, DPAPI, Android Keystore). | `app/lib/core/vault.dart` |
 | No ads, no analytics. | `app/pubspec.yaml` lists every dependency; none of them is a tracking or ads SDK. |
 | Works offline. Codes come from the device clock (RFC 6238 / RFC 4226). | `app/lib/core/totp.dart` |
+| One automatic network call: a clock check. At most once an hour while codes are on screen, and when you tap "Codes not working?", the app asks the Tanooki Auth relay's `/health` for the time, to warn you if your device clock is off (codes fail when it is). Nothing about you or your accounts is sent. Everything else that goes online (breach alerts, sync, phone link, emergency access, buying Premium) only happens if you turn it on, and sync, phone link and emergency access carry only encrypted data the server can't read. | `app/lib/core/clock_check.dart`, `relay/src/index.js` |
 | The browser extension talks only to the app on the same computer, over a local connection you pair once with a 6-digit code, and fills a code only on the exact site it is saved for. | `app/lib/bridge/server.dart`, `extension/sw.js`, `extension/content.js` |
 | Backups are encrypted with a password only you know (PBKDF2-SHA256, 600,000 rounds, then AES-256-GCM). | `app/lib/core/backup.dart` |
 

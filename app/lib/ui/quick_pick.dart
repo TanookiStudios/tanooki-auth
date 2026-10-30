@@ -6,9 +6,11 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/account.dart';
+import '../core/activity.dart';
 import '../core/vault.dart';
 import 'clipboard.dart';
 import 'home.dart' show accountTitle, groupCode;
+import 'security_ui.dart' show confirmItsYou;
 
 const _window = MethodChannel('tanooki/window');
 
@@ -58,19 +60,25 @@ class _QuickPickScreenState extends State<QuickPickScreen> {
 
   List<Account> get _matches {
     final q = _query.trim().toLowerCase();
-    return homeOrder(widget.vault.accounts, sort: 'recent')
+    return homeOrder(widget.vault.visible, sort: 'recent')
         .where((a) => q.isEmpty || [a.issuer, a.label, ...a.domains, ...a.tags].any((f) => f.toLowerCase().contains(q)))
         .toList();
   }
 
-  Future<void> _used(Account a) async {
+  Future<void> _used(Account a, ActivityKind kind) async {
     a.lastUsedAt = DateTime.now().toUtc();
+    logActivity(widget.vault, kind, accountId: a.id, where: 'Quick pick');
     await widget.vault.save();
   }
 
+  /// "Ask first" accounts never show their code here, and ask for Touch ID / Windows Hello before using it.
+  Future<bool> _ok(Account a) async =>
+      !a.requireAuth || await confirmItsYou(context, widget.vault, 'Use the code for ${accountTitle(a)}');
+
   Future<void> _copy(Account a) async {
+    if (!await _ok(a)) return;
     await copyCode(a.codeAt(DateTime.now()));
-    await _used(a);
+    await _used(a, ActivityKind.copied);
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -81,9 +89,10 @@ class _QuickPickScreenState extends State<QuickPickScreen> {
   }
 
   Future<void> _type(Account a) async {
+    if (!await _ok(a)) return;
     final problem = await typeCode(a.codeAt(DateTime.now()));
     if (problem == null) {
-      await _used(a);
+      await _used(a, ActivityKind.typed);
       if (mounted) Navigator.pop(context);
       return;
     }
@@ -157,7 +166,7 @@ class _QuickPickScreenState extends State<QuickPickScreen> {
                     return ListTile(
                       title: Text(accountTitle(a)),
                       subtitle: Text(
-                        groupCode(a.codeAt(now)),
+                        a.requireAuth ? '••• •••  (asks first)' : groupCode(a.codeAt(now)),
                         style: const TextStyle(fontFeatures: [FontFeature.tabularFigures()]),
                       ),
                       onTap: () => _copy(a),

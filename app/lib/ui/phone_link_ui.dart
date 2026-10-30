@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 import '../bridge/server.dart' show addFromUri;
 import '../core/account.dart';
+import '../core/activity.dart';
 import '../core/phone_link.dart';
 import '../core/sync/relay_client.dart';
 import '../core/sync/sync_service.dart' show SyncService, thisDeviceName;
@@ -14,6 +15,7 @@ import '../core/vault.dart';
 import 'add.dart' show ScanScreen, hasCamera, confirmAddAccounts;
 import 'home.dart' show accountTitle;
 import 'premium.dart';
+import 'security_ui.dart' show confirmItsYou;
 import 'theme.dart';
 
 // ---------------------------------------------------------------- push notifications
@@ -21,7 +23,7 @@ import 'theme.dart';
 const _push = MethodChannel('tanooki/push');
 
 /// Asks the OS for a push token. Returns (platform, token), or throws a plain sentence saying why not.
-Future<(String, String)> _pushToken() async {
+Future<(String, String)> pushToken() async {
   if (Platform.isAndroid) {
     // deferred(firebase): Android push needs a Firebase project and its google-services.json, which only
     // Maddie's Google account can create. Until then, requests arrive while the app is open.
@@ -161,7 +163,7 @@ class LinkService {
     final links = linksOf(v);
     if (links.isEmpty) return;
     try {
-      final (platform, token) = await _pushToken();
+      final (platform, token) = await pushToken();
       String? problem;
       for (final l in links) {
         problem ??= await l.registerPush(platform, token, environment: kReleaseMode ? 'production' : 'sandbox');
@@ -179,7 +181,7 @@ class LinkService {
 
 /// Asks whether to send a code for [r]. Returns the account to send, or null to deny.
 Future<Account?> askToApprove(BuildContext context, Vault vault, FillRequest r) async {
-  final offered = accountsForHost(vault.live, r.host);
+  final offered = accountsForHost(vault.visible, r.host);
   final nav = Navigator.of(context);
   var open = true;
   // The browser stops waiting after about two minutes; don't leave a stale question on screen.
@@ -388,7 +390,14 @@ void startSyncAndLink(BuildContext context, Vault v, Future<void> Function() bri
   SyncService.instance.attach(v);
   LinkService.instance.attach(v, (r) async {
     await bringToFront();
-    return context.mounted ? askToApprove(context, v, r) : null;
+    if (!context.mounted) return null;
+    final a = await askToApprove(context, v, r);
+    if (a == null || !context.mounted) return null;
+    // "Ask first" accounts: Face ID / passcode here before the code goes to the browser.
+    if (a.requireAuth && !await confirmItsYou(context, v, 'Send the code for ${accountTitle(a)}')) return null;
+    logActivity(v, ActivityKind.filled, accountId: a.id, where: 'Browser, through this phone');
+    await v.save();
+    return a;
   }, (accounts) async {
     // The browser's right-click "Add to Tanooki Auth": always ask here before saving.
     await bringToFront();

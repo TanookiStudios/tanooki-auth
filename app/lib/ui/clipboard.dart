@@ -47,7 +47,7 @@ Future<void> copyCode(String code) async {
 /// count up (HOTP, where copying would use up a code).
 Account? copyOnOpenPick(Vault v) {
   if (v.settings[copyOnOpenKey] != true) return null;
-  final used = v.live.where((a) => a.lastUsedAt != null && a.timeBased && !a.requireAuth && !a.travelHidden).toList()
+  final used = v.visible.where((a) => a.lastUsedAt != null && a.timeBased && !a.requireAuth).toList()
     ..sort((a, b) => b.lastUsedAt!.compareTo(a.lastUsedAt!));
   return used.firstOrNull;
 }

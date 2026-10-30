@@ -22,12 +22,13 @@ const _channel = MethodChannel('tanooki/extras');
 
 /// What widgets and the watch get: favorite time-based accounts, and nothing unless [shareCodesKey] is on.
 /// Counter-based (HOTP) accounts are left out: a widget can't move the counter forward. So are accounts
-/// travel mode hides. The one chosen for the watch face complication carries `complication: true`.
+/// travel mode hides and accounts that ask for Face ID first (a widget can't ask). The one chosen for the
+/// watch face complication carries `complication: true`.
 List<Map<String, Object>> sharedFavorites(Vault v, {bool premium = false}) => v.settings[shareCodesKey] != true
     ? const []
     : [
-        for (final a in v.live)
-          if (a.favorite && a.timeBased && !a.travelHidden)
+        for (final a in v.visible)
+          if (a.favorite && a.timeBased && !a.requireAuth)
             {
               if (premium && v.settings[complicationKey] == a.id) 'complication': true,
               'type': a.type.name, // "steam" switches the widget to Steam Guard's letters
@@ -61,9 +62,9 @@ Future<void> publishSharedFavorites(Vault v) async {
 
 /// After a code is copied on iPhone: a Live Activity (Lock Screen and Dynamic Island) with the account's
 /// name, that code and a countdown, ending when the code expires. Premium, opt-in, and never for an account
-/// travel mode hides.
+/// travel mode hides or one that asks for Face ID before showing its code.
 Future<void> showCopiedCodeActivity(Vault v, Account a, DateTime now) async {
-  if (!Platform.isIOS || !widgetPremium() || v.settings[liveActivityKey] != true || a.travelHidden || !a.timeBased) return;
+  if (!Platform.isIOS || !liveActivityAllowed(v, a, premium: widgetPremium())) return;
   final unix = now.millisecondsSinceEpoch ~/ 1000;
   try {
     await _channel.invokeMethod<void>('startCodeActivity', {
@@ -77,6 +78,10 @@ Future<void> showCopiedCodeActivity(Vault v, Account a, DateTime now) async {
     debugPrint('Live Activity failed: ${e.code}'); // e.g. turned off in the iPhone Settings app
   }
 }
+
+/// Whether [a]'s code may go on the Lock Screen after copying (see [showCopiedCodeActivity]).
+bool liveActivityAllowed(Vault v, Account a, {required bool premium}) =>
+    premium && v.settings[liveActivityKey] == true && a.timeBased && !a.requireAuth && v.visible.contains(a);
 
 /// Something a widget, Control Center button or quick settings tile asked for ("scan"), or null.
 /// Reading it clears it, so it runs once.

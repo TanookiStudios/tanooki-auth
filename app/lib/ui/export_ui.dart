@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import '../core/account.dart';
+import '../core/activity.dart';
 import '../core/exporters.dart';
 import '../core/google_migration.dart';
 import '../core/vault.dart';
@@ -21,7 +22,7 @@ String _today() => DateTime.now().toIso8601String().substring(0, 10);
 
 /// Settings > "Move to another app": pick where the accounts are going.
 Future<void> exportToAppFlow(BuildContext context, Vault vault) async {
-  if (vault.live.isEmpty) {
+  if (vault.visible.isEmpty) {
     _say(context, 'There are no accounts to export yet.');
     return;
   }
@@ -41,20 +42,21 @@ Future<void> exportToAppFlow(BuildContext context, Vault vault) async {
   if (choice == null || !context.mounted) return;
   if (choice == 'links') return exportPlainFlow(context, vault);
   if (!await confirmItsYou(context, vault, 'Export your accounts') || !context.mounted) return;
-  final accounts = vault.live;
+  final accounts = vault.visible;
+  Future<void> save(String name, String text) => _save(context, vault, name, text, accounts.length);
   switch (choice) {
     case 'aegisLocked':
       final pass = await askPassphrase(context, forExport: true);
       if (pass == null || !context.mounted) return;
       final text = await busy(context, 'Encrypting for Aegis…', () => exportAegisEncrypted(accounts, pass));
       if (!context.mounted) return;
-      await _save(context, 'Tanooki Auth for Aegis ${_today()}.json', text, accounts.length);
+      await save('Tanooki Auth for Aegis ${_today()}.json', text);
     case 'aegisPlain':
       if (!await confirmPlainExport(context, what: 'This saves every setup key in an unencrypted Aegis file.') || !context.mounted) return;
-      await _save(context, 'Tanooki Auth for Aegis (not encrypted) ${_today()}.json', exportAegisPlain(accounts), accounts.length);
+      await save('Tanooki Auth for Aegis (not encrypted) ${_today()}.json', exportAegisPlain(accounts));
     case 'twoFas':
       if (!await confirmPlainExport(context, what: 'This saves every setup key in a 2FAS file without a password.') || !context.mounted) return;
-      await _save(context, 'Tanooki Auth for 2FAS ${_today()}.2fas', export2fas(accounts), accounts.length);
+      await save('Tanooki Auth for 2FAS ${_today()}.2fas', export2fas(accounts));
     case 'google':
       final ok = await showDialog<bool>(
         context: context,
@@ -75,12 +77,19 @@ Future<void> exportToAppFlow(BuildContext context, Vault vault) async {
         ),
       );
       if (ok != true || !context.mounted) return;
+      logActivity(vault, ActivityKind.exported, where: 'Google Authenticator QR codes');
+      await vault.save();
+      if (!context.mounted) return;
       await Navigator.push(context, MaterialPageRoute(builder: (_) => GoogleExportScreen(accounts: accounts)));
   }
 }
 
-Future<void> _save(BuildContext context, String name, String text, int count) async {
+Future<void> _save(BuildContext context, Vault vault, String name, String text, int count) async {
   final saved = await deliverFile(context, name, Uint8List.fromList(utf8.encode(text)), 'application/json');
+  if (saved) {
+    logActivity(vault, ActivityKind.exported, where: name);
+    await vault.save();
+  }
   if (saved && context.mounted) {
     _say(context, 'Exported $count accounts. Import the file in the other app, then delete it.');
   }

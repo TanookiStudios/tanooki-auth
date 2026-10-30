@@ -135,7 +135,7 @@ class CheckupFinding {
 /// Everything worth fixing, most important first. An empty list means all good.
 List<CheckupFinding> securityCheckup(Vault vault, DateTime now) {
   final s = vault.settings;
-  final missingCodes = vault.live.where((a) => a.recoveryCodes.isEmpty).toList();
+  final missingCodes = vault.visible.where((a) => a.recoveryCodes.isEmpty).toList();
   return [
     if (!isLockOn(s)) CheckupFinding(CheckupIssue.lockOff),
     if (s[passcodeKey] == null) CheckupFinding(CheckupIssue.noPasscode),
@@ -143,4 +143,71 @@ List<CheckupFinding> securityCheckup(Vault vault, DateTime now) {
     if (!backupIsRecent(s, now)) CheckupFinding(CheckupIssue.noBackup),
     if (missingCodes.isNotEmpty) CheckupFinding(CheckupIssue.noRecoveryCodes, missingCodes),
   ];
+}
+
+// ---------- lock on sleep (Mac and Windows) ----------
+
+/// Lock the app when the computer sleeps or its screen locks. On unless turned off, whenever a lock is set.
+const lockOnSleepKey = 'lockOnSleep';
+bool lockOnSleep(Map<String, dynamic> s) => isLockOn(s) && s[lockOnSleepKey] != false;
+
+// ---------- backup nudge ----------
+
+/// Until when "Not now" hides the backup reminder (ISO time).
+const backupNudgeKey = 'backupNudgeUntil';
+const backupNudgeSnooze = Duration(days: 7);
+
+/// The newest change to any account, Trash included (moving to Trash or restoring counts as a change).
+DateTime? lastAccountChange(Vault v) =>
+    v.accounts.isEmpty ? null : v.accounts.map((a) => a.updatedAt).reduce((a, b) => a.isAfter(b) ? a : b);
+
+/// Show the "back up your accounts" card: accounts changed since the last backup (by hand or automatic), and it
+/// wasn't put off in the last 7 days.
+bool showBackupNudge(Vault v, DateTime now) {
+  final s = v.settings;
+  if (v.live.isEmpty) return false;
+  final until = DateTime.tryParse(s[backupNudgeKey] as String? ?? '');
+  if (until != null && now.isBefore(until)) return false;
+  final last = DateTime.tryParse(s[lastBackupKey] as String? ?? ''), changed = lastAccountChange(v);
+  return last == null || (changed != null && changed.isAfter(last));
+}
+
+Future<void> snoozeBackupNudge(Vault v, DateTime now) async {
+  v.settings[backupNudgeKey] = now.toUtc().add(backupNudgeSnooze).toIso8601String();
+  await v.save();
+}
+
+// ---------- monthly summary (Premium) ----------
+
+/// The month ("2026-11") whose summary card was closed.
+const summaryDismissedKey = 'summaryDismissed';
+/// Whether the optional "your summary is ready" notification on the 1st is on.
+const summaryNotifyKey = 'summaryNotify';
+
+class MonthlySummary {
+  MonthlySummary(this.month, this.newAccounts, this.lastBackup, this.noRecoveryCodes, this.checkupItems);
+  /// The month the numbers cover (the one that just ended).
+  final DateTime month;
+  final int newAccounts;
+  final DateTime? lastBackup;
+  final int noRecoveryCodes;
+  final int checkupItems;
+}
+
+String _ym(DateTime t) => '${t.year}-${t.month.toString().padLeft(2, '0')}';
+
+/// The summary card for [now]'s month: shown from the 1st through the 7th (so missing the 1st doesn't lose it)
+/// until closed. Null when there's nothing to show.
+MonthlySummary? monthlySummary(Vault v, DateTime now, {required bool premium}) {
+  if (!premium || now.day > 7 || v.settings[summaryDismissedKey] == _ym(now) || v.live.isEmpty) return null;
+  final start = DateTime(now.year, now.month - 1), end = DateTime(now.year, now.month);
+  final added = v.live.where((a) => !a.createdAt.toLocal().isBefore(start) && a.createdAt.toLocal().isBefore(end)).length;
+  final findings = securityCheckup(v, now);
+  final noCodes = findings.where((f) => f.issue == CheckupIssue.noRecoveryCodes).firstOrNull?.accounts.length ?? 0;
+  return MonthlySummary(start, added, DateTime.tryParse(v.settings[lastBackupKey] as String? ?? ''), noCodes, findings.length);
+}
+
+Future<void> dismissMonthlySummary(Vault v, DateTime now) async {
+  v.settings[summaryDismissedKey] = _ym(now);
+  await v.save();
 }

@@ -24,7 +24,20 @@ String decodeQr(img.Image image) {
 }
 
 String? _tryDecode(img.Image image) {
-  final pixels = image.convert(numChannels: 4).getBytes(order: img.ChannelOrder.abgr).buffer.asInt32List();
+  // zxing's finder can lock onto a finder-like square inside the data of a dense code (about 1 in 20
+  // share-sized codes) before it reaches the real third corner. It scans top to bottom, so the same picture
+  // turned a quarter turn is scanned in a different order and usually reads fine.
+  for (final angle in const [0, 90, 180, 270]) {
+    final text = _tryDecodeOnce(angle == 0 ? image : img.copyRotate(image, angle: angle));
+    if (text != null) return text;
+  }
+  return null;
+}
+
+String? _tryDecodeOnce(img.Image image) {
+  // 8 bits per channel whatever the file used (1-bit and palette PNGs are common for QR codes), laid out as
+  // the 0xAARRGGBB ints zxing reads: on a little-endian CPU that is B, G, R, A in memory.
+  final pixels = image.convert(format: img.Format.uint8, numChannels: 4, alpha: 255).getBytes(order: img.ChannelOrder.bgra).buffer.asInt32List();
   final source = RGBLuminanceSource(image.width, image.height, pixels);
   for (final bitmap in [
     BinaryBitmap(HybridBinarizer(source)),

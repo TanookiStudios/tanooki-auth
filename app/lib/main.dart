@@ -7,8 +7,12 @@ import 'package:path_provider/path_provider.dart';
 
 import 'bridge/server.dart';
 import 'core/account.dart';
+import 'core/activity.dart';
 import 'core/auto_backup.dart';
+import 'core/clock_check.dart';
+import 'core/emergency.dart';
 import 'core/security.dart';
+import 'core/security_key.dart';
 import 'core/spotlight.dart';
 import 'core/vault.dart';
 import 'core/widget_share.dart';
@@ -80,9 +84,13 @@ void main() {
       // Test and screenshot stores never reach the real Spotlight index.
       if (storageName.isEmpty) publishSpotlight(v);
       autoBackup.vaultChanged(v);
+      EmergencyService.instance.vaultChanged(v); // keeps the emergency copy current
     }
   };
   autoBackup.isPremium = () => premium.value;
+  activityPremium = () => premium.value;
+  EmergencyService.instance.isPremium = () => premium.value;
+  ClockCheck.instance.auto = true;
   widgetPremium = () => premium.value;
   runApp(const TanookiAuthApp());
 }
@@ -263,6 +271,13 @@ class _GateState extends State<Gate> implements BridgeHost {
   }
 
   @override
+  Future<bool> confirmReveal(Account account, String client) async {
+    await bringToFront();
+    if (!mounted || locked) return false;
+    return confirmItsYou(context, vault, 'Send the code for ${accountTitle(account)} to $client');
+  }
+
+  @override
   Future<void> openScreen(String screen) async {
     await bringToFront();
     if (!mounted || _vault == null || _locked) return;
@@ -295,6 +310,7 @@ class _GateState extends State<Gate> implements BridgeHost {
       await _runPendingAction();
     });
     _window.setMethodCallHandler((call) async {
+      if (call.method == 'screenLocked') return _lockNow();
       if (call.method != 'trayClicked') return;
       _pendingAction = 'pick';
       await _runPendingAction();
@@ -365,6 +381,7 @@ class _GateState extends State<Gate> implements BridgeHost {
       if (mounted) await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => RecoveryKitScreen(vault: v)));
     }
     autoBackup.appOpened(v); // runs in the background; a failure shows in Settings and the check-up
+    EmergencyService.instance.check(v); // a request notification can be missed, so ask on every unlock
     if (mounted) await weeklyBreachCheck(context, v);
     await _runPendingAction();
   }
@@ -484,6 +501,27 @@ class _GateState extends State<Gate> implements BridgeHost {
     if (ok && _real != null) await _enter(_real!);
   }
 
+  /// The computer went to sleep or its screen locked (Mac and Windows): lock too, if that's on.
+  void _lockNow() {
+    if (_locked || _real == null || !lockOnSleep(_real!.settings)) return;
+    Navigator.of(context).popUntil((r) => r.isFirst);
+    setState(() => _locked = true);
+    stopSyncAndLink();
+  }
+
+  String? _keyError;
+
+  Future<void> _unlockWithKey() async {
+    setState(() => _keyError = null);
+    try {
+      await SecurityKeys.unlock(_real!);
+    } on SecurityKeyException catch (e) {
+      if (mounted) setState(() => _keyError = e.message);
+      return;
+    }
+    if (mounted) await _enter(_real!);
+  }
+
   void _onLifecycle(AppLifecycleState state) {
     if (!isDesktop) setState(() => _covered = state != AppLifecycleState.resumed);
     if (state == AppLifecycleState.hidden || state == AppLifecycleState.paused) {
@@ -589,6 +627,17 @@ class _GateState extends State<Gate> implements BridgeHost {
                 if (_biometricOn) TextButton(onPressed: _unlock, child: Text('Use $_biometricName')),
               ] else
                 FilledButton(onPressed: _unlock, child: const Text('Unlock')),
+              if (securityKeysOf(_real!.settings).isNotEmpty) ...[
+                TextButton.icon(onPressed: _unlockWithKey, icon: const Icon(Icons.key), label: const Text('Use security key')),
+                if (_keyError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: SizedBox(
+                      width: 320,
+                      child: Text(_keyError!, textAlign: TextAlign.center, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                    ),
+                  ),
+              ],
             ]),
           ),
         ),

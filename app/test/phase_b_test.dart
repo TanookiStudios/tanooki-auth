@@ -34,6 +34,7 @@ void main() {
       Account(id: id, issuer: id, label: '$id@me', secret: secret, lastUsedAt: used, favorite: fav);
 
   test('Spotlight gets names only, never trashed or travel-hidden accounts, nothing when off', () {
+    vault.settings[Vault.travelModeKey] = true;
     vault.accounts.addAll([
       acct('GitHub'),
       acct('Hidden')..travelHidden = true,
@@ -49,6 +50,7 @@ void main() {
   });
 
   test('watch complication flag only on the chosen favorite, and only with Premium; travel-hidden left out', () {
+    vault.settings[Vault.travelModeKey] = true;
     vault.settings[shareCodesKey] = true;
     vault.settings[complicationKey] = 'B';
     vault.accounts.addAll([acct('A', fav: true), acct('B', fav: true), acct('C', fav: true)..travelHidden = true]);
@@ -70,6 +72,8 @@ void main() {
     ]);
     expect(copyOnOpenPick(vault), isNull, reason: 'off by default');
     vault.settings[copyOnOpenKey] = true;
+    expect(copyOnOpenPick(vault)!.id, 'Travel', reason: 'travel mode is off, so it is an ordinary account');
+    vault.settings[Vault.travelModeKey] = true;
     expect(copyOnOpenPick(vault)!.id, 'Newest');
     vault.accounts.removeWhere((a) => a.id == 'Newest' || a.id == 'Old');
     expect(copyOnOpenPick(vault), isNull);

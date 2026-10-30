@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 
 import '../core/account.dart';
+import '../core/activity.dart';
 import '../core/google_migration.dart';
 import '../core/otpauth_uri.dart';
 import '../core/totp.dart';
@@ -26,6 +27,9 @@ abstract class BridgeHost {
   void hidePairingCode();
   /// Always shown before a browser's add is saved: one account, or every account in a Google transfer code.
   Future<bool> confirmAdd(List<Account> accounts);
+  /// For accounts set to "ask first": asks for Face ID / Touch ID / Windows Hello in the app before a code
+  /// goes to [client]. True when allowed.
+  Future<bool> confirmReveal(Account account, String client);
   void vaultChanged();
 
   /// Brings the app forward on a screen: 'add' or 'settings'.
@@ -153,8 +157,8 @@ class BridgeServer {
         _pairings.any((p) => p['origin'] == origin && constantTimeEquals(p['token'] as String, token));
     if (!paired) throw _BridgeError('notPaired', 'This app isn\'t paired with Tanooki Auth.');
 
-    // Trashed accounts are invisible to the extension.
-    final accounts = host.vault.live;
+    // Trashed accounts, and those travel mode hides, are invisible to the extension.
+    final accounts = host.vault.visible;
     Account find() => accounts.firstWhere((a) => a.id == msg['accountId'],
         orElse: () => throw _BridgeError('notFound', 'That account isn\'t in Tanooki Auth any more.'));
 
@@ -163,7 +167,7 @@ class BridgeServer {
         return {
           'accounts': [
             for (final a in accounts)
-              {'id': a.id, 'type': a.type.name, 'issuer': a.issuer, 'label': a.label, 'domains': a.domains},
+              {'id': a.id, 'type': a.type.name, 'issuer': a.issuer, 'label': a.label, 'domains': a.domains, 'requireAuth': a.requireAuth},
           ],
         };
       case 'code' || 'codes':
@@ -172,26 +176,33 @@ class BridgeServer {
         if (codeTimes.length >= _maxCodesPerSecond) throw _BridgeError('rateLimited', 'Too many requests.');
         codeTimes.add(now);
         if (type == 'codes') {
-          // Popup list: TOTP only. HOTP codes are single-use and must be asked for one at a time.
+          // Popup list: TOTP only. HOTP codes are single-use and must be asked for one at a time, and "ask first"
+          // accounts only hand out a code one at a time, after the app asks.
           final ids = (msg['accountIds'] as List).cast<String>().toSet();
           return {
             'codes': {
               for (final a in accounts)
-                if (ids.contains(a.id) && a.timeBased)
+                if (ids.contains(a.id) && a.timeBased && !a.requireAuth)
                   a.id: {'code': a.codeAt(now), 'secondsLeft': secondsLeft(now.millisecondsSinceEpoch ~/ 1000, period: a.period)},
             },
           };
         }
         final a = find();
+        if (a.requireAuth && !await host.confirmReveal(a, bridgeClientName(origin))) {
+          throw _BridgeError('denied', 'Not allowed: this account asks first, and Tanooki Auth wasn\'t unlocked for it.');
+        }
+        logActivity(host.vault, ActivityKind.filled, accountId: a.id, where: bridgeClientName(origin));
+        if (activityPremium() && a.type != OtpType.hotp) await host.vault.save();
+        final at = a.requireAuth ? DateTime.now() : now; // the prompt may have taken a while
         if (a.type == OtpType.hotp) {
           // Each HOTP code is single-use, so hand out the current one and move on.
-          final code = a.codeAt(now);
+          final code = a.codeAt(at);
           a.counter++;
           await host.vault.save();
           host.vaultChanged();
           return {'code': code, 'secondsLeft': null};
         }
-        return {'code': a.codeAt(now), 'secondsLeft': secondsLeft(now.millisecondsSinceEpoch ~/ 1000, period: a.period)};
+        return {'code': a.codeAt(at), 'secondsLeft': secondsLeft(at.millisecondsSinceEpoch ~/ 1000, period: a.period)};
       case 'open':
         final screen = msg['screen'];
         if (screen != 'add' && screen != 'settings') throw _BridgeError('badRequest', 'Unknown screen.');

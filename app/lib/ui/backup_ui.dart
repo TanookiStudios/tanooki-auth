@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../core/account.dart';
+import '../core/activity.dart';
 import '../core/backup.dart';
 import '../core/google_migration.dart';
 import '../core/otpauth_uri.dart';
@@ -16,6 +17,7 @@ import '../core/tidy.dart';
 import '../core/vault.dart';
 import 'brand_icon.dart';
 import 'home.dart';
+import 'theme.dart';
 
 void _say(BuildContext context, String msg) => ScaffoldMessenger.of(context)
   ..hideCurrentSnackBar()
@@ -106,20 +108,21 @@ Future<bool> deliverFile(BuildContext context, String fileName, Uint8List bytes,
 String _today() => DateTime.now().toIso8601String().substring(0, 10);
 
 Future<void> exportBackupFlow(BuildContext context, Vault vault) async {
-  if (vault.live.isEmpty) {
+  if (vault.visible.isEmpty) {
     _say(context, 'There are no accounts to back up yet.');
     return;
   }
   final pass = await askPassphrase(context, forExport: true);
   if (pass == null || !context.mounted) return;
-  final text = await busy(context, 'Encrypting backup…', () => exportBackup(vault.live, pass));
+  final text = await busy(context, 'Encrypting backup…', () => exportBackup(vault.visible, pass));
   if (!context.mounted) return;
   final saved = await deliverFile(context, 'Tanooki Auth backup ${_today()}.$backupExtension',
       Uint8List.fromList(utf8.encode(text)), 'application/octet-stream');
   if (!saved) return;
   vault.settings[lastBackupKey] = DateTime.now().toUtc().toIso8601String();
+  logActivity(vault, ActivityKind.exported, where: 'Backup file');
   await vault.save();
-  if (context.mounted) _say(context, 'Backup of ${vault.live.length} accounts saved.');
+  if (context.mounted) _say(context, 'Backup of ${vault.visible.length} accounts saved.');
 }
 
 /// Picks a backup file and decrypts it. Returns null if the user cancels or it fails (with a message shown).
@@ -222,13 +225,15 @@ Future<void> importGoogleFlow(BuildContext context, Vault vault, String uri) asy
 }
 
 Future<void> exportPlainFlow(BuildContext context, Vault vault) async {
-  if (vault.live.isEmpty) {
+  if (vault.visible.isEmpty) {
     _say(context, 'There are no accounts to export yet.');
     return;
   }
   if (!await confirmPlainExport(context) || !context.mounted) return;
-  final text = '${vault.live.map(toOtpauthUri).join('\n')}\n';
-  await deliverFile(context, 'Tanooki Auth setup links ${_today()}.txt', Uint8List.fromList(utf8.encode(text)), 'text/plain');
+  final text = '${vault.visible.map(toOtpauthUri).join('\n')}\n';
+  if (!await deliverFile(context, 'Tanooki Auth setup links ${_today()}.txt', Uint8List.fromList(utf8.encode(text)), 'text/plain')) return;
+  logActivity(vault, ActivityKind.exported, where: 'Setup links file');
+  await vault.save();
 }
 
 /// The loud warning before any export that isn't encrypted. True when the user says go ahead.
@@ -256,7 +261,7 @@ Future<bool> confirmPlainExport(BuildContext context,
 
 /// A printable PDF of every account's QR code and recovery codes, behind a blunt warning.
 Future<void> paperBackupFlow(BuildContext context, Vault vault) async {
-  if (vault.live.isEmpty) {
+  if (vault.visible.isEmpty) {
     _say(context, 'There are no accounts to print yet.');
     return;
   }
@@ -279,8 +284,28 @@ Future<void> paperBackupFlow(BuildContext context, Vault vault) async {
     ),
   );
   if (ok != true || !context.mounted) return;
-  final pdf = await busy(context, 'Making the PDF…', () => buildPaperBackup(vault.live));
+  final pdf = await busy(context, 'Making the PDF…', () => buildPaperBackup(vault.visible));
   if (!context.mounted) return;
   final saved = await deliverFile(context, 'Tanooki Auth paper backup ${_today()}.pdf', pdf, 'application/pdf');
+  if (saved) {
+    logActivity(vault, ActivityKind.exported, where: 'Paper backup PDF');
+    await vault.save();
+  }
   if (saved && context.mounted) _say(context, 'PDF ready. Print it, then delete the file.');
+}
+
+/// Settings > "Test a backup": opens a backup file with its passphrase and says what's in it. Adds nothing and
+/// changes nothing.
+Future<void> testBackupFlow(BuildContext context) async {
+  final accounts = await pickAndOpenBackup(context);
+  if (accounts == null || !context.mounted) return; // cancelled, or the reason was already shown
+  await showDialog<void>(
+    context: context,
+    builder: (c) => AlertDialog(
+      icon: Icon(Icons.check_circle_outline, color: Palette.green),
+      title: const Text('Backup works'),
+      content: Text('This backup opens fine and has ${accounts.length} account${accounts.length == 1 ? '' : 's'}. Nothing was added or changed.'),
+      actions: [FilledButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
+    ),
+  );
 }

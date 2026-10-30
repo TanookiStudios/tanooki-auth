@@ -5,6 +5,7 @@
 //   tanooki/push:   register -> APNs device token (hex), iOS only.
 //   tanooki/folder: see FolderAccess.swift.
 //   tanooki/spotlight: see Spotlight.swift.
+//   tanooki/securitykey, tanooki/notify: see SecurityKey.swift.
 #if os(iOS)
 import Flutter
 import UIKit
@@ -37,6 +38,8 @@ public class TanookiCloudPlugin: NSObject, FlutterPlugin {
     registrar.addMethodCallDelegate(instance, channel: FlutterMethodChannel(name: "tanooki/icloud", binaryMessenger: messenger))
     FolderAccess.register(with: registrar) // tanooki/folder: automatic backups' folder (FolderAccess.swift)
     Spotlight.register(with: registrar) // tanooki/spotlight: account names in Spotlight (Spotlight.swift)
+    SecurityKey.register(with: registrar) // tanooki/securitykey: YubiKey unlock (SecurityKey.swift)
+    MonthlyReminder.register(with: registrar) // tanooki/notify: monthly summary reminder (SecurityKey.swift)
     #if os(iOS)
     registrar.addMethodCallDelegate(instance, channel: FlutterMethodChannel(name: "tanooki/push", binaryMessenger: messenger))
     registrar.addApplicationDelegate(instance)

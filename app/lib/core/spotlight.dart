@@ -17,8 +17,7 @@ const _channel = MethodChannel('tanooki/spotlight');
 List<Map<String, String>> spotlightItems(Vault v) => v.settings[spotlightKey] == false
     ? const []
     : [
-        for (final a in v.live)
-          if (!a.travelHidden) {'id': a.id, 'issuer': a.issuer, 'label': a.label},
+        for (final a in v.visible) {'id': a.id, 'issuer': a.issuer, 'label': a.label},
       ];
 
 String? _lastSent;

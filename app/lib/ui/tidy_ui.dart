@@ -18,7 +18,7 @@ class TidyNamesScreen extends StatefulWidget {
 
 class _TidyNamesScreenState extends State<TidyNamesScreen> {
   late final List<(Account, ({String issuer, String label}))> _changes = [
-    for (final a in widget.vault.live)
+    for (final a in widget.vault.visible)
       if (tidyName(a.issuer, a.label, brandName: brandTitle) case final t when t.issuer != a.issuer || t.label != a.label) (a, t),
   ];
   late final Set<String> _on = {for (final (a, _) in _changes) a.id};
