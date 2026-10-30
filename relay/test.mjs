@@ -2,6 +2,9 @@
 //   node relay/test.mjs http://localhost:8787
 //   node relay/test.mjs https://tanooki-auth-relay.kirbymail.workers.dev
 // Set EXPECT_PUSH=1 once push secrets are installed: the push-token check then expects 200 instead of 503.
+// Set TEST_MODE=1 when the relay runs with `npx wrangler dev --var TEST_MODE:1`: emergency access is then released
+// after 2 s. Without it the test checks the deployed relay ignores the shortcut and keeps the 7-day wait.
+// Team tests sign team licenses with the real key in ~/.tanooki-auth-signing/license_ed25519.json (or TA_LICENSE_FILE).
 const BASE = (process.argv[2] || 'http://localhost:8787').replace(/\/$/, '');
 const { subtle } = globalThis.crypto;
 const te = new TextEncoder();
@@ -16,6 +19,7 @@ let failed = 0;
 function check(name, cond, detail = '') {
   if (cond) { passed++; console.log(`  ok   ${name}`); }
   else { failed++; console.log(`  FAIL ${name} ${detail}`); }
+  return cond;
 }
 
 // ---------- crypto helpers (what the app / extension implement) ----------
@@ -292,10 +296,258 @@ async function linkTests() {
   pws.ws.close();
 }
 
+// ---------- health ----------
+async function healthTests() {
+  console.log('health');
+  const r = await fetch(`${BASE}/health`);
+  const b = await r.json().catch(() => null);
+  check('GET /health is ok with service and time', r.status === 200 && b?.ok === true && b.service === 'tanooki-auth-relay' && !Number.isNaN(Date.parse(b.time)), JSON.stringify(b));
+  check('/health allows any origin (CORS *)', r.headers.get('access-control-allow-origin') === '*');
+}
+
+// ---------- emergency access ----------
+async function emergencyTests() {
+  console.log('emergency access');
+  const E = `/v1/emergency/${b64u(rand(32))}`;
+  const owner = await ed25519Device();
+  const contact = await ed25519Device();
+  const stranger = await ed25519Device();
+  const contactBox = await subtle.generateKey({ name: 'X25519' }, true, ['deriveBits']);
+  const contactBoxPub = b64u(await subtle.exportKey('raw', contactBox.publicKey));
+  // Owner seals a snapshot to the contact's X25519 key (ephemeral ECDH + HKDF + AES-GCM); the relay only stores it.
+  const sealTo = async (peerPub, plain, info) => {
+    const eph = await subtle.generateKey({ name: 'X25519' }, true, ['deriveBits']);
+    const peer = await subtle.importKey('raw', unb64u(peerPub), { name: 'X25519' }, false, []);
+    const shared = new Uint8Array(await subtle.deriveBits({ name: 'X25519', public: peer }, eph.privateKey, 256));
+    const ephPub = b64u(await subtle.exportKey('raw', eph.publicKey));
+    return `${ephPub}.${await seal(await hkdf(shared, new Uint8Array(), info, 32), plain, info)}`;
+  };
+  const openFrom = async (priv, blob, info) => {
+    const [ephPub, ct] = blob.split('.');
+    const peer = await subtle.importKey('raw', unb64u(ephPub), { name: 'X25519' }, false, []);
+    const shared = new Uint8Array(await subtle.deriveBits({ name: 'X25519', public: peer }, priv, 256));
+    return open(await hkdf(shared, new Uint8Array(), info, 32), ct, info);
+  };
+  const snapshot = { accounts: [{ issuer: 'GitHub', secret: 'JBSWY3DPEHPK3PXP' }] };
+  const blob = (await sealTo(contactBoxPub, snapshot, 'TA-EMERGENCY-1')).replace('.', '_'); // one base64url string on the wire
+  const unwire = (b) => `${b.slice(0, 43)}.${b.slice(44)}`;
+
+  let r = await call(owner, 'GET', E);
+  check('unknown grant is 404', r.status === 404, JSON.stringify(r));
+  r = await call(owner, 'POST', E, { contactKey: contact.pub, blob });
+  check('owner uploads sealed blob (201)', r.status === 201 && r.body.state === 'idle' && r.body.owner === owner.pub, JSON.stringify(r));
+  check('status does not include the blob', !JSON.stringify(r.body).includes(blob.slice(0, 40)));
+  r = await call(stranger, 'POST', E, { contactKey: stranger.pub, blob: 'AAAA' });
+  check('stranger cannot replace it (403)', r.status === 403, JSON.stringify(r));
+  r = await call(stranger, 'GET', E);
+  check('stranger cannot read status (403)', r.status === 403, JSON.stringify(r));
+  r = await call(contact, 'GET', `${E}/blob`);
+  check('contact cannot download before asking (409)', r.status === 409, JSON.stringify(r));
+  r = await call(contact, 'POST', `${E}/deny`);
+  check('contact cannot deny (404 for contact)', r.status === 404, JSON.stringify(r));
+  r = await call(owner, 'POST', `${E}/push`, { platform: 'apns', token: 'a'.repeat(64), environment: 'sandbox' });
+  check(process.env.EXPECT_PUSH ? 'owner registers a push token' : 'push token without secrets: 503', r.status === (process.env.EXPECT_PUSH ? 200 : 503), JSON.stringify(r));
+
+  r = await call(contact, 'POST', `${E}/request`, { delaySeconds: 2 });
+  const wait = r.body?.releaseAt - r.body?.requestedAt;
+  check('contact asks: 201, waiting', r.status === 201 && r.body.state === 'waiting', JSON.stringify(r));
+  if (process.env.TEST_MODE) check('TEST_MODE relay shortens the wait to 2 s', wait === 2000, String(wait));
+  else check('relay ignores delaySeconds: wait is 7 days', wait === 7 * 86400_000, String(wait));
+  if (process.env.EXPECT_PUSH) check('owner push attempted (fake token is dead, 0 sent)', r.body.push?.tokens === 1 && r.body.push.sent === 0, JSON.stringify(r.body.push));
+  else check('no push service: 0 tokens', r.body?.push?.tokens === 0, JSON.stringify(r.body?.push));
+  r = await call(contact, 'GET', `${E}/blob`);
+  check('blob locked while waiting (403 + releaseAt)', r.status === 403 && r.body.releaseAt > Date.now(), JSON.stringify(r));
+  r = await call(owner, 'POST', `${E}/deny`);
+  check('owner denies: back to idle', r.status === 200 && r.body.state === 'idle' && r.body.releaseAt === null, JSON.stringify(r));
+  r = await call(owner, 'POST', `${E}/deny`);
+  check('second deny: nothing to deny (409)', r.status === 409, JSON.stringify(r));
+  r = await call(contact, 'GET', `${E}/blob`);
+  check('denied: blob not available (409)', r.status === 409, JSON.stringify(r));
+
+  r = await call(contact, 'POST', `${E}/request`, { delaySeconds: 2 });
+  const releaseAt = r.body?.releaseAt;
+  check('contact asks again (201)', r.status === 201, JSON.stringify(r));
+  r = await call(contact, 'POST', `${E}/request`, { delaySeconds: 0 });
+  check('asking twice keeps the first timer (200, no new push)', r.status === 200 && r.body.releaseAt === releaseAt && r.body.push === undefined, JSON.stringify(r));
+  if (process.env.TEST_MODE) {
+    await sleep(2500);
+    r = await call(contact, 'GET', `${E}/blob`);
+    check('after the wait the contact downloads and opens it', r.status === 200 && (await openFrom(contactBox.privateKey, unwire(r.body.blob), 'TA-EMERGENCY-1')).accounts[0].secret === snapshot.accounts[0].secret, JSON.stringify(r).slice(0, 200));
+    r = await call(owner, 'GET', E);
+    check('status says released', r.body?.state === 'released', JSON.stringify(r));
+  } else {
+    r = await call(contact, 'GET', `${E}/blob`);
+    check('deployed relay still locks the blob (403)', r.status === 403, JSON.stringify(r));
+  }
+
+  const newContact = await ed25519Device();
+  r = await call(owner, 'POST', E, { contactKey: newContact.pub, blob: 'BBBB' });
+  check('owner switches contact: 200, request cleared', r.status === 200 && r.body.state === 'idle', JSON.stringify(r));
+  r = await call(contact, 'GET', `${E}/blob`);
+  check('old contact is locked out (403)', r.status === 403, JSON.stringify(r));
+  r = await call(owner, 'POST', E, { contactKey: owner.pub, blob: 'BBBB' });
+  check('owner cannot name itself as contact (400)', r.status === 400, JSON.stringify(r));
+  r = await call(newContact, 'GET', E, undefined, (q) => ({ ...q, headers: { ...q.headers, 'x-ta-signature': b64u(rand(64)) } }));
+  check('bad signature is refused (401)', r.status === 401, JSON.stringify(r));
+  r = await call(owner, 'DELETE', E);
+  check('owner deletes the grant', r.status === 200);
+  r = await call(newContact, 'GET', E);
+  check('deleted grant is gone (404)', r.status === 404, JSON.stringify(r));
+}
+
+// ---------- team vault ----------
+async function teamTests() {
+  console.log('team vault');
+  const { readFileSync } = await import('node:fs');
+  let lic;
+  try { lic = JSON.parse(readFileSync(process.env.TA_LICENSE_FILE || `${process.env.HOME}/.tanooki-auth-signing/license_ed25519.json`, 'utf8')); } catch {}
+  if (!check('license signing file found (needed to make team licenses)', !!lic)) return;
+  const std2u = (s) => Buffer.from(s, 'base64').toString('base64url');
+  const signer = async (seed, pub) => subtle.importKey('jwk', { kty: 'OKP', crv: 'Ed25519', d: std2u(seed), x: std2u(pub) }, { name: 'Ed25519' }, false, ['sign']);
+  const realKey = await signer(lic.seed, lic.public);
+  const teamLicense = async (payload, key = realKey, tag = 'TT1') =>
+    `${tag}.${b64u(te.encode(payload))}.${b64u(await subtle.sign({ name: 'Ed25519' }, key, te.encode(payload)))}`;
+  const yearOut = Math.floor(Date.now() / 1000) + 365 * 86400;
+  const T = `/v1/team/${b64u(rand(32))}`;
+  const box = async () => {
+    const kp = await subtle.generateKey({ name: 'X25519' }, true, ['deriveBits']);
+    return { kp, pub: b64u(await subtle.exportKey('raw', kp.publicKey)) };
+  };
+  const person = async () => ({ ...(await ed25519Device()), box: await box() });
+  // Wrap the team key for one member: ephemeral X25519 + HKDF + AES-GCM, all on the client.
+  const wrap = async (teamKey, memberBoxPub) => {
+    const eph = await subtle.generateKey({ name: 'X25519' }, true, ['deriveBits']);
+    const peer = await subtle.importKey('raw', unb64u(memberBoxPub), { name: 'X25519' }, false, []);
+    const shared = new Uint8Array(await subtle.deriveBits({ name: 'X25519', public: peer }, eph.privateKey, 256));
+    const k = await subtle.importKey('raw', await hkdf(shared, new Uint8Array(), 'TA-TEAM-WRAP-1', 32), 'AES-GCM', false, ['encrypt']);
+    const iv = rand(12);
+    const ct = new Uint8Array(await subtle.encrypt({ name: 'AES-GCM', iv }, k, teamKey));
+    return b64u(Buffer.concat([new Uint8Array(await subtle.exportKey('raw', eph.publicKey)), iv, ct]));
+  };
+  const unwrap = async (wrapped, boxPriv) => {
+    const all = unb64u(wrapped);
+    const peer = await subtle.importKey('raw', all.slice(0, 32), { name: 'X25519' }, false, []);
+    const shared = new Uint8Array(await subtle.deriveBits({ name: 'X25519', public: peer }, boxPriv, 256));
+    const k = await subtle.importKey('raw', await hkdf(shared, new Uint8Array(), 'TA-TEAM-WRAP-1', 32), 'AES-GCM', false, ['decrypt']);
+    return new Uint8Array(await subtle.decrypt({ name: 'AES-GCM', iv: all.slice(32, 44) }, k, all.slice(44)));
+  };
+  const A = await person();
+  const B = await person();
+  const C = await person();
+
+  let r = await call(A, 'POST', `${T}/create`, { boxKey: A.box.pub });
+  check('create without a license is refused (402)', r.status === 402, JSON.stringify(r));
+  r = await call(A, 'POST', `${T}/create`, { boxKey: A.box.pub, license: await teamLicense(`1|cs_test_x|20261030`, realKey, 'TA1') });
+  check('a Premium key is not a team license (402)', r.status === 402 && /malformed/.test(r.body?.error), JSON.stringify(r));
+  r = await call(A, 'POST', `${T}/create`, { boxKey: A.box.pub, license: await teamLicense(`team1|sub_test|${Math.floor(Date.now() / 1000) - 60}`) });
+  check('expired team license is refused (402)', r.status === 402 && /expired/.test(r.body?.error), JSON.stringify(r));
+  const fake = await subtle.generateKey({ name: 'Ed25519' }, true, ['sign', 'verify']);
+  r = await call(A, 'POST', `${T}/create`, { boxKey: A.box.pub, license: await teamLicense(`team1|sub_test|${yearOut}`, fake.privateKey) });
+  check('team license signed by another key is refused (402)', r.status === 402 && /signature/.test(r.body?.error), JSON.stringify(r));
+  r = await call(A, 'POST', `${T}/create`, { boxKey: A.box.pub, license: await teamLicense(`team1|sub_test|${yearOut}`) });
+  check('admin creates the team with a valid license (201)', r.status === 201 && r.body.admin === A.pub && r.body.epoch === 1, JSON.stringify(r));
+  r = await call(B, 'POST', `${T}/create`, { boxKey: B.box.pub, license: await teamLicense(`team1|sub_test|${yearOut}`) });
+  check('second create is refused (409)', r.status === 409, JSON.stringify(r));
+
+  r = await call(B, 'POST', `${T}/join`, { invite: 'made-up', boxKey: B.box.pub });
+  check('made-up invite is refused (403)', r.status === 403, JSON.stringify(r));
+  r = await call(A, 'POST', `${T}/invites`);
+  const inviteB = r.body?.invite;
+  check('admin makes an invite', r.status === 201 && typeof inviteB === 'string', JSON.stringify(r));
+  r = await call(B, 'POST', `${T}/join`, { invite: inviteB, boxKey: B.box.pub });
+  check('B joins with the invite (201)', r.status === 201 && r.body.members.length === 2, JSON.stringify(r));
+  r = await call(C, 'POST', `${T}/join`, { invite: inviteB, boxKey: C.box.pub });
+  check('invite is single-use (403)', r.status === 403, JSON.stringify(r));
+  r = await call(B, 'POST', `${T}/invites`);
+  check('a member cannot make invites (403)', r.status === 403, JSON.stringify(r));
+  r = await call(C, 'GET', T);
+  check('outsider cannot read the team (403)', r.status === 403, JSON.stringify(r));
+
+  const key1 = rand(32);
+  r = await call(A, 'POST', `${T}/keys`, { epoch: 1, keys: { [A.pub]: await wrap(key1, A.box.pub), [B.pub]: await wrap(key1, B.box.pub) } });
+  check('admin uploads wrapped keys for epoch 1', r.status === 200 && r.body.members.every((m) => m.hasKey), JSON.stringify(r));
+  r = await call(B, 'GET', `${T}/key`);
+  const bKey = r.status === 200 ? await unwrap(r.body.wrapped, B.box.kp.privateKey) : null;
+  check('B fetches and unwraps the team key', bKey && Buffer.compare(bKey, key1) === 0, JSON.stringify(r));
+
+  const entryId = b64u(rand(16));
+  const aad = (epoch) => `TA-TEAM-1|${T.split('/').pop()}|${entryId}|${epoch}`;
+  const t0 = Date.now();
+  r = await call(A, 'POST', `${T}/entries`, { entries: [{ id: entryId, updatedAt: t0, epoch: 1, ciphertext: await seal(key1, { issuer: 'AWS', secret: 'JBSWY3DPEHPK3PXP' }, aad(1)) }] });
+  check('admin pushes an entry', r.status === 200 && r.body.results[0].status === 'ok', JSON.stringify(r));
+  r = await call(B, 'GET', `${T}/entries?since=0`);
+  check('B reads and decrypts it', r.status === 200 && (await open(bKey, r.body.entries[0].ciphertext, aad(1))).issuer === 'AWS', JSON.stringify(r));
+  r = await call(B, 'POST', `${T}/entries`, { entries: [{ id: entryId, updatedAt: t0 - 1, epoch: 1, ciphertext: await seal(key1, { issuer: 'old' }, aad(1)) }] });
+  check('older write loses (stale + current)', r.body?.results?.[0]?.status === 'stale' && r.body.results[0].current.updatedAt === t0, JSON.stringify(r));
+  r = await call(B, 'POST', `${T}/entries`, { entries: [{ id: entryId, updatedAt: t0 + 1, epoch: 1, ciphertext: await seal(key1, { issuer: 'AWS', label: 'ops' }, aad(1)) }] });
+  check('newer write wins', r.body?.results?.[0]?.status === 'ok', JSON.stringify(r));
+
+  // Fill the team to 10, then the 11th is refused.
+  const extra = [C];
+  for (let i = 0; i < 7; i++) extra.push(await person());
+  let joined = 0;
+  for (const p of extra) {
+    const inv = (await call(A, 'POST', `${T}/invites`)).body.invite;
+    if ((await call(p, 'POST', `${T}/join`, { invite: inv, boxKey: p.box.pub })).status === 201) joined++;
+  }
+  check('8 more people join (10 in all)', joined === 8);
+  const eleventh = await person();
+  r = await call(eleventh, 'POST', `${T}/join`, { invite: (await call(A, 'POST', `${T}/invites`)).body.invite, boxKey: eleventh.box.pub });
+  check('11th member is refused (507)', r.status === 507, JSON.stringify(r));
+
+  r = await call(A, 'DELETE', `${T}/members/${B.pub}`);
+  check('admin removes B: team needs key rotation', r.status === 200 && r.body.needsRotation === true && !r.body.members.some((m) => m.key === B.pub), JSON.stringify(r));
+  r = await call(B, 'GET', `${T}/entries?since=0`);
+  check('B loses access at once (403)', r.status === 403, JSON.stringify(r));
+  r = await call(B, 'GET', `${T}/key`);
+  check('B cannot fetch the key any more (403)', r.status === 403, JSON.stringify(r));
+  r = await call(C, 'DELETE', `${T}/members/${A.pub}`);
+  check('a member cannot remove others (403)', r.status === 403, JSON.stringify(r));
+
+  const key2 = rand(32);
+  const members = [A, ...extra];
+  r = await call(A, 'POST', `${T}/keys`, { epoch: 2, keys: { [A.pub]: await wrap(key2, A.box.pub) } });
+  check('rotation missing members is refused (400)', r.status === 400 && r.body.missing?.length === 8, JSON.stringify(r).slice(0, 200));
+  const all = {};
+  for (const p of members) all[p.pub] = await wrap(key2, p.box.pub);
+  r = await call(A, 'POST', `${T}/keys`, { epoch: 2, keys: all });
+  check('admin rotates to epoch 2', r.status === 200 && r.body.epoch === 2 && r.body.needsRotation === false, JSON.stringify(r).slice(0, 200));
+  r = await call(A, 'POST', `${T}/keys`, { epoch: 4, keys: all });
+  check('skipping an epoch is refused (409)', r.status === 409, JSON.stringify(r).slice(0, 200));
+  r = await call(C, 'POST', `${T}/entries`, { entries: [{ id: b64u(rand(16)), updatedAt: Date.now(), epoch: 1, ciphertext: 'AAAA' }] });
+  check('writing with the old key is refused (409)', r.status === 409 && r.body.epoch === 2, JSON.stringify(r));
+  r = await call(C, 'GET', `${T}/key`);
+  const cKey = r.status === 200 ? await unwrap(r.body.wrapped, C.box.kp.privateKey) : null;
+  check('C unwraps the epoch 2 key', r.body?.epoch === 2 && cKey && Buffer.compare(cKey, key2) === 0, JSON.stringify(r));
+  r = await call(C, 'GET', `${T}/entries?since=0`);
+  const oldEntry = r.body?.entries?.[0];
+  check('old entries keep epoch 1 until re-encrypted', oldEntry?.epoch === 1, JSON.stringify(r));
+  r = await call(C, 'POST', `${T}/entries`, { entries: [{ id: entryId, updatedAt: oldEntry.updatedAt, epoch: 2, ciphertext: await seal(key2, await open(key1, oldEntry.ciphertext, aad(1)), aad(2)) }] });
+  check('re-encrypting under epoch 2 with the same time is accepted', r.body?.results?.[0]?.status === 'ok', JSON.stringify(r));
+  r = await call(A, 'GET', `${T}/entries?since=0`);
+  check('A decrypts the re-encrypted entry with the new key', r.body.entries[0].epoch === 2 && (await open(key2, r.body.entries[0].ciphertext, aad(2))).label === 'ops', JSON.stringify(r));
+
+  r = await call(A, 'DELETE', `${T}/members/${A.pub}`);
+  check('the admin cannot leave (409)', r.status === 409, JSON.stringify(r));
+  r = await call(C, 'DELETE', `${T}/members/${C.pub}`);
+  check('a member can leave (team needs rotation again)', r.status === 200 && r.body.needsRotation === true, JSON.stringify(r).slice(0, 200));
+  r = await call(A, 'POST', `${T}/license`, { license: await teamLicense(`team1|sub_test|${yearOut + 86400}`) });
+  check('admin refreshes the license', r.status === 200 && r.body.licenseEnd === (yearOut + 86400) * 1000, JSON.stringify(r).slice(0, 200));
+  r = await call(extra[1], 'DELETE', T);
+  check('only the admin deletes the team (403)', r.status === 403, JSON.stringify(r));
+  r = await call(A, 'DELETE', T);
+  check('admin deletes the team', r.status === 200);
+  r = await call(A, 'GET', T);
+  check('deleted team is gone (404)', r.status === 404, JSON.stringify(r));
+}
+
 console.log(`relay test against ${BASE}`);
 const info = await fetch(BASE).then((r) => r.json());
 check('service answers', info.service === 'tanooki-auth-relay');
+await healthTests();
 await syncTests();
 await linkTests();
+await emergencyTests();
+await teamTests();
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

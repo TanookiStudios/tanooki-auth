@@ -1,15 +1,13 @@
 // One SyncGroup Durable Object per sync group. Stores opaque ciphertext records; devices sign every request.
 import { DurableObject } from 'cloudflare:workers';
-import { ID, Window, b64u, err, json, parseJson, readBody, sha256, verifyEd25519 } from './util.js';
+import { B64U, ID, SKEW, Window, err, json, parseJson, readBody, signedParts, verifyEd25519, verifySigned } from './util.js';
 
-const SKEW = 300_000; // accepted clock difference, ms
 const MAX_RECORDS = 2000; // per group, tombstones included
 const MAX_DEVICES = 20;
 const MAX_CIPHERTEXT = 65_536; // characters of base64url per record
 const MAX_BATCH = 100;
 const MAX_INVITE_LIFE = 24 * 3600_000;
 const REC_ID = /^[A-Za-z0-9_-]{1,64}$/;
-const B64U = /^[A-Za-z0-9_-]*$/;
 const NONCE = /^[A-Za-z0-9_-]{16,64}$/;
 
 const rowToRecord = (r) => ({ id: r.id, version: r.version, deleted: !!r.deleted, updatedAt: r.updated_at, ciphertext: r.ct, seq: r.seq });
@@ -40,18 +38,9 @@ export class SyncGroup extends DurableObject {
   isDevice(key) { return !!this.one('SELECT 1 AS x FROM devices WHERE key=?', key); }
 
   // Verifies the Ed25519 request signature and burns the nonce. Returns the device key, or a Response on failure.
-  async authenticate({ method, path, device, ts, nonce, sig, body, registered = true }) {
-    if (!ID.test(device || '') || !NONCE.test(nonce || '') || !sig) return err(401, 'missing or malformed signature headers');
-    const t = Number(ts);
-    const now = Date.now();
-    if (!Number.isInteger(t) || Math.abs(now - t) > SKEW) return err(401, 'timestamp outside the allowed 5 minute window', { serverTime: now });
-    const message = `TA-RELAY-1\n${method}\n${path}\n${t}\n${nonce}\n${b64u(await sha256(body))}`;
-    if (!(await verifyEd25519(device, sig, message))) return err(401, 'bad signature');
-    if (registered && !this.isDevice(device)) return err(this.exists() ? 403 : 404, this.exists() ? 'device is not in this sync group' : 'sync group not found');
-    this.sql.exec('DELETE FROM nonces WHERE exp < ?', now);
-    if (this.one('SELECT 1 AS x FROM nonces WHERE nonce=?', nonce)) return err(401, 'replayed request (nonce already used)');
-    this.sql.exec('INSERT INTO nonces VALUES(?, ?)', nonce, t + SKEW + 60_000);
-    return device;
+  authenticate({ registered = true, ...parts }) {
+    return verifySigned(this.sql, parts, (device) =>
+      registered && !this.isDevice(device) ? err(this.exists() ? 403 : 404, this.exists() ? 'device is not in this sync group' : 'sync group not found') : null);
   }
 
   async fetch(req) {
@@ -75,9 +64,7 @@ export class SyncGroup extends DurableObject {
 
     const { bytes, error } = await readBody(req);
     if (error) return error;
-    const h = req.headers;
-    const auth = (registered = true) =>
-      this.authenticate({ method: req.method, path: url.pathname + url.search, device: h.get('x-ta-device'), ts: h.get('x-ta-timestamp'), nonce: h.get('x-ta-nonce'), sig: h.get('x-ta-signature'), body: bytes, registered });
+    const auth = (registered = true) => this.authenticate({ ...signedParts(req, url, bytes), registered });
     const body = parseJson(bytes);
     if (body === null) return err(400, 'body is not a JSON object');
 
