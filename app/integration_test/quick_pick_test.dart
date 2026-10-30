@@ -118,8 +118,9 @@ void main() {
         final typed = code();
         step('tapping Type');
         await t.tap(find.text('Type'));
+        // Type minimizes the app, and a minimized Flutter window draws no frames, so wait in real time, not with pump.
         for (var i = 0; i < 100 && (!out.existsSync() || out.readAsStringSync().length < typed.length); i++) {
-          await t.pump(const Duration(milliseconds: 100));
+          await Future<void>.delayed(const Duration(milliseconds: 100));
         }
         step('typed: ${out.existsSync() ? out.readAsStringSync() : '<none>'}');
         step('target window after Type: ${ready.readAsStringSync()}');
@@ -129,6 +130,7 @@ void main() {
         target.kill();
         step('target output: ${await target.stdout.transform(systemEncoding.decoder).join()} ${await target.stderr.transform(systemEncoding.decoder).join()}');
         await window.invokeMethod<void>('focus');
+        await pumpFor(t, const Duration(seconds: 1));
       }
     }
   }, skip: !(Platform.isMacOS || Platform.isWindows), timeout: const Timeout(Duration(minutes: 4)));
