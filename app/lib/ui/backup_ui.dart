@@ -102,17 +102,17 @@ Future<bool> _deliver(BuildContext context, String fileName, Uint8List bytes, St
 String _today() => DateTime.now().toIso8601String().substring(0, 10);
 
 Future<void> exportBackupFlow(BuildContext context, Vault vault) async {
-  if (vault.accounts.isEmpty) {
+  if (vault.live.isEmpty) {
     _say(context, 'There are no accounts to back up yet.');
     return;
   }
   final pass = await _askPassphrase(context, forExport: true);
   if (pass == null || !context.mounted) return;
-  final text = await _busy(context, 'Encrypting backup…', () => exportBackup(vault.accounts, pass));
+  final text = await _busy(context, 'Encrypting backup…', () => exportBackup(vault.live, pass));
   if (!context.mounted) return;
   final saved = await _deliver(context, 'Tanooki Auth backup ${_today()}.$backupExtension',
       Uint8List.fromList(utf8.encode(text)), 'application/octet-stream');
-  if (saved && context.mounted) _say(context, 'Backup of ${vault.accounts.length} accounts saved.');
+  if (saved && context.mounted) _say(context, 'Backup of ${vault.live.length} accounts saved.');
 }
 
 /// Picks a backup file and decrypts it. Returns null if the user cancels or it fails (with a message shown).
@@ -186,7 +186,7 @@ Future<void> importGoogleFlow(BuildContext context, Vault vault, String uri) asy
 }
 
 Future<void> exportPlainFlow(BuildContext context, Vault vault) async {
-  if (vault.accounts.isEmpty) {
+  if (vault.live.isEmpty) {
     _say(context, 'There are no accounts to export yet.');
     return;
   }
@@ -208,6 +208,6 @@ Future<void> exportPlainFlow(BuildContext context, Vault vault) async {
     ),
   );
   if (ok != true || !context.mounted) return;
-  final text = '${vault.accounts.map(toOtpauthUri).join('\n')}\n';
+  final text = '${vault.live.map(toOtpauthUri).join('\n')}\n';
   await _deliver(context, 'Tanooki Auth setup links ${_today()}.txt', Uint8List.fromList(utf8.encode(text)), 'text/plain');
 }

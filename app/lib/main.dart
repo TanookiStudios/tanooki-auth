@@ -10,6 +10,7 @@ import 'core/account.dart';
 import 'core/vault.dart';
 import 'ui/add.dart';
 import 'ui/backup_ui.dart';
+import 'ui/brand_icon.dart';
 import 'ui/home.dart';
 import 'ui/premium.dart';
 import 'ui/settings.dart';
@@ -227,6 +228,7 @@ class _GateState extends State<Gate> implements BridgeHost {
       return;
     }
     await loadPremiumAndTheme(vault);
+    await loadBrandIcons();
     setState(() {
       _vault = vault;
       _error = null;

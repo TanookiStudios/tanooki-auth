@@ -76,14 +76,17 @@ Future<List<Account>> importBackup(String text, String passphrase) async {
 }
 
 /// Adds [incoming] to [into], skipping any already present (same id or same secret).
-/// Returns (added, skipped).
+/// A matching account in Trash is replaced by the incoming one. Returns (added, skipped).
 (int, int) mergeAccounts(List<Account> into, Iterable<Account> incoming) {
   var added = 0, skipped = 0;
   for (final a in incoming) {
-    if (into.any((x) => x.id == a.id || x.secret == a.secret)) {
+    bool same(Account x) => x.id == a.id || x.secret == a.secret;
+    if (into.any((x) => !x.trashed && same(x))) {
       skipped++;
     } else {
-      into.add(a);
+      into
+        ..removeWhere(same)
+        ..add(a);
       added++;
     }
   }

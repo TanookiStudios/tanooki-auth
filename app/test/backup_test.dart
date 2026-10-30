@@ -14,7 +14,7 @@ void main() {
     expect((jsonDecode(file) as Map)['kdf']['iterations'], 600000);
     final back = await importBackup(file, 'correct horse battery');
     expect(back.map((x) => x.toJson()).toList(), [a.toJson(), b.toJson()]);
-  });
+  }, timeout: const Timeout(Duration(minutes: 2))); // 600k PBKDF2 rounds in pure Dart; ~25 s on an M-series Mac
 
   test('wrong passphrase and tampering fail with a message', () async {
     final file = await exportBackup([a], 'right', iterations: 1000);

@@ -30,6 +30,8 @@ Future<bool> showAccountDialog(BuildContext context, Account a,
   final issuer = TextEditingController(text: a.issuer);
   final label = TextEditingController(text: a.label);
   final domains = TextEditingController(text: a.domains.join(', '));
+  final tags = TextEditingController(text: a.tags.join(', '));
+  final notes = TextEditingController(text: a.notes);
   final ok = await showDialog<bool>(
     context: context,
     builder: (c) => AlertDialog(
@@ -48,6 +50,19 @@ Future<bool> showAccountDialog(BuildContext context, Account a,
               helperMaxLines: 2,
             ),
           ),
+          TextField(
+            controller: tags,
+            decoration: const InputDecoration(
+              labelText: 'Tags (optional)',
+              helperText: 'e.g. work, games. Separate with commas.',
+            ),
+          ),
+          TextField(
+            controller: notes,
+            minLines: 1,
+            maxLines: 4,
+            decoration: const InputDecoration(labelText: 'Notes (optional)'),
+          ),
         ]),
       ),
       actions: [
@@ -62,6 +77,10 @@ Future<bool> showAccountDialog(BuildContext context, Account a,
   a.domains
     ..clear()
     ..addAll(domains.text.split(',').map(normalizeDomain).where((d) => d.isNotEmpty).toSet());
+  a.tags
+    ..clear()
+    ..addAll(tags.text.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).toSet());
+  a.notes = notes.text.trim();
   return true;
 }
 
@@ -81,9 +100,9 @@ class _AddScreenState extends State<AddScreen> {
   /// Common path for every way of adding: parse, check duplicates, confirm, save.
   Future<void> _fromText(String text) async {
     if (text.startsWith('otpauth-migration://')) {
-      final before = widget.vault.accounts.length;
+      final before = widget.vault.live.length;
       await importGoogleFlow(context, widget.vault, text);
-      if (mounted && widget.vault.accounts.length > before) Navigator.pop(context);
+      if (mounted && widget.vault.live.length > before) Navigator.pop(context);
       return;
     }
     final Account a;
@@ -97,14 +116,16 @@ class _AddScreenState extends State<AddScreen> {
   }
 
   Future<void> _confirmAndSave(Account a) async {
-    final dupe = widget.vault.accounts.where((x) => x.secret == a.secret).firstOrNull;
+    final dupe = widget.vault.live.where((x) => x.secret == a.secret).firstOrNull;
     if (dupe != null) {
       _say('${accountTitle(dupe)} is already in your list.');
       return;
     }
     if (!mounted) return;
     if (!await showAccountDialog(context, a, title: 'Add this account?', confirm: 'Add')) return;
-    widget.vault.accounts.add(a);
+    widget.vault.accounts
+      ..removeWhere((x) => x.secret == a.secret) // an old copy in Trash
+      ..add(a);
     await widget.vault.save();
     if (mounted) Navigator.pop(context);
   }

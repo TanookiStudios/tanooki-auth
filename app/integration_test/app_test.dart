@@ -77,9 +77,33 @@ void main() {
     await waitFor(t, find.text('GitHub'));
     await expectCurrentCode(t);
 
+    // Trash round trip through the real UI and disk: delete, see it in Settings > Trash, restore.
+    await t.tap(find.byTooltip('More').first);
+    await settle(t);
+    await t.tap(find.text('Delete'));
+    await settle(t);
+    expect(find.text('GitHub'), findsNothing);
+    await t.tap(find.byTooltip('Settings').evaluate().isNotEmpty ? find.byTooltip('Settings') : find.text('Settings'));
+    await settle(t);
+    await t.ensureVisible(find.text('Trash (1)'));
+    await settle(t);
+    await t.tap(find.text('Trash (1)'));
+    await settle(t);
+    expect(find.text('GitHub'), findsOneWidget);
+    await t.tap(find.text('Restore'));
+    await settle(t);
+    expect(find.text('Trash is empty.\nDeleted accounts stay here for 30 days.'), findsOneWidget);
+    await t.pageBack();
+    await settle(t);
+    await t.pageBack();
+    await waitFor(t, find.text('GitHub'));
+    final reloaded = await openVault();
+    await reloaded.load();
+    expect(reloaded.live.single.issuer, 'GitHub');
+
     final vaultFile = await openVault().then((v) => v.file);
     expect(vaultFile.existsSync(), isTrue);
     expect(vaultFile.readAsStringSync().contains('JBSWY3DPEHPK3PXP'), isFalse);
-    stdout.writeln('PROOF vault=${vaultFile.path} accounts-restored=1 code-matches=true platform=${Platform.operatingSystem}');
+    stdout.writeln('PROOF vault=${vaultFile.path} accounts-restored=1 code-matches=true trash-restore=true platform=${Platform.operatingSystem}');
   });
 }

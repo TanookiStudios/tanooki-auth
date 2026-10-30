@@ -57,11 +57,25 @@ class Vault {
   /// Non-secret app settings (lock on/off etc.), stored encrypted alongside the accounts.
   final Map<String, dynamic> settings = {};
 
+  /// Accounts not in Trash, in the user's order. Everything except the Trash screen uses these.
+  List<Account> get live => accounts.where((a) => !a.trashed).toList();
+  List<Account> get trash => accounts.where((a) => a.trashed).toList();
+
+  static const trashDays = 30;
+
+  /// Permanently removes accounts that have been in Trash for more than [trashDays]. Returns how many.
+  int purgeTrash([DateTime? now]) {
+    final cutoff = (now ?? DateTime.now()).toUtc().subtract(const Duration(days: trashDays));
+    final before = accounts.length;
+    accounts.removeWhere((a) => a.deletedAt != null && a.deletedAt!.isBefore(cutoff));
+    return before - accounts.length;
+  }
+
   static final _aes = AesGcm.with256bits();
   static final _aad = utf8.encode('tanooki-auth-vault-v1');
 
   /// Loads the vault. On a true first run (no file, no key) creates a fresh key and empty vault.
-  Future<void> load() async {
+  Future<void> load({DateTime? now}) async {
     final keyB64 = await keyStore.read();
     final exists = await file.exists();
     if (!exists && keyB64 == null) {
@@ -101,6 +115,7 @@ class Vault {
     } catch (e) {
       throw VaultException(VaultFailure.badJson, e);
     }
+    if (purgeTrash(now) > 0) await save();
   }
 
   /// Throws away whatever is there and starts empty. Only for an explicit user choice.

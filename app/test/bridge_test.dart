@@ -200,6 +200,21 @@ void main() {
     expect(host.vault.accounts.single.domains, ['github.com', 'gist.github.com']);
   });
 
+  test('trashed accounts are invisible to the extension; re-adding replaces the trashed copy', () async {
+    final c = await Client.connect(port);
+    final token = await pair(c);
+    final gh = host.vault.accounts.single..deletedAt = DateTime.now().toUtc();
+    expect((await c.send({'type': 'accounts', 'token': token}))['accounts'], isEmpty);
+    expect((await c.send({'type': 'code', 'token': token, 'accountId': gh.id}))['error'], 'notFound');
+    expect(((await c.send({'type': 'codes', 'token': token, 'accountIds': [gh.id]}))['codes'] as Map), isEmpty);
+    expect((await c.send({'type': 'setDomain', 'token': token, 'accountId': gh.id, 'domain': 'x.com'}))['error'], 'notFound');
+
+    final r = await c.send({'type': 'add', 'token': token, 'uri': 'otpauth://totp/GitHub:me?secret=JBSWY3DPEHPK3PXP'});
+    expect(r['accepted'], isTrue);
+    expect(host.vault.accounts.single.trashed, isFalse);
+    expect(host.vault.accounts.single.id, r['accountId']);
+  });
+
   test('constantTimeEquals', () {
     expect(constantTimeEquals('abc', 'abc'), isTrue);
     expect(constantTimeEquals('abc', 'abd'), isFalse);

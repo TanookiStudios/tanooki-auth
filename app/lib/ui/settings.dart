@@ -8,8 +8,10 @@ import '../bridge/server.dart';
 import '../core/vault.dart';
 import 'about_maddie.dart';
 import 'backup_ui.dart';
+import 'home.dart';
 import 'premium.dart';
 import 'theme.dart';
+import 'trash.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key, required this.vault});
@@ -142,6 +144,55 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ];
   }
 
+  Future<void> _set(String key, Object value) async {
+    setState(() => widget.vault.settings[key] = value);
+    await widget.vault.save();
+  }
+
+  List<Widget> _listSection() {
+    final s = widget.vault.settings;
+    final trashed = widget.vault.trash.length;
+    return [
+      const Padding(padding: EdgeInsets.fromLTRB(4, 0, 4, 8), child: CapsLabel('Accounts list')),
+      Card(
+        child: Column(children: [
+          SwitchListTile(
+            title: const Text('Compact cards'),
+            subtitle: const Text('Smaller cards, so more accounts fit on screen'),
+            value: s[layoutKey] == 'compact',
+            onChanged: (on) => _set(layoutKey, on ? 'compact' : 'roomy'),
+          ),
+          const Divider(),
+          SwitchListTile(
+            title: const Text('Recently used first'),
+            subtitle: const Text('Accounts you just copied a code from move to the top, under your favorites'),
+            value: s[recentFirstKey] == true,
+            onChanged: (on) => _set(recentFirstKey, on),
+          ),
+          const Divider(),
+          SwitchListTile(
+            title: const Text('Hide codes until tapped'),
+            subtitle: const Text('Shows dots instead of codes, so people nearby can\'t read them'),
+            value: s[hideCodesKey] == true,
+            onChanged: (on) => _set(hideCodesKey, on),
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.delete_outline),
+            title: Text(trashed == 0 ? 'Trash' : 'Trash ($trashed)'),
+            subtitle: const Text('Deleted accounts stay here for 30 days'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () async {
+              await Navigator.push(context, MaterialPageRoute(builder: (_) => TrashScreen(vault: widget.vault)));
+              setState(() {});
+            },
+          ),
+        ]),
+      ),
+      const SizedBox(height: 20),
+    ];
+  }
+
   List<Widget> _browserSection() {
     final b = activeBridge;
     final paired = b?.pairedOrigins ?? [];
@@ -186,6 +237,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           ..._premiumAndAppearance(),
+          ..._listSection(),
           const Padding(
             padding: EdgeInsets.fromLTRB(4, 0, 4, 8),
             child: CapsLabel('Security'),

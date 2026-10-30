@@ -133,7 +133,8 @@ class BridgeServer {
         _pairings.any((p) => p['origin'] == origin && constantTimeEquals(p['token'] as String, token));
     if (!paired) throw _BridgeError('notPaired', 'This browser isn\'t paired with Tanooki Auth.');
 
-    final accounts = host.vault.accounts;
+    // Trashed accounts are invisible to the extension.
+    final accounts = host.vault.live;
     Account find() => accounts.firstWhere((a) => a.id == msg['accountId'],
         orElse: () => throw _BridgeError('notFound', 'That account isn\'t in Tanooki Auth any more.'));
 
@@ -198,7 +199,9 @@ class BridgeServer {
         final d = _hostOf(msg['domain'] as String? ?? '');
         if (d.isNotEmpty) a.domains.add(d);
         if (!await host.confirmAdd(a)) return {'accepted': false, 'reason': 'declined'};
-        accounts.add(a);
+        host.vault.accounts
+          ..removeWhere((x) => x.secret == a.secret) // an old copy in Trash
+          ..add(a);
         await host.vault.save();
         host.vaultChanged();
         return {'accepted': true, 'accountId': a.id};
