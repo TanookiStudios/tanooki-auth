@@ -10,6 +10,10 @@ compatibility_date = "2026-09-01"
 
 [vars]
 APNS_TOPIC = "com.tanookistudios.auth"
+# Public half of the Premium signing key (same as worker/wrangler.toml): checks team license tokens.
+LICENSE_PUBLIC = "JZ9iKjegJLat8xNt2L80HNWmHfXJc9at34lUBynULM8="
+# TEST_MODE is never set here. Local tests pass it with `npx wrangler dev --var TEST_MODE:1` so the
+# emergency-access wait can be shortened.
 
 [[durable_objects.bindings]]
 name = "SYNC"
@@ -19,9 +23,21 @@ class_name = "SyncGroup"
 name = "LINK"
 class_name = "LinkRoom"
 
+[[durable_objects.bindings]]
+name = "EMERGENCY"
+class_name = "EmergencyGrant"
+
+[[durable_objects.bindings]]
+name = "TEAM"
+class_name = "Team"
+
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["SyncGroup", "LinkRoom"]
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["EmergencyGrant", "Team"]
 
 # Per-IP cap on every request, checked before any Durable Object is touched.
 [[ratelimits]]

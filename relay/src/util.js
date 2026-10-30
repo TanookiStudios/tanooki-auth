@@ -1,6 +1,9 @@
 // Shared helpers. Everything on the wire is base64url without padding.
 export const MAX_BODY = 1 << 20; // 1 MiB per request
 export const ID = /^[A-Za-z0-9_-]{43}$/; // 32 random bytes, base64url
+export const SKEW = 300_000; // accepted clock difference for signed requests, ms
+export const B64U = /^[A-Za-z0-9_-]*$/;
+const NONCE = /^[A-Za-z0-9_-]{16,64}$/;
 
 export const CORS = {
   'access-control-allow-origin': '*',
@@ -38,6 +41,29 @@ export async function verifyEd25519(pubB64u, sigB64u, message) {
     return false; // malformed key or signature is just a bad signature
   }
 }
+
+// Checks a TA-RELAY-1 signed request (PROTOCOL.md 1.3) and burns its nonce in `sql`'s nonces(nonce, exp) table.
+// `allowed(device)` returns a Response to refuse a validly signed device. Returns the device key or a Response.
+export async function verifySigned(sql, { method, path, device, ts, nonce, sig, body }, allowed = () => null) {
+  if (!ID.test(device || '') || !NONCE.test(nonce || '') || !sig) return err(401, 'missing or malformed signature headers');
+  const t = Number(ts);
+  const now = Date.now();
+  if (!Number.isInteger(t) || Math.abs(now - t) > SKEW) return err(401, 'timestamp outside the allowed 5 minute window', { serverTime: now });
+  const message = `TA-RELAY-1\n${method}\n${path}\n${t}\n${nonce}\n${b64u(await sha256(body))}`;
+  if (!(await verifyEd25519(device, sig, message))) return err(401, 'bad signature');
+  const refused = allowed(device);
+  if (refused) return refused;
+  sql.exec('DELETE FROM nonces WHERE exp < ?', now);
+  if (sql.exec('SELECT 1 AS x FROM nonces WHERE nonce=?', nonce).toArray().length) return err(401, 'replayed request (nonce already used)');
+  sql.exec('INSERT INTO nonces VALUES(?, ?)', nonce, t + SKEW + 60_000);
+  return device;
+}
+
+// The signed-request fields of an HTTP request, for verifySigned.
+export const signedParts = (req, url, bytes) => {
+  const h = req.headers;
+  return { method: req.method, path: url.pathname + url.search, device: h.get('x-ta-device'), ts: h.get('x-ta-timestamp'), nonce: h.get('x-ta-nonce'), sig: h.get('x-ta-signature'), body: bytes };
+};
 
 // Reads the body with the size cap. Returns { bytes } or { error: Response }.
 export async function readBody(req) {

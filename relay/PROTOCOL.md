@@ -24,6 +24,8 @@ an account name, or a site name in the clear.
   - Per sync group: 600 requests / 60 s. Per link room: 120 requests / 60 s. Over: 429.
   - On 429 back off (start at 2 s, double, cap 60 s).
 - `GET /` returns `{"service":"tanooki-auth-relay","protocol":1}`.
+- `GET /health` returns `{"ok":true,"service":"tanooki-auth-relay","time":"<ISO 8601>"}` with CORS `*`, for the
+  status page. It is answered before the per-IP limit and touches no Durable Object.
 
 ## 1. Sync store (feature 32)
 
@@ -292,9 +294,120 @@ The iOS app should register the notification category `TA_FILL_REQUEST`.
 network with throwaway keys on 2026-10-29: Apple's push server and Google's token server both answer the relay
 (rejecting the fake keys), so only real keys are missing. A real delivery has not been tested yet.
 
-## 3. Known limits
+## 3. Emergency access (feature 26)
+
+A person (the **owner**) leaves an encrypted copy of their vault for one trusted **contact**. The contact can ask
+for it at any time; the owner's devices get a notification and have **7 days to deny**. If nobody denies, the
+contact can download the copy. **The relay only enforces the waiting period.** It cannot read the copy, cannot
+check what is inside it, and cannot stop the owner from changing or deleting it.
+
+### 3.1 Client-side sealing (the relay never sees this)
+
+The contact gives the owner two public keys (for example by QR): their Ed25519 device key (`contactKey`, used to
+sign requests) and an X25519 key for sealing. The owner seals a vault snapshot to the X25519 key, for example:
+ephemeral X25519 key pair, `shared = X25519(ephemeral, contactX25519)`,
+`key = HKDF-SHA256(ikm=shared, salt=empty, info="TA-EMERGENCY-1", L=32)`, then AES-256-GCM with
+`aad = "TA-EMERGENCY-1"`, and sends `blob = base64url(...)` holding the ephemeral public key, nonce and
+ciphertext. `test.mjs` does exactly this. Any sealing the app already uses (`core/share.dart`) works as well:
+the relay treats `blob` as opaque.
+
+### 3.2 Endpoints
+
+`grantId` is 32 random bytes made by the owner (43 base64url chars). Every request is signed exactly as in 1.3
+(same headers, same string, nonces remembered per grant). Limit: 120 requests / 60 s per grant.
+
+| Request | Who | Effect |
+|---|---|---|
+| `POST /v1/emergency/<grantId>` `{"contactKey","blob"}` | first signer becomes owner; then owner only | Creates (201) or replaces (200) the sealed blob. Naming a different `contactKey` cancels any pending request. `blob` max 786,432 chars. |
+| `GET /v1/emergency/<grantId>` | owner or contact | Status (below). Never includes the blob. |
+| `POST /v1/emergency/<grantId>/push` `{"platform","token","environment"}` | owner | Registers an owner device for the "someone asked" notification (same rules as 2.6; up to 10 devices, newest kept). 503 `push not configured` without push keys. |
+| `POST /v1/emergency/<grantId>/request` `{}` | contact | Starts the 7-day wait and notifies every registered owner device. 201 with status plus `push: {sent, tokens}`. Asking again while waiting or released returns 200 with the same status and sends nothing. |
+| `POST /v1/emergency/<grantId>/deny` | owner | Cancels a waiting (or released) request: back to `idle`. 409 `there is no request to deny` otherwise. The contact may ask again later. |
+| `GET /v1/emergency/<grantId>/blob` | contact | 200 `{"blob","updatedAt"}` once released. 409 if the contact has not asked; 403 `the waiting period has not ended` with `releaseAt` while waiting. |
+| `DELETE /v1/emergency/<grantId>` | owner | Deletes everything for this grant. |
+
+Status: `{"owner","contactKey","state":"idle"|"waiting"|"released","requestedAt","releaseAt","updatedAt","blobLength"}`
+(times in Unix ms; `requestedAt`/`releaseAt` are `null` when idle). Other errors: 404 `grant not found`,
+403 `device is neither the owner nor the contact of this grant`, 403 `only the owner can change this grant`,
+400 for a malformed `contactKey` or `blob` (or a contact equal to the owner).
+
+**Notification.** The same channel as 2.6, with a different fixed sentence and no grant ID, name or account:
+APNs `{"aps":{"alert":{"title":"Tanooki Auth","body":"Someone asked for emergency access to your accounts. Open the app to deny it."},"sound":"default","category":"TA_EMERGENCY_REQUEST"}}`,
+expiring after 7 days; FCM `data {"type":"emergency-request"}`, ttl 7 days. The app should also poll
+`GET /v1/emergency/<grantId>` when opened, since a push can be missed.
+
+**Testing.** The relay honors `{"delaySeconds": n}` in `request` **only** when its `TEST_MODE` variable is set,
+which only happens for a local `npx wrangler dev --var TEST_MODE:1`. The deployed relay ignores it and always
+waits 7 days; `test.mjs` run without `TEST_MODE=1` checks that.
+
+## 4. Team vault (feature 42)
+
+A team is up to **10** devices that share a team key. The admin wraps the team key separately for each member
+(the relay stores the wrapped copies as opaque blobs) and entries are ciphertext under it. The relay sees
+device public keys, wrapped keys, entry IDs, timestamps and ciphertext only.
+
+### 4.1 Client-side keys (the relay never sees these)
+
+- Each member has its Ed25519 device key (signs requests, as in 1.3) and an X25519 `boxKey` sent at create/join.
+- `teamKey`: 32 random bytes made by the admin. A new one is made for every **epoch** (rotation).
+- Wrapped key for a member, as in `test.mjs`: ephemeral X25519 with the member's `boxKey`,
+  `HKDF-SHA256(shared, salt=empty, info="TA-TEAM-WRAP-1", L=32)`, AES-256-GCM, sent as
+  `base64url(ephemeralPub || nonce || ciphertext)` (max 1,024 chars).
+- Entry ciphertext: `base64url(nonce || AES-256-GCM(teamKey, nonce, plaintext, aad))` with
+  `aad = "TA-TEAM-1|" + teamId + "|" + entryId + "|" + epoch`.
+
+### 4.2 Team license
+
+Creating a team needs a **team license** from the Premium worker (`GET /team-license?session_id=` after the
+$20/year Stripe subscription, `POST /team-license/refresh` later):
+`TT1.<base64url "team1|<subscriptionId>|<periodEnd Unix seconds>">.<base64url Ed25519 signature>`, signed by the
+same key as Premium license keys. The relay checks it with its `LICENSE_PUBLIC` variable. A Premium key (`TA1.`)
+is not a team license. 402 errors: `team license is malformed`, `team license signature is not valid`,
+`team license has expired; refresh it in the app`.
+
+Writes (`join`, `invites`, `entries`) keep working until **14 days after** the license period ends, then return
+402 until the admin posts a refreshed license. Reading always works, so a lapsed team can still get its data out.
+
+### 4.3 Endpoints
+
+`teamId` is 32 random bytes from the admin. Every request is signed as in 1.3. Limit: 600 requests / 60 s per team.
+
+| Request | Who | Effect |
+|---|---|---|
+| `POST /v1/team/<teamId>/create` `{"license","boxKey"}` | anyone with a license | Creates the team with the signer as admin, epoch 1. 201 + status. 409 if it exists. |
+| `GET /v1/team/<teamId>` | member | Status: `{"admin","epoch","needsRotation","licenseEnd","cursor","members":[{"key","role","boxKey","added","hasKey"}]}` (`hasKey`: has a wrapped key for the current epoch). |
+| `POST /v1/team/<teamId>/license` `{"license"}` | admin | Stores a refreshed license (the later end date wins). |
+| `POST /v1/team/<teamId>/invites` | admin | 201 `{"invite","expiresAt"}`: a random single-use token, valid 7 days (relay keeps only its SHA-256). Max 20 unused. Put it in the invite link with the `teamId`. |
+| `POST /v1/team/<teamId>/join` `{"invite","boxKey"}` | new device | Joins as `member`. 403 `invite is not valid, expired, or already used`; 507 `team is full (10 members)`; 409 if already a member. |
+| `POST /v1/team/<teamId>/keys` `{"epoch","keys":{"<memberKey>":"<wrapped>"}}` | admin | `epoch` = current: adds/replaces wrapped keys for the listed members (after someone joins). `epoch` = current + 1: **rotation**; must include every member (400 with `missing` otherwise), replaces all wrapped keys and clears `needsRotation`. Anything else: 409 with the current `epoch`. |
+| `GET /v1/team/<teamId>/key` | member | `{"epoch","wrapped"}` for the caller at the current epoch; 404 until the admin has wrapped one for it. |
+| `POST /v1/team/<teamId>/entries` `{"entries":[{"id","updatedAt","deleted","epoch","ciphertext"}]}` | member | 1 to 100 entries. Last writer wins by `updatedAt` (ms), like sync's merge: each result is `ok` (with `seq`) or `stale` (with `current`). `epoch` must be the current epoch, else 409 `the team key has changed` with `epoch`. Max 2,000 entries per team (deleted ones count), 65,536 chars each. |
+| `GET /v1/team/<teamId>/entries?since=<seq>` | member | Up to 500 entries after `seq`, each with its `epoch`; `{"entries","cursor","more"}`. |
+| `DELETE /v1/team/<teamId>/members/<memberKey>` | admin, or a member removing itself | Removes the member **immediately** (every later request from it is 403) and sets `needsRotation`. The admin cannot leave (409); it deletes the team instead. |
+| `DELETE /v1/team/<teamId>` | admin | Deletes the team and everything in it. |
+
+### 4.4 Removing someone and rotating the key
+
+1. The admin removes the member. From that moment the relay refuses every request from that device.
+2. `needsRotation` is now true. The admin's app makes a new `teamKey`, wraps it for every remaining member and
+   posts it with `epoch = current + 1`.
+3. **Old-epoch entries stay as they are** (still encrypted with the old key, and listed with their old `epoch`).
+   New writes must use the new epoch. The admin's app (or any member) should then re-encrypt every old-epoch entry
+   with the new key and push it with the **same** `updatedAt` and the new epoch: the relay accepts a same-time
+   write only when it moves an entry onto the current epoch, so this never overwrites a newer edit.
+4. Members keep the old team key locally until re-encryption is done, so they can still read old-epoch entries.
+   A member who joins after the rotation cannot read old-epoch entries until they are re-encrypted.
+
+Rotation protects **future** changes only. A removed member may have kept copies of everything they could see
+before, so the app should suggest changing the secrets in shared entries that matter.
+
+## 5. Known limits
 
 - Tombstones count toward the 2,000-record cap and are never pruned by the server.
 - Removing a device does not rotate the group key (see 1.4).
+- Emergency access: the relay enforces only the waiting period. Someone who controls the relay could release
+  the blob early, but still could not read it.
+- Team vault: one team license can create more than one team (the relay does not keep a global list of
+  subscriptions). Rotation after removal is the admin app's job; until it happens, new entries use the old key.
 - The per-IP limit is approximate (Cloudflare's limiter is per data center and eventually consistent);
   the per-group and per-room limits are exact.

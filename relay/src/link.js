@@ -1,7 +1,7 @@
 // One LinkRoom Durable Object per extension<->phone pairing. A mailbox of end-to-end encrypted messages.
 import { DurableObject } from 'cloudflare:workers';
 import { Window, b64u, err, json, parseJson, randomId, readBody, secretEquals, sha256, unb64u } from './util.js';
-import { pushConfigured, sendPush } from './push.js';
+import { pushConfigured, pushTokenError, sendPush } from './push.js';
 
 const PAIR_WINDOW = 10 * 60_000; // phone must join within 10 minutes of creation
 const MAX_TTL = 120; // seconds a message lives
@@ -102,11 +102,9 @@ export class LinkRoom extends DurableObject {
 
     if (req.method === 'POST' && route === 'push') {
       if (role !== 'phone') return err(403, 'only the phone registers a push token');
+      const bad = pushTokenError(this.env, body);
+      if (bad) return bad;
       const { platform, token, environment = 'production' } = body;
-      if (platform !== 'apns' && platform !== 'fcm') return err(400, 'platform must be "apns" or "fcm"');
-      if (typeof token !== 'string' || !/^[A-Za-z0-9_:.-]{8,4096}$/.test(token)) return err(400, 'token is malformed');
-      if (environment !== 'production' && environment !== 'sandbox') return err(400, 'environment must be "production" or "sandbox"');
-      if (!pushConfigured(this.env, platform)) return err(503, 'push not configured', { platform });
       this.set('pushPlatform', platform);
       this.set('pushToken', token);
       this.set('pushEnv', environment);

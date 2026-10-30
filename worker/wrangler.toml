@@ -2,6 +2,7 @@
 # Secrets (set with `npx wrangler secret put NAME`, never in this file):
 #   STRIPE_KEY    Stripe restricted key with read access to Checkout Sessions
 #   LICENSE_SEED  base64 Ed25519 seed from ~/.tanooki-auth-signing/license_ed25519.json
+#   FEEDBACK_ADMIN  token for GET /feedback/list (copy in ~/.tanooki-auth-signing/feedback-admin.txt)
 name = "tanooki-auth-premium"
 main = "src/index.js"
 compatibility_date = "2026-09-01"
@@ -9,3 +10,13 @@ compatibility_date = "2026-09-01"
 [vars]
 # Public half of the signing key; must match lib/core/license.dart.
 LICENSE_PUBLIC = "JZ9iKjegJLat8xNt2L80HNWmHfXJc9at34lUBynULM8="
+
+# Invite codes -> number of paid friends (plus the checkout IDs already counted). Nothing else.
+[[kv_namespaces]]
+binding = "INVITES"
+id = "23797a842ef442a1bb3443b23f5d1094"
+
+# Feedback messages, and hourly per-address counters keyed by a salted hash (never the address).
+[[kv_namespaces]]
+binding = "FEEDBACK"
+id = "0cf7d827548149b58acd5c2ff32c9f28"
