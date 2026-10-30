@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 
@@ -11,11 +12,13 @@ import '../core/otpauth_uri.dart';
 import '../core/importers.dart';
 import '../core/qr_image.dart';
 import '../core/screen_capture.dart';
+import '../core/share.dart';
 import '../core/totp.dart';
 import '../core/vault.dart';
 import 'backup_ui.dart';
 import 'home.dart';
 import 'import_ui.dart';
+import 'share_ui.dart';
 
 bool get hasCamera => Platform.isIOS || Platform.isAndroid || Platform.isMacOS;
 bool get isPhone => Platform.isIOS || Platform.isAndroid;
@@ -96,6 +99,11 @@ class _AddScreenState extends State<AddScreen> {
 
   /// Common path for every way of adding: parse, check duplicates, confirm, save.
   Future<void> _fromText(String text) async {
+    if (text.trim().startsWith(sharePrefix)) {
+      final a = await openShareFlow(context, text.trim());
+      if (a != null) await _confirmAndSave(a);
+      return;
+    }
     if (text.startsWith('otpauth-migration://')) {
       final before = widget.vault.live.length;
       await importGoogleFlow(context, widget.vault, text);
@@ -167,6 +175,12 @@ class _AddScreenState extends State<AddScreen> {
     await _fromText(text);
   }
 
+  Future<void> _openShareFile() async {
+    final files = await FilePicker.pickFiles();
+    if (files.isEmpty) return;
+    await _fromText(utf8.decode(await files.first.readAsBytes(), allowMalformed: true));
+  }
+
   Future<void> _fromOtherApp() async {
     final before = widget.vault.live.length;
     await Navigator.push(context, MaterialPageRoute(builder: (_) => ImportFromAppScreen(vault: widget.vault)));
@@ -195,7 +209,7 @@ class _AddScreenState extends State<AddScreen> {
     }
     if (!mounted) return;
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    if (!text.startsWith('otpauth://') && !text.startsWith('otpauth-migration://')) {
+    if (!text.startsWith('otpauth://') && !text.startsWith('otpauth-migration://') && !text.startsWith(sharePrefix)) {
       _say('Found a QR code on your screen, but it isn\'t a two-factor setup code.');
       return;
     }
@@ -321,6 +335,12 @@ class _AddScreenState extends State<AddScreen> {
           onTap: _paste,
         ),
         ListTile(
+          leading: const Icon(Icons.people_outline),
+          title: const Text('Open a shared account'),
+          subtitle: const Text('A .$shareExtension file someone sent you'),
+          onTap: _openShareFile,
+        ),
+        ListTile(
           leading: const Icon(Icons.swap_horiz),
           title: const Text('Move from Google Authenticator'),
           subtitle: const Text('Bring all your accounts across at once'),
@@ -344,7 +364,7 @@ class _AddScreenState extends State<AddScreen> {
 }
 
 class ScanScreen extends StatefulWidget {
-  const ScanScreen({super.key, this.prefixes = const ['otpauth://', 'otpauth-migration://'], this.title = 'Scan QR code', this.wrongCode = 'That QR code isn\'t a two-factor setup code.'});
+  const ScanScreen({super.key, this.prefixes = const ['otpauth://', 'otpauth-migration://', sharePrefix], this.title = 'Scan QR code', this.wrongCode = 'That QR code isn\'t a two-factor setup code.'});
   /// QR codes this scan accepts; anything else shows [wrongCode].
   final List<String> prefixes;
   final String title;

@@ -12,6 +12,7 @@ import 'brand_icon.dart';
 import 'clipboard.dart';
 import 'recovery_codes.dart';
 import 'settings.dart';
+import 'share_ui.dart';
 import 'theme.dart';
 
 String groupCode(String code) => code.length == 6
@@ -198,6 +199,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onNext: () => _nextHotp(a),
         onFavorite: () => _toggleFavorite(a),
         onRecoveryCodes: () => _recoveryCodes(a),
+        onShare: () => shareAccountFlow(context, widget.vault, a),
         onMove: _canReorder ? (_, d) => _reorder(visible, i, i + d) : null,
       ),
     );
@@ -458,6 +460,7 @@ class AccountCard extends StatelessWidget {
     this.hidden = false,
     this.compact = false,
     this.onMove,
+    this.onShare,
   });
 
   final Account account;
@@ -468,6 +471,7 @@ class AccountCard extends StatelessWidget {
   final bool selected, hidden, compact;
   final VoidCallback onTap, onEdit, onDelete, onNext, onFavorite, onRecoveryCodes;
   final Future<void> Function(Account, int)? onMove;
+  final VoidCallback? onShare;
 
   bool get _urgent => left != null && left! <= 5;
 
@@ -482,6 +486,7 @@ class AccountCard extends StatelessWidget {
         'edit' => onEdit(),
         'favorite' => onFavorite(),
         'recovery' => onRecoveryCodes(),
+        'share' => onShare?.call(),
         'delete' => onDelete(),
         'earlier' => onMove?.call(a, -1),
         _ => onMove?.call(a, 1),
@@ -493,6 +498,7 @@ class AccountCard extends StatelessWidget {
           value: 'recovery',
           child: Text(a.recoveryCodes.isEmpty ? 'Recovery codes' : 'Recovery codes ($left left)'),
         ),
+        if (onShare != null) const PopupMenuItem(value: 'share', child: Text('Share securely')),
         if (onMove != null) const PopupMenuItem(value: 'earlier', child: Text('Move earlier')),
         if (onMove != null) const PopupMenuItem(value: 'later', child: Text('Move later')),
         const PopupMenuItem(value: 'delete', child: Text('Delete')),

@@ -11,6 +11,10 @@ import 'theme.dart';
 /// redirects to the key page (worker/), which shows the buyer's license key.
 const checkoutUrl = 'https://buy.stripe.com/fZubJ3dsP5kv5xZ2kr1VK03';
 
+/// TODO(maddie): Stripe Payment Link for the $10 family plan (up to 5 people). Empty until Maddie creates
+/// it in the Stripe Dashboard; while empty the Premium screen says "Family plan coming soon".
+const familyCheckoutUrl = '';
+
 final premium = ValueNotifier<bool>(false);
 final themeChoice = ValueNotifier<String>('auto');
 
@@ -35,12 +39,12 @@ class _PremiumScreenState extends State<PremiumScreen> {
     ..hideCurrentSnackBar()
     ..showSnackBar(SnackBar(content: Text(msg)));
 
-  Future<void> _buy() async {
-    if (checkoutUrl.isEmpty) {
+  Future<void> _buy(String url) async {
+    if (url.isEmpty) {
       _say('Checkout isn\'t open yet; it\'s coming very soon. Thank you for wanting to support Tanooki Auth!');
       return;
     }
-    await launchUrl(Uri.parse(checkoutUrl));
+    await launchUrl(Uri.parse(url));
   }
 
   Future<void> _enterKey() async {
@@ -77,6 +81,8 @@ class _PremiumScreenState extends State<PremiumScreen> {
   @override
   Widget build(BuildContext context) {
     final owned = premium.value;
+    final key = widget.vault.settings['license'];
+    final family = owned && key is String && licenseSeats(key) > 1;
     Widget perk(IconData icon, String title, String body) => Padding(
           padding: const EdgeInsets.only(bottom: 14),
           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -102,7 +108,12 @@ class _PremiumScreenState extends State<PremiumScreen> {
               Text(owned ? 'You have Premium' : 'Tanooki Auth Premium',
                   style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700)),
               const SizedBox(height: 4),
-              Text(owned ? 'Thank you for supporting Tanooki Auth.' : '\$5, once. Yours forever.',
+              Text(
+                  owned
+                      ? (family
+                          ? 'Family plan: share your license key with up to 4 other people (5 in all). Thank you for supporting Tanooki Auth.'
+                          : 'Thank you for supporting Tanooki Auth.')
+                      : '\$5 once, or \$10 for your whole family. Yours forever.',
                   style: TextStyle(color: Palette.muted, fontSize: 16)),
               const SizedBox(height: 20),
               Card(
@@ -110,11 +121,19 @@ class _PremiumScreenState extends State<PremiumScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 18, 16, 4),
                   child: Column(children: [
                     perk(Icons.palette_outlined, 'Every Premium theme',
-                        'Pastel Pink, Pastel Blue, Lavender, Mint and Midnight, plus every theme added later.'),
+                        'Pastel Pink, Pastel Blue and ${themeChoices.length - freeThemes.length - 2} more, plus every theme added later.'),
+                    perk(Icons.apps_outlined, 'App icons',
+                        'Pick a different home-screen icon on iPhone and Android. Coming in the next update.'),
                     perk(Icons.sync, 'Sync across your devices',
                         'Add an account on one device and see it on all of them, end-to-end encrypted. Through iCloud on Apple devices, or the Tanooki relay for any mix.'),
                     perk(Icons.phonelink_lock_outlined, 'Approve codes from your phone',
                         'Use the browser extension on any computer: it asks your phone, you tap Approve, and the code fills in.'),
+                    perk(Icons.shield_outlined, 'Breach alerts',
+                        'Get told when a website you have an account for is in a known data breach. Checked on your device; nothing about you is sent.'),
+                    perk(Icons.people_outline, 'Share an account securely',
+                        'Give one account to someone you trust with a QR code and a 6-digit code. Locked, expires in 24 hours, no server.'),
+                    perk(Icons.family_restroom, 'Family plan',
+                        'For \$10 instead of \$5, one key unlocks Premium for up to 5 people. Send it to your family and they enter it like you do.'),
                     perk(Icons.auto_awesome_outlined, 'Every future Premium feature',
                         'Pay once and get whatever Premium grows into. No subscription, ever.'),
                     perk(Icons.favorite_outline, 'Keeps privacy apps free',
@@ -130,17 +149,35 @@ class _PremiumScreenState extends State<PremiumScreen> {
               const SizedBox(height: 22),
               if (!owned) ...[
                 // deferred(v1-release): iPhone needs Apple in-app purchase; until it's set up, no buy button there.
+                // deferred(v1-release): when it is, turn on Family Sharing for the product in App Store Connect so the family plan carries over.
                 if (Platform.isIOS)
                   Text('Buying on iPhone is coming soon.', style: TextStyle(color: Palette.muted))
                 else
+                ...[
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
-                      onPressed: _buy,
+                      onPressed: () => _buy(checkoutUrl),
                       style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
-                      child: const Text('Get Premium for \$5', style: TextStyle(fontSize: 16)),
+                      child: const Text('Just me — \$5', style: TextStyle(fontSize: 16)),
                     ),
                   ),
+                  const SizedBox(height: 10),
+                  if (familyCheckoutUrl.isEmpty)
+                    Center(child: Text('Family plan coming soon', style: TextStyle(color: Palette.muted)))
+                  else
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: () => _buy(familyCheckoutUrl),
+                        style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
+                        child: const Text('Family (up to 5 people) — \$10', style: TextStyle(fontSize: 16)),
+                      ),
+                    ),
+                  const SizedBox(height: 6),
+                  Text('Family: one license key you share with up to 4 other people. Each of them enters it in their own Tanooki Auth.',
+                      textAlign: TextAlign.center, style: TextStyle(color: Palette.muted, fontSize: 13, height: 1.4)),
+                ],
                 const SizedBox(height: 8),
                 Center(
                   child: TextButton(onPressed: _enterKey, child: const Text('Already bought it? Enter your license key')),

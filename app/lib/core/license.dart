@@ -7,7 +7,8 @@ import 'package:cryptography/cryptography.dart';
 const _licensePublicKey = 'JZ9iKjegJLat8xNt2L80HNWmHfXJc9at34lUBynULM8=';
 
 /// Returns true when [key] is a Premium license signed with our key.
-/// Format: `TA1.` + base64url payload `1|orderId|yyyymmdd` + `.` + base64url Ed25519 signature.
+/// Format: `TA1.` + base64url payload `1|orderId|yyyymmdd` (family keys add `|seats`) + `.` + base64url
+/// Ed25519 signature.
 Future<bool> verifyLicense(String key, {String publicKey = _licensePublicKey}) async {
   final parts = key.trim().split('.');
   if (parts.length != 3 || parts[0] != 'TA1') return false;
@@ -21,5 +22,16 @@ Future<bool> verifyLicense(String key, {String publicKey = _licensePublicKey}) a
     );
   } catch (_) {
     return false;
+  }
+}
+
+/// How many people a key covers: 1 for a normal key (and every key sold before the family plan), 5 for a
+/// family key. Only meaningful once [verifyLicense] has said the key is genuine.
+int licenseSeats(String key) {
+  try {
+    final payload = utf8.decode(base64Url.decode(base64Url.normalize(key.trim().split('.')[1]))).split('|');
+    return payload.length > 3 ? int.parse(payload[3]) : 1;
+  } catch (_) {
+    return 1;
   }
 }

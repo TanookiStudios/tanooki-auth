@@ -27,4 +27,19 @@ void main() {
     }
   });
 
+  test('family keys carry 5 seats; old keys still verify with 1 seat', () async {
+    final pair = await Ed25519().newKeyPair();
+    final pub = base64.encode((await pair.extractPublicKey()).bytes);
+    final old = await issue(pair, '1|cs_live_old|20261028');
+    final family = await issue(pair, '1|cs_live_fam|20261029|5');
+    expect(await verifyLicense(old, publicKey: pub), isTrue);
+    expect(await verifyLicense(family, publicKey: pub), isTrue);
+    expect(licenseSeats(old), 1);
+    expect(licenseSeats(family), 5);
+    expect(licenseSeats('junk'), 1);
+    // Upgrading a $5 key to family by editing the payload breaks the signature.
+    final parts = old.split('.');
+    final bumped = 'TA1.${base64Url.encode(utf8.encode('1|cs_live_old|20261028|5')).replaceAll('=', '')}.${parts[2]}';
+    expect(await verifyLicense(bumped, publicKey: pub), isFalse);
+  });
 }

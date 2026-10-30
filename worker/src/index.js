@@ -1,14 +1,15 @@
-// After a $5 Stripe Checkout, Stripe sends the buyer to /thanks?session_id=cs_...
+// After a $5 (or $10 family) Stripe Checkout, Stripe sends the buyer to /thanks?session_id=cs_...
 // We ask Stripe whether that session is paid, then show a license key for it. Ed25519 signatures are
 // deterministic and the payload only uses the session, so revisiting the link shows the same key.
 
 const b64url = (bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const fromB64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 
-export async function makeLicense(orderId, created, seedB64, publicB64) {
+export async function makeLicense(orderId, created, seedB64, publicB64, seats = 1) {
   const d = new Date(created * 1000);
   const ymd = `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}${String(d.getUTCDate()).padStart(2, '0')}`;
-  const payload = new TextEncoder().encode(`1|${orderId}|${ymd}`);
+  // Family keys add `|seats`; $5 keys keep the original three fields so they stay byte-identical.
+  const payload = new TextEncoder().encode(`1|${orderId}|${ymd}${seats > 1 ? `|${seats}` : ''}`);
   const key = await crypto.subtle.importKey(
     'jwk',
     { kty: 'OKP', crv: 'Ed25519', d: b64url(fromB64(seedB64)), x: b64url(fromB64(publicB64)) },
@@ -20,10 +21,12 @@ export async function makeLicense(orderId, created, seedB64, publicB64) {
   return `TA1.${b64url(payload)}.${b64url(sig)}`;
 }
 
-const PRIVACY = `<h1>Privacy policy</h1><p>Tanooki Auth, by Tanooki Studios. Last updated October 28, 2026.</p>
-<p><b>The app collects nothing.</b> Your accounts and setup keys are encrypted and stored only on your own device. There is no account to create, no analytics, no ads, and no tracking. The app makes no internet connections except opening a web page when you tap a link.</p>
+const PRIVACY = `<h1>Privacy policy</h1><p>Tanooki Auth, by Tanooki Studios. Last updated October 29, 2026.</p>
+<p><b>The app collects nothing.</b> Your accounts and setup keys are encrypted and stored only on your own device. There is no account to create, no analytics, no ads, and no tracking. The app makes no internet connections except opening a web page when you tap a link, and the features below, which stay off unless you turn them on.</p>
 <p><b>The browser extension</b> reads the web pages you visit only to find code boxes and two-factor setup QR codes. It talks only to the Tanooki Auth app on your own computer (127.0.0.1), receives one current code at a time, and stores only a pairing token in your browser. Nothing is sent anywhere else.</p>
 <p><b>Backups</b> are files you create, encrypted with a passphrase only you know.</p>
+<p><b>Breach alerts</b> (off unless you turn them on) download the public list of known website breaches from Have I Been Pwned and check it on your device. Nothing about you or your accounts is sent.</p>
+<p><b>Sync and approving codes from your phone</b> (off unless you turn them on) are end-to-end encrypted on your devices before anything leaves them. Whether it goes through your own iCloud or the Tanooki relay, they only ever see scrambled data they cannot read. To ask your phone for approval, the relay keeps your phone's notification address (from Apple or Google) until you unlink it.</p>
 <p><b>Premium purchases</b> are handled by Stripe (or Apple / Google in their stores), who receive your payment details under their own privacy policies. This page receives your checkout ID only to show your license key and keeps no record of it.</p>
 <p>Questions: tanookistudios.com/support</p>`;
 
@@ -66,13 +69,16 @@ export default {
       return page('Payment pending', '<h1>Payment not finished yet</h1><p>Stripe hasn\'t confirmed this payment. Reload this page in a minute; your key appears as soon as it does.</p>', 402);
     }
 
-    const key = await makeLicense(session, s.created, env.LICENSE_SEED, env.LICENSE_PUBLIC);
+    // shortcut: the $10 family plan is told apart by price (before tax), not by price ID; switch to the
+    // Payment Link ID if a coupon or a second price ever makes amounts overlap.
+    const family = (s.amount_subtotal ?? s.amount_total ?? 0) >= 1000;
+    const key = await makeLicense(session, s.created, env.LICENSE_SEED, env.LICENSE_PUBLIC, family ? 5 : 1);
     return page('Your Premium key', `
-<h1>Thank you!</h1><p>You've got Tanooki Auth Premium, forever. Here's your license key:</p>
+<h1>Thank you!</h1><p>You've got Tanooki Auth Premium${family ? ' for your family' : ''}, forever. Here's your license key:</p>
 <div class="card"><code id="k">${esc(key)}</code><button onclick="navigator.clipboard.writeText(document.getElementById('k').textContent);this.textContent='Copied'">Copy key</button></div>
 <ol><li>Open Tanooki Auth and go to <b>Settings → Get Premium</b>.</li>
 <li>Tap <b>Already bought it? Enter your license key</b>, paste, and tap <b>Unlock</b>.</li>
-<li>Use the same key on all your devices. Bookmark this page to find it again.</li></ol>
+<li>Use the same key on all your devices. Bookmark this page to find it again.</li>${family ? '\n<li>Family plan: send this key to up to 4 other people (5 in all) and they unlock Premium the same way. Only share it with people you trust.</li>' : ''}</ol>
 <p>Your support is what lets me keep making free privacy apps. — Maddie</p>`);
   },
 };
