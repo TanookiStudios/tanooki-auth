@@ -177,12 +177,12 @@ void main() {
     await finish(t);
   });
 
-  testWidgets('wide layout: folder titles above grids of cards', (t) async {
+  testWidgets('sidebar layout (700-899 px): folder titles above grids of cards', (t) async {
     vault.accounts.addAll([
       acct('Alpha', 'JBSWY3DPEHPK3PXP', folder: 'Work'),
       acct('Bravo', 'GEZDGNBVGY3TQOJQ'),
     ]);
-    t.view.physicalSize = const Size(1200, 900);
+    t.view.physicalSize = const Size(820, 900);
     t.view.devicePixelRatio = 1;
     addTearDown(t.view.reset);
     await t.pumpWidget(MaterialApp(theme: buildTheme(darkPalette), home: HomeScreen(vault: vault)));
@@ -259,7 +259,7 @@ void main() {
 
   testWidgets('Advanced settings: live preview follows the choices; nothing changes until Save', (t) async {
     final a = Account(id: 'a', issuer: 'Steam', label: 'gamer', secret: 'MFRGGZDFMZTWQ2LK');
-    t.view.physicalSize = const Size(420, 1400);
+    t.view.physicalSize = const Size(420, 2200);
     t.view.devicePixelRatio = 1;
     addTearDown(t.view.reset);
     late BuildContext ctx;
@@ -277,6 +277,7 @@ void main() {
     var result = open();
     await t.pumpAndSettle();
     expect(preview(), matches(RegExp(r'^\d{6}$')));
+    await t.ensureVisible(find.text('Advanced'));
     await t.tap(find.text('Advanced'));
     await t.pumpAndSettle();
     expect(find.textContaining('Only change these if the website told you to'), findsOneWidget);
@@ -294,6 +295,7 @@ void main() {
 
     result = open();
     await t.pumpAndSettle();
+    await t.ensureVisible(find.text('Advanced'));
     await t.tap(find.text('Advanced'));
     await t.pumpAndSettle();
     await t.tap(find.text('6'));

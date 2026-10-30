@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../core/account.dart';
+import 'theme.dart';
 
 /// Bundled website logos (Simple Icons, CC0; see assets/brand_icons/LICENSE.md), keyed by domain.
 /// Built by tool/make_brand_icons.mjs. Never fetched from the network.
@@ -94,6 +95,18 @@ class IssuerAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The user's own color and emoji (edit window) win over the logo and the letter.
+    final custom = account.color == null ? null : Color(account.color!);
+    final emoji = account.emoji?.trim() ?? '';
+    if (emoji.isNotEmpty) {
+      return ExcludeSemantics(
+        child: CircleAvatar(
+          radius: size / 2,
+          backgroundColor: custom ?? Palette.line,
+          child: Text(emoji, style: TextStyle(fontSize: size * .5, height: 1.1)),
+        ),
+      );
+    }
     final icon = brandIconFor(account);
     final name = account.issuer.isNotEmpty ? account.issuer : account.label;
     if (icon == null) {
@@ -101,17 +114,18 @@ class IssuerAvatar extends StatelessWidget {
       return ExcludeSemantics(
         child: CircleAvatar(
           radius: size / 2,
-          backgroundColor: _letterColors[name.hashCode.abs() % _letterColors.length],
+          backgroundColor: custom ?? _letterColors[name.hashCode.abs() % _letterColors.length],
           child: Text(letter, style: TextStyle(fontSize: size * .45, fontWeight: FontWeight.w700, color: Colors.white)),
         ),
       );
     }
     // Dark-on-light for very light brand colors so the glyph stays visible.
-    final light = icon.color.computeLuminance() > .6;
+    final bg = custom ?? icon.color;
+    final light = bg.computeLuminance() > .6;
     return ExcludeSemantics(
       child: CircleAvatar(
         radius: size / 2,
-        backgroundColor: icon.color,
+        backgroundColor: bg,
         child: CustomPaint(
           size: Size.square(size * .55),
           painter: _GlyphPainter(icon.path, light ? Colors.black87 : Colors.white),

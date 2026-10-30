@@ -35,7 +35,8 @@ void main() {
       }
     }
     await t.pump(const Duration(seconds: 1));
-    expect(find.text(expectedCode()), findsOneWidget);
+    // findsWidgets: from 900 px wide (the Linux window) the details pane shows the code a second time.
+    expect(find.text(expectedCode()), findsWidgets);
   }
 
   Future<void> waitFor(WidgetTester t, Finder f) async {
@@ -77,7 +78,7 @@ void main() {
     await settle(t);
 
     await waitFor(t, find.text('GitHub'));
-    expect(find.text('octo@example.com'), findsOneWidget);
+    expect(find.text('octo@example.com'), findsWidgets);
     await expectCurrentCode(t);
 
     // Restart: a fresh app must load the account back from disk through the real secure store.

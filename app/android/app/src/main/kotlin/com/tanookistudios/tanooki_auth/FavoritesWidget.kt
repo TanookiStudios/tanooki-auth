@@ -61,7 +61,8 @@ class FavoritesWidget : AppWidgetProvider() {
             views.setTextViewText(R.id.message, message ?: "")
             for (f in favorites.take(MAX_ROWS)) {
                 val row = RemoteViews(context.packageName, R.layout.widget_row)
-                row.setTextViewText(R.id.title, f.title)
+                row.setTextViewText(R.id.title, f.badgedTitle)
+                f.color?.let { row.setTextColor(R.id.title, it) }
                 row.setTextViewText(R.id.code, com.tanookistudios.shared.Totp.grouped(f.code(now)))
                 // Counts down to this code's expiry; going negative shows it is stale until the next refresh.
                 val leftMs = f.period * 1000L - nowMs % (f.period * 1000L)

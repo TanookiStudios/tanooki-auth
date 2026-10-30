@@ -127,6 +127,22 @@ abstract final class Palette {
   static Color get red => current.red;
 }
 
+/// Settings key and switch for the easy-to-read font (Atkinson Hyperlegible, bundled in assets/fonts with
+/// its SIL Open Font License). Read by [buildTheme]; the app root repaints everything when it changes.
+const easyFontKey = 'easyFont', easyFontFamily = 'AtkinsonHyperlegible';
+final easyFont = ValueNotifier<bool>(false);
+
+/// [accent] darkened just enough for white button labels on it to read at 4.5:1 (WCAG AA). Themes whose
+/// accent already passes get it unchanged. Used for filled buttons only; links keep the brighter accent.
+Color buttonFill(Color accent) {
+  double onWhite(Color c) => 1.05 / (c.computeLuminance() + 0.05);
+  var hsl = HSLColor.fromColor(accent);
+  while (onWhite(hsl.toColor()) < 4.5 && hsl.lightness > 0.02) {
+    hsl = hsl.withLightness(hsl.lightness - 0.01);
+  }
+  return hsl.toColor();
+}
+
 const _radius = 8.0;
 RoundedRectangleBorder get _outline => RoundedRectangleBorder(
   borderRadius: BorderRadius.circular(_radius),
@@ -135,6 +151,8 @@ RoundedRectangleBorder get _outline => RoundedRectangleBorder(
 
 ThemeData buildTheme(AppPalette p) {
   Palette.current = p;
+  // Styles set right here don't pick up ThemeData.fontFamily on their own, so each one names it too.
+  final font = easyFont.value ? easyFontFamily : null;
   final scheme = ColorScheme(
     brightness: p.brightness,
     onSecondary: Colors.white,
@@ -142,6 +160,9 @@ ThemeData buildTheme(AppPalette p) {
     primary: Palette.accent,
     onPrimary: Colors.white,
     secondary: Palette.green,
+    // Selected chips and segments. Unset, these fall back to green with white text, which is hard to read.
+    secondaryContainer: buttonFill(Palette.accent),
+    onSecondaryContainer: Colors.white,
     surface: Palette.panel,
     onSurface: Palette.text,
     surfaceContainerHighest: Palette.line,
@@ -150,6 +171,7 @@ ThemeData buildTheme(AppPalette p) {
   );
   return ThemeData(
     useMaterial3: true,
+    fontFamily: font,
     colorScheme: scheme,
     scaffoldBackgroundColor: Palette.background,
     dividerColor: Palette.line,
@@ -159,7 +181,7 @@ ThemeData buildTheme(AppPalette p) {
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,
-      titleTextStyle: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Palette.text),
+      titleTextStyle: TextStyle(fontFamily: font, fontSize: 22, fontWeight: FontWeight.w700, color: Palette.text),
       shape: Border(bottom: BorderSide(color: Palette.line)),
     ),
     cardTheme: CardThemeData(color: Palette.card, elevation: 0, margin: EdgeInsets.zero, shape: _outline),
@@ -167,14 +189,14 @@ ThemeData buildTheme(AppPalette p) {
     popupMenuTheme: PopupMenuThemeData(color: Palette.panel, surfaceTintColor: Colors.transparent, shape: _outline),
     snackBarTheme: SnackBarThemeData(
       backgroundColor: Palette.panel,
-      contentTextStyle: TextStyle(color: Palette.text),
+      contentTextStyle: TextStyle(fontFamily: font, color: Palette.text),
       behavior: SnackBarBehavior.floating,
       shape: _outline,
     ),
-    listTileTheme: ListTileThemeData(iconColor: Palette.muted, subtitleTextStyle: TextStyle(color: Palette.muted)),
+    listTileTheme: ListTileThemeData(iconColor: Palette.muted, subtitleTextStyle: TextStyle(fontFamily: font, color: Palette.muted)),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: Palette.accent,
+        backgroundColor: buttonFill(Palette.accent),
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
       ),
@@ -187,13 +209,13 @@ ThemeData buildTheme(AppPalette p) {
       ),
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: Palette.accent,
+      backgroundColor: buttonFill(Palette.accent),
       foregroundColor: Colors.white,
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: Palette.background,
-      hintStyle: TextStyle(color: Palette.muted),
+      hintStyle: TextStyle(fontFamily: font, color: Palette.muted),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(6),
         borderSide: BorderSide(color: Palette.lineBright),

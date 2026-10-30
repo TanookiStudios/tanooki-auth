@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show LicenseEntryWithLineBreaks, LicenseRegistry;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
@@ -21,6 +22,7 @@ import 'ui/app_icon.dart';
 import 'ui/backup_ui.dart';
 import 'ui/brand_icon.dart';
 import 'ui/clipboard.dart';
+import 'ui/code_view.dart' show countdownKey;
 import 'ui/home.dart';
 import 'ui/phone_link_ui.dart' show resumeSyncAndLink, startSyncAndLink, stopSyncAndLink;
 import 'ui/premium.dart';
@@ -53,7 +55,7 @@ Future<void> createDecoyVault(Vault real, Map<String, Object> passcodeRecord) as
   }
   final decoy = await openVault(second: true);
   await decoy.resetToEmpty();
-  const lookAlike = ['theme', 'license', layoutKey, hideCodesKey, recentFirstKey, sortKey, lockKey, lockAfterKey, blockScreenshotsKey];
+  const lookAlike = ['theme', 'license', easyFontKey, countdownKey, layoutKey, hideCodesKey, recentFirstKey, sortKey, lockKey, lockAfterKey, blockScreenshotsKey];
   for (final k in lookAlike) {
     if (real.settings.containsKey(k)) decoy.settings[k] = real.settings[k];
   }
@@ -77,6 +79,10 @@ Future<void> deleteDecoyVault() async {
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  // The bundled easy-to-read font's license travels with it (SIL Open Font License).
+  LicenseRegistry.addLicense(() async* {
+    yield LicenseEntryWithLineBreaks(['Atkinson Hyperlegible'], await rootBundle.loadString('assets/fonts/OFL.txt'));
+  });
   // Widgets and the watch follow the real vault only; the decoy never reaches them.
   Vault.onSaved = (v) {
     if (!isDecoyVault(v)) {
@@ -108,11 +114,13 @@ class _TanookiAuthAppState extends State<TanookiAuthApp> with WidgetsBindingObse
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     themeChoice.addListener(_repaintAll);
+    easyFont.addListener(_repaintAll);
   }
 
   @override
   void dispose() {
     themeChoice.removeListener(_repaintAll);
+    easyFont.removeListener(_repaintAll);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -343,6 +351,7 @@ class _GateState extends State<Gate> implements BridgeHost {
     final spotlightId = await takeSpotlightOpen();
     if (spotlightId != null) _pendingAction = 'account:$spotlightId';
     await loadPremiumAndTheme(vault);
+    easyFont.value = vault.settings[easyFontKey] == true;
     await restoreDockIcon(vault, premium: premium.value);
     await loadBrandIcons();
     await applyScreenshotBlocking(blockScreenshotsOn(vault.settings));
@@ -363,7 +372,10 @@ class _GateState extends State<Gate> implements BridgeHost {
 
   /// Unlocks into [v] (the real vault or the decoy). Only the real vault gets the first-run kit and breach check.
   Future<void> _enter(Vault v) async {
-    if (v != _vault) await loadPremiumAndTheme(v);
+    if (v != _vault) {
+      await loadPremiumAndTheme(v);
+      easyFont.value = v.settings[easyFontKey] == true;
+    }
     if (!mounted) return;
     setState(() {
       _vault = v;

@@ -63,7 +63,7 @@ class Account {
   DateTime updatedAt;
   /// The one folder this account sits in on the home list, or null.
   String? folder;
-  /// Stored for later phases (per-account color/emoji, ask before revealing, travel mode); no UI yet.
+  /// The account's own color (0xAARRGGBB) and emoji, shown on its avatar, widgets and the watch.
   int? color;
   String? emoji;
   bool requireAuth;

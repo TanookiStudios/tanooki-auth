@@ -89,7 +89,7 @@ struct FavoritesView: View {
       switch family {
       case .accessoryInline:
         // Codes are hidden on the Lock Screen while the phone is locked.
-        Text("\(shown[0].title) \(code(shown[0]))").privacySensitive()
+        Text("\(shown[0].badgedTitle) \(code(shown[0]))").privacySensitive()
       case .accessoryCircular:
         VStack(spacing: 0) {
           Text(String(code(shown[0]).prefix(4)))
@@ -102,7 +102,7 @@ struct FavoritesView: View {
           ForEach(shown, id: \.self) { f in
             HStack(alignment: .firstTextBaseline) {
               VStack(alignment: .leading, spacing: 0) {
-                Text(f.title).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                Text(f.badgedTitle).font(.caption2).foregroundStyle(f.tint ?? .secondary).lineLimit(1)
                 Text(code(f))
                   .font(.system(family == .accessoryRectangular ? .body : .title3, design: .monospaced).weight(.bold))
                   .privacySensitive()

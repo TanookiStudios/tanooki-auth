@@ -124,7 +124,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                     perk(Icons.palette_outlined, 'Every Premium theme',
                         'Pastel Pink, Pastel Blue and ${themeChoices.length - freeThemes.length - 2} more, plus every theme added later.'),
                     perk(Icons.apps_outlined, 'App icons',
-                        'Pick a different home-screen icon on iPhone and Android, in Pastel Pink, Pastel Blue and ${appIcons.length - 3} more colors. On a Mac it changes the Dock icon while the app is open.'),
+                        'Pick a different home-screen icon on iPhone and Android, in Pastel Pink, Pastel Blue and ${appIcons.length - 6} more colors, plus seasonal ones for fall, winter and spring. On a Mac it changes the Dock icon while the app is open.'),
                     perk(Icons.sync, 'Sync across your devices',
                         'Add an account on one device and see it on all of them, end-to-end encrypted. Through iCloud on Apple devices, or the Tanooki relay for any mix.'),
                     perk(Icons.phonelink_lock_outlined, 'Approve codes from your phone',

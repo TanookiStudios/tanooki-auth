@@ -38,6 +38,9 @@ List<Map<String, Object>> sharedFavorites(Vault v, {bool premium = false}) => v.
               'algorithm': a.algorithm.name,
               'digits': a.digits,
               'period': a.period,
+              // The account's own look, shown next to its name on widgets and the watch.
+              if (a.color != null) 'color': a.color!,
+              if (a.emoji?.trim().isNotEmpty ?? false) 'emoji': a.emoji!.trim(),
             },
       ];
 

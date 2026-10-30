@@ -7,4 +7,7 @@
     <color name="ic_launcher_mint_background">#F0FAF6</color>
     <color name="ic_launcher_midnight_background">#0A0F1F</color>
     <color name="ic_launcher_sunset_background">#1A0F1E</color>
+    <color name="ic_launcher_spooky_background">#1A1022</color>
+    <color name="ic_launcher_cozy_background">#0E2238</color>
+    <color name="ic_launcher_spring_background">#EEF8EA</color>
 </resources>

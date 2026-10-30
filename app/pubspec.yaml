@@ -49,6 +49,7 @@ dependencies:
   # iCloud Drive sync folder and the iPhone notification token (packages/tanooki_cloud).
   tanooki_cloud:
     path: packages/tanooki_cloud
+  flutter_tts: ^4.2.5
 
 dev_dependencies:
   flutter_test:
@@ -78,6 +79,15 @@ flutter:
   assets:
     - assets/brand_icons/icons.json
     - assets/app_icons/
+    - assets/fonts/OFL.txt
+
+  # Easy-to-read font setting (Settings > Appearance). SIL Open Font License: assets/fonts/OFL.txt.
+  fonts:
+    - family: AtkinsonHyperlegible
+      fonts:
+        - asset: assets/fonts/AtkinsonHyperlegible-Regular.ttf
+        - asset: assets/fonts/AtkinsonHyperlegible-Bold.ttf
+          weight: 700
 
   # To add assets to your application, add an assets section, like this:
   # assets:

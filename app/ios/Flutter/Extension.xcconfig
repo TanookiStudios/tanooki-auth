@@ -1,0 +1,3 @@
+// Base settings for the widget and Apple Watch targets: Flutter's version numbers, but not the CocoaPods
+// settings Debug.xcconfig / Release.xcconfig pull in (those link plugin frameworks the extensions can't use).
+#include "Generated.xcconfig"

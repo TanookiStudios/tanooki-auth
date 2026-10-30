@@ -19,6 +19,7 @@ import 'app_icon.dart';
 import 'auto_backup_ui.dart';
 import 'backup_ui.dart';
 import 'clipboard.dart';
+import 'code_view.dart';
 import 'emergency_ui.dart';
 import 'export_ui.dart';
 import 'home.dart';
@@ -545,6 +546,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       const SizedBox(height: 10),
       _appIconPicker(),
+      const SizedBox(height: 10),
+      Card(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          const ListTile(
+            title: Text('Countdown style'),
+            subtitle: Text('How the time left on each code is shown'),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+            child: SegmentedButton<String>(
+              key: const Key('countdownStyle'),
+              showSelectedIcon: false,
+              segments: [for (final e in countdownChoices.entries) ButtonSegment(value: e.key, label: Text(e.value))],
+              selected: {countdownOf(widget.vault.settings)},
+              onSelectionChanged: (v) => _set(countdownKey, v.first),
+            ),
+          ),
+          const Divider(),
+          SwitchListTile(
+            key: const Key('easyFontSwitch'),
+            title: const Text('Easy-to-read font'),
+            subtitle: const Text('Atkinson Hyperlegible, made by the Braille Institute so letters and numbers are hard to mix up'),
+            value: easyFont.value,
+            onChanged: (on) async {
+              easyFont.value = on;
+              await _set(easyFontKey, on);
+            },
+          ),
+        ]),
+      ),
       const SizedBox(height: 20),
     ];
   }

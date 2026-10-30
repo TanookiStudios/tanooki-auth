@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 
 import '../core/account.dart';
@@ -11,10 +12,12 @@ import '../core/otpauth_uri.dart';
 import '../core/totp.dart';
 import '../core/vault.dart';
 import '../core/widget_share.dart' show showCopiedCodeActivity;
+import 'account_details.dart';
 import 'add.dart';
 import 'brand_icon.dart';
 import 'home_cards.dart';
 import 'clipboard.dart';
+import 'code_view.dart';
 import 'recovery_codes.dart';
 import 'security_ui.dart';
 import 'settings.dart';
@@ -22,11 +25,7 @@ import 'share_ui.dart';
 import 'sync_ui.dart' show QrView;
 import 'theme.dart';
 
-String groupCode(String code) => code.length == 6
-    ? '${code.substring(0, 3)} ${code.substring(3)}'
-    : code.length == 8
-        ? '${code.substring(0, 4)} ${code.substring(4)}'
-        : code;
+String groupCode(String code) => codeGroups(code).join(' ');
 
 String accountTitle(Account a) => a.issuer.isNotEmpty ? a.issuer : a.label;
 
@@ -189,6 +188,12 @@ class _HomeScreenState extends State<HomeScreen> {
     logActivity(widget.vault, ActivityKind.copied, accountId: a.id, where: 'This app');
     await widget.vault.save();
     if (mounted) setState(() => _selected = _visible.indexOf(a).clamp(0, 1 << 30));
+  }
+
+  /// Speaks the code slowly. "Ask first" accounts ask for Face ID etc. first, like copying does.
+  Future<void> _readAloud(Account a) async {
+    if (!await _prove(a, 'Read aloud the code for') || !mounted) return;
+    await readAloud(a, a.codeAt(DateTime.now()));
   }
 
   Future<void> _add() async {
@@ -492,6 +497,8 @@ class _HomeScreenState extends State<HomeScreen> {
         left: left,
         hidden: _isHidden(a, now),
         compact: _compact,
+        countdownStyle: countdownOf(_settings),
+        onReadAloud: () => _readAloud(a),
         selected: !_selecting && i == _selected && visible.length > 1,
         picked: _selecting ? _picked.contains(a.id) : null,
         onTap: () {
@@ -667,8 +674,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final unix = now.millisecondsSinceEpoch ~/ 1000;
-    // Sidebar layout from 700 pt, so an upright iPad mini (744 pt) gets it too.
-    final wide = MediaQuery.sizeOf(context).width >= 700;
+    // Sidebar layout from 700 pt, so an upright iPad mini (744 pt) gets it too. From 900 the list becomes
+    // one column with a details pane beside it ([_split]).
+    final width = MediaQuery.sizeOf(context).width;
+    final split = width >= 900, wide = width >= 700 && !split;
     final live = _live;
 
     Widget list = CallbackShortcuts(
@@ -693,6 +702,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final selectButton = live.isEmpty || _selecting
         ? null
         : IconButton(tooltip: 'Select accounts', icon: const Icon(Icons.checklist), onPressed: _startSelecting);
+
+    if (split) return _split(list, live, selectButton, now, unix);
 
     if (!wide) {
       return Scaffold(
@@ -741,7 +752,8 @@ class _HomeScreenState extends State<HomeScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
               child: Row(children: [
-                const Text('Your accounts', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                // Gives way first on an upright iPad mini, where the row is tight.
+                const Flexible(child: Text('Your accounts', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700))),
                 const SizedBox(width: 10),
                 CountBadge(live.length),
                 const SizedBox(width: 20),
@@ -771,6 +783,59 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ]),
+        ),
+      ]),
+    );
+  }
+
+  /// Wide layout (900 px and up): the list on the left, the selected account's details on the right.
+  Widget _split(Widget list, List<Account> live, Widget? selectButton, DateTime now, int unix) {
+    final visible = _visible;
+    final a = visible.isEmpty ? null : visible[_selected.clamp(0, visible.length - 1)];
+    return Scaffold(
+      body: Row(children: [
+        Sidebar(onAdd: _add, onSettings: _openSettings),
+        const VerticalDivider(width: 1),
+        SizedBox(
+          width: 380,
+          child: Column(children: [
+            Container(
+              height: 60,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Palette.line))),
+              child: Row(children: [
+                const Text('Accounts', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+                const SizedBox(width: 10),
+                CountBadge(live.length),
+                const Spacer(),
+                ?selectButton,
+              ]),
+            ),
+            Padding(padding: const EdgeInsets.fromLTRB(16, 12, 16, 8), child: _search()),
+            _tagChips(const EdgeInsets.fromLTRB(16, 0, 16, 8)),
+            HomeNotices(vault: widget.vault, padding: const EdgeInsets.fromLTRB(16, 0, 16, 8), onChanged: () => setState(() {})),
+            if (_selecting) _selectionBar(const EdgeInsets.fromLTRB(16, 0, 16, 8)),
+            Expanded(child: list),
+          ]),
+        ),
+        const VerticalDivider(width: 1),
+        Expanded(
+          child: a == null
+              ? Center(child: Text('Pick an account on the left to see it here.', style: TextStyle(color: Palette.muted)))
+              : AccountDetails(
+                  key: ValueKey('details-${a.id}'),
+                  account: a,
+                  code: a.codeAt(now),
+                  left: a.timeBased ? secondsLeft(unix, period: a.period) : null,
+                  hidden: _isHidden(a, now),
+                  countdownStyle: countdownOf(_settings),
+                  onCopy: () => _copy(a),
+                  onReadAloud: () => _readAloud(a),
+                  onShowQr: () => _showQr(a),
+                  onRecoveryCodes: () => _recoveryCodes(a),
+                  onEdit: () => _edit(a),
+                  onNext: () => _nextHotp(a),
+                ),
         ),
       ]),
     );
@@ -863,7 +928,7 @@ class Sidebar extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               onTap: onTap,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14), // 48 px tall: easy to hit
                 child: Row(children: [
                   Icon(icon, size: 20, color: active ? Palette.text : Palette.muted),
                   const SizedBox(width: 12),
@@ -914,7 +979,7 @@ class Sidebar extends StatelessWidget {
   }
 }
 
-class AccountCard extends StatelessWidget {
+class AccountCard extends StatefulWidget {
   const AccountCard({
     super.key,
     required this.account,
@@ -934,6 +999,8 @@ class AccountCard extends StatelessWidget {
     this.onShare,
     this.onShowQr,
     this.picked,
+    this.countdownStyle = 'ring',
+    this.onReadAloud,
   });
 
   final Account account;
@@ -947,28 +1014,48 @@ class AccountCard extends StatelessWidget {
   final VoidCallback? onShare, onShowQr;
   /// Select mode: whether this card is ticked. Null when not selecting (shows the menu instead).
   final bool? picked;
+  /// How the time left is drawn: 'ring', 'bar' or 'number' (Settings > Countdown style).
+  final String countdownStyle;
+  /// Reads the code aloud (asking first for "ask first" accounts). Null hides the speaker button.
+  final VoidCallback? onReadAloud;
 
+  @override
+  State<AccountCard> createState() => _AccountCardState();
+}
+
+class _AccountCardState extends State<AccountCard> {
+  final _menuKey = GlobalKey<PopupMenuButtonState<String>>();
+
+  Account get account => widget.account;
+  String get code => widget.code;
+  String? get nextCode => widget.nextCode;
+  int? get left => widget.left;
+  bool get hidden => widget.hidden;
+  bool? get picked => widget.picked;
   bool get _urgent => left != null && left! <= 5;
+  VoidCallback? get _readAloud => picked == null && readAloudSupported ? widget.onReadAloud : null;
 
   Widget _menu() {
     final a = account;
+    final w = widget;
     if (picked != null) {
-      return Checkbox(value: picked, onChanged: (_) => onTap(), semanticLabel: 'Select ${accountTitle(a)}');
+      return Checkbox(value: picked, onChanged: (_) => w.onTap(), semanticLabel: 'Select ${accountTitle(a)}');
     }
     final left = a.recoveryCodes.where((r) => !r.used).length;
     return PopupMenuButton<String>(
+      key: _menuKey,
       tooltip: 'More',
       iconSize: 18,
       icon: Icon(Icons.more_vert, color: Palette.muted),
       onSelected: (v) => switch (v) {
-        'edit' => onEdit(),
-        'favorite' => onFavorite(),
-        'recovery' => onRecoveryCodes(),
-        'share' => onShare?.call(),
-        'qr' => onShowQr?.call(),
-        'delete' => onDelete(),
-        'earlier' => onMove?.call(a, -1),
-        _ => onMove?.call(a, 1),
+        'edit' => w.onEdit(),
+        'favorite' => w.onFavorite(),
+        'recovery' => w.onRecoveryCodes(),
+        'share' => w.onShare?.call(),
+        'qr' => w.onShowQr?.call(),
+        'delete' => w.onDelete(),
+        'earlier' => w.onMove?.call(a, -1),
+        _ => w.onMove?.call(a, 1),
       },
       itemBuilder: (_) => [
         const PopupMenuItem(value: 'edit', child: Text('Edit')),
@@ -977,10 +1064,10 @@ class AccountCard extends StatelessWidget {
           value: 'recovery',
           child: Text(a.recoveryCodes.isEmpty ? 'Recovery codes' : 'Recovery codes ($left left)'),
         ),
-        if (onShare != null) const PopupMenuItem(value: 'share', child: Text('Share securely')),
-        if (onShowQr != null) const PopupMenuItem(value: 'qr', child: Text('Show QR code')),
-        if (onMove != null) const PopupMenuItem(value: 'earlier', child: Text('Move earlier')),
-        if (onMove != null) const PopupMenuItem(value: 'later', child: Text('Move later')),
+        if (w.onShare != null) const PopupMenuItem(value: 'share', child: Text('Share securely')),
+        if (w.onShowQr != null) const PopupMenuItem(value: 'qr', child: Text('Show QR code')),
+        if (w.onMove != null) const PopupMenuItem(value: 'earlier', child: Text('Move earlier')),
+        if (w.onMove != null) const PopupMenuItem(value: 'later', child: Text('Move later')),
         const PopupMenuItem(value: 'delete', child: Text('Delete')),
       ],
     );
@@ -990,7 +1077,6 @@ class AccountCard extends StatelessWidget {
     final shown = hidden ? groupCode('•' * code.length) : groupCode(code);
     return Text(
       shown,
-      semanticsLabel: hidden ? 'Code hidden. Tap to show and copy.' : code.split('').join(' '),
       style: TextStyle(
         fontSize: size,
         fontWeight: FontWeight.w700,
@@ -1004,25 +1090,25 @@ class AccountCard extends StatelessWidget {
   Widget? _next() => nextCode == null || hidden
       ? null
       : Text('Next ${groupCode(nextCode!)}',
-          semanticsLabel: 'Next code ${nextCode!.split('').join(' ')}',
           style: TextStyle(fontSize: 12, color: Palette.muted, fontFeatures: const [FontFeature.tabularFigures()]));
 
   Widget _timer() => left == null
-      ? TextButton.icon(onPressed: onNext, icon: const Icon(Icons.refresh, size: 18), label: const Text('Next code'))
-      : Row(mainAxisSize: MainAxisSize.min, children: [
-          Text('${left}s', style: TextStyle(fontSize: 12, color: _urgent ? Palette.red : Palette.muted)),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 22,
-            height: 22,
-            child: CircularProgressIndicator(
-              value: left! / account.period,
-              strokeWidth: 3,
-              color: _urgent ? Palette.red : Palette.accent,
-              backgroundColor: Palette.line,
-            ),
-          ),
-        ]);
+      ? TextButton.icon(onPressed: widget.onNext, icon: const Icon(Icons.refresh, size: 18), label: const Text('Next code'))
+      : Countdown(left: left!, period: account.period, style: widget.countdownStyle);
+
+  /// The whole card is one screen-reader item: name, code in groups and time left; tap copies, and the
+  /// speaker, "Next code" and menu buttons are its actions.
+  String get _semanticsLabel {
+    final a = account;
+    final parts = [
+      accountTitle(a),
+      if (a.issuer.isNotEmpty && a.label.isNotEmpty) a.label,
+      if (a.favorite) 'Favorite',
+      hidden ? (a.requireAuth ? 'Code hidden until you confirm it is you' : 'Code hidden') : codeSemantics(code, left),
+      if (nextCode != null && !hidden) 'Next code ${spokenCode(nextCode!)}',
+    ];
+    return parts.join('. ');
+  }
 
   Widget _star() => Padding(
         padding: const EdgeInsets.only(left: 6),
@@ -1032,7 +1118,10 @@ class AccountCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final a = account;
+    final w = widget;
+    final compact = w.compact;
     final next = _next();
+    final speaker = _readAloud == null ? null : ReadAloudButton(onPressed: _readAloud!);
     final kind = switch (a.type) {
       OtpType.totp => 'TOTP · ${a.digits} digits · ${a.period}s',
       OtpType.steam => 'Steam · 5 characters · ${a.period}s',
@@ -1070,6 +1159,7 @@ class AccountCard extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           _timer(),
+          ?speaker,
           _menu(),
         ]),
       );
@@ -1128,17 +1218,32 @@ class AccountCard extends StatelessWidget {
               ),
             ),
             _timer(),
+            ?speaker,
           ]),
         ),
       ]);
     }
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: selected ? Palette.accent : Palette.line, width: selected ? 1.5 : 1),
+    return Semantics(
+      container: true,
+      button: true,
+      selected: picked ?? false,
+      label: _semanticsLabel,
+      onTapHint: picked != null ? (picked! ? 'unselect' : 'select') : 'copy the code',
+      onTap: w.onTap,
+      customSemanticsActions: {
+        const CustomSemanticsAction(label: 'Read code aloud'): ?_readAloud,
+        if (left == null) const CustomSemanticsAction(label: 'Next code'): w.onNext,
+        if (picked == null) const CustomSemanticsAction(label: 'More options'): () => _menuKey.currentState?.showButtonMenu(),
+      },
+      excludeSemantics: true,
+      child: Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(color: w.selected ? Palette.accent : Palette.line, width: w.selected ? 1.5 : 1),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(onTap: w.onTap, hoverColor: Colors.white.withValues(alpha: 0.03), child: body),
       ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(onTap: onTap, hoverColor: Colors.white.withValues(alpha: 0.03), child: body),
     );
   }
 }

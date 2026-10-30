@@ -1,5 +1,6 @@
 import Foundation
 import Security
+import SwiftUI
 
 /// One favorite as the app hands it over (see app/lib/core/widget_share.dart).
 struct Favorite: Codable, Hashable {
@@ -13,8 +14,20 @@ struct Favorite: Codable, Hashable {
   let type: String?
   /// The one favorite picked for the watch face complication (Premium). Absent on all the others.
   var complication: Bool? = nil
+  /// The account's own color (0xAARRGGBB) and emoji, when the user picked them. Absent otherwise.
+  var color: Int? = nil
+  var emoji: String? = nil
 
   var title: String { issuer.isEmpty ? label : issuer }
+
+  /// The emoji before the name, if any: "🎮 Steam".
+  var badgedTitle: String { emoji.map { "\($0) \(title)" } ?? title }
+
+  /// The picked color as a SwiftUI color, or nil for the default look.
+  var tint: Color? {
+    guard let c = color else { return nil }
+    return Color(red: Double((c >> 16) & 0xFF) / 255, green: Double((c >> 8) & 0xFF) / 255, blue: Double(c & 0xFF) / 255)
+  }
 
   func code(at date: Date) -> String {
     guard let key = TOTP.base32Decode(secret) else { return "------" }

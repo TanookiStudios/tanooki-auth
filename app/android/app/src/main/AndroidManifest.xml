@@ -121,6 +121,39 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity-alias>
+        <activity-alias
+            android:name=".AppIcon_spooky"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_spooky"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".AppIcon_cozy"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_cozy"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".AppIcon_spring"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_spring"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
         <!-- Home screen widget with favorites' codes (only when the user turns it on in Settings). -->
         <receiver
             android:name=".FavoritesWidget"

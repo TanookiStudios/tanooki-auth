@@ -35,6 +35,9 @@ void main() {
         expect(contrast(p.muted, surface), greaterThanOrEqualTo(4.5), reason: '${p.name} muted');
       }
     });
+    test('${p.name}: white labels on filled buttons are readable (at least 4.5:1)', () {
+      expect(contrast(Colors.white, buttonFill(p.accent)), greaterThanOrEqualTo(4.5));
+    });
     // The newer themes also keep the accent readable as link text, and white button labels on the accent.
     // The originals predate this check (their accents are lighter), so they're held to the text rules only.
     if (const {'sunset', 'peach', 'forest', 'ocean', 'mono'}.contains(id)) {

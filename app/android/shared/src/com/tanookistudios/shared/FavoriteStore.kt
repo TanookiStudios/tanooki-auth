@@ -21,8 +21,14 @@ data class Favorite(
     val period: Int,
     /** "totp" or "steam"; favorites saved before Steam support have none, so default to totp. */
     val type: String = "totp",
+    /** The account's own color (0xAARRGGBB) and emoji, when the user picked them. */
+    val color: Int? = null,
+    val emoji: String? = null,
 ) {
     val title: String get() = issuer.ifEmpty { label }
+
+    /** The emoji before the name, if any: "🎮 Steam". */
+    val badgedTitle: String get() = emoji?.let { "$it $title" } ?: title
 
     fun code(unixSeconds: Long): String =
         Totp.base32Decode(secret)?.let {
@@ -84,6 +90,8 @@ object FavoriteStore {
                 o.getString("issuer"), o.getString("label"), o.getString("secret"),
                 o.getString("algorithm"), o.getInt("digits"), o.getInt("period"),
                 o.optString("type", "totp"),
+                if (o.has("color")) o.getLong("color").toInt() else null,
+                o.optString("emoji").ifEmpty { null },
             )
         }
     } catch (e: Exception) {

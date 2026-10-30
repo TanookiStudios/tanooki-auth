@@ -18,6 +18,7 @@ import '../core/totp.dart';
 import '../core/vault.dart';
 import 'backup_ui.dart';
 import 'brand_icon.dart';
+import 'code_view.dart';
 import 'home.dart';
 import 'import_ui.dart';
 import 'premium.dart';
@@ -73,6 +74,8 @@ Future<bool> showAccountDialog(BuildContext context, Account a,
   final notes = TextEditingController(text: a.notes);
   final folder = TextEditingController(text: a.folder ?? '');
   final counter = TextEditingController(text: '${a.counter}');
+  final emoji = TextEditingController(text: a.emoji ?? '');
+  int? color = a.color;
   // Advanced settings are tried on a copy, so the live preview never touches the real account until Save.
   var type = a.type, digits = a.digits, period = a.period, algorithm = a.algorithm;
   var advanced = false;
@@ -97,6 +100,41 @@ Future<bool> showAccountDialog(BuildContext context, Account a,
           onChanged: (v) => v == null ? null : set(v),
         ),
       );
+
+  // One round 48 px target per color (and "No color"), so each is easy to hit and to find with a screen reader.
+  Widget swatch(int? value, String name, StateSetter setState) {
+    final on = color == value;
+    return Semantics(
+      button: true,
+      selected: on,
+      label: value == null ? 'No color' : '$name color',
+      excludeSemantics: true,
+      child: InkResponse(
+        key: Key('color-${value ?? 'none'}'),
+        radius: 24,
+        onTap: () => setState(() => color = value),
+        child: SizedBox.square(
+          dimension: 48,
+          child: Center(
+            child: Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: value == null ? null : Color(value),
+                border: Border.all(color: on ? Palette.text : Palette.lineBright, width: on ? 3 : 1),
+              ),
+              child: value == null
+                  ? Icon(Icons.block, size: 16, color: Palette.muted)
+                  : on
+                      ? const Icon(Icons.check, size: 16, color: Colors.white)
+                      : null,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   final ok = await showDialog<bool>(
     context: context,
@@ -151,6 +189,34 @@ Future<bool> showAccountDialog(BuildContext context, Account a,
                 maxLines: 4,
                 decoration: const InputDecoration(labelText: 'Notes (optional)'),
               ),
+              const SizedBox(height: 12),
+              Text('Color (optional)', style: TextStyle(fontSize: 12, color: Palette.muted)),
+              Wrap(children: [
+                for (var i = 0; i < accountColors.length; i++) swatch(accountColors[i], accountColorNames[i], setState),
+                swatch(null, '', setState),
+              ]),
+              TextField(
+                key: const Key('emojiField'),
+                controller: emoji,
+                decoration: const InputDecoration(
+                  labelText: 'Emoji (optional)',
+                  helperText: 'Shown instead of the logo, here and on widgets and the watch.',
+                  helperMaxLines: 2,
+                ),
+              ),
+              Wrap(children: [
+                for (final e in emojiSuggestions)
+                  Semantics(
+                    button: true,
+                    label: 'Use $e',
+                    excludeSemantics: true,
+                    child: InkResponse(
+                      radius: 24,
+                      onTap: () => emoji.text = e,
+                      child: SizedBox.square(dimension: 48, child: Center(child: Text(e, style: const TextStyle(fontSize: 22)))),
+                    ),
+                  ),
+              ]),
               const SizedBox(height: 4),
               SwitchListTile(
                 key: const Key('requireAuthSwitch'),
@@ -235,6 +301,10 @@ Future<bool> showAccountDialog(BuildContext context, Account a,
     ..clear()
     ..addAll(tags.text.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).toSet());
   a.notes = notes.text.trim();
+  final e = emoji.text.trim();
+  a
+    ..emoji = e.isEmpty ? null : e.characters.first // one emoji; extra typing is dropped
+    ..color = color;
   final f = folder.text.trim();
   a.folder = f.isEmpty ? null : f;
   a

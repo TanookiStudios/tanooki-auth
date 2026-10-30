@@ -67,7 +67,7 @@ class MainActivity : Activity() {
         }
         val now = System.currentTimeMillis() / 1000
         for (f in favorites) {
-            list.addView(text(f.title, 12f))
+            list.addView(text(f.badgedTitle, 12f).apply { f.color?.let { setTextColor(it) } })
             list.addView(text(Totp.grouped(f.code(now)), 24f, bold = true))
             list.addView(text("${f.period - now % f.period}s", 10f))
         }

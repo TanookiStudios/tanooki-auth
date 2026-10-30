@@ -5,7 +5,8 @@ import 'package:flutter/services.dart';
 
 import '../core/vault.dart';
 
-/// Premium alternate app icons, in picker order: the blue shield, then the shield recolored per theme.
+/// Premium alternate app icons, in picker order: the blue shield, the shield recolored per theme, then the
+/// seasonal ones.
 /// Images come from tool/make_app_icons.cjs. Each non-default id needs an iOS `AppIcon-<id>` icon set and an
 /// Android `.AppIcon_<id>` activity-alias; test/app_icon_test.dart checks they all exist.
 const appIcons = <String, String>{
@@ -16,6 +17,10 @@ const appIcons = <String, String>{
   'mint': 'Mint',
   'midnight': 'Midnight',
   'sunset': 'Sunset',
+  // Seasonal: the same shield with a touch of the season.
+  'spooky': 'Spooky (fall)',
+  'cozy': 'Cozy (winter)',
+  'spring': 'Spring',
 };
 
 /// Settings key for the Mac Dock icon (macOS forgets it when the app quits, so it is set again at launch).

@@ -74,7 +74,7 @@ struct ContentView: View {
       } else {
         List(favorites, id: \.self) { f in
           VStack(alignment: .leading, spacing: 2) {
-            Text(f.title).font(.footnote).foregroundStyle(.secondary).lineLimit(1)
+            Text(f.badgedTitle).font(.footnote).foregroundStyle(f.tint ?? .secondary).lineLimit(1)
             HStack {
               Text(TOTP.grouped(f.code(at: context.date)))
                 .font(.system(.title3, design: .monospaced).weight(.bold))

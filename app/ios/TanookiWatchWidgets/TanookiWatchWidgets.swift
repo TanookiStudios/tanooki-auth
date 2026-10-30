@@ -70,7 +70,7 @@ struct ComplicationView: View {
       let countdown = Text(timerInterval: entry.date...expires, countsDown: true).monospacedDigit()
       switch family {
       case .accessoryInline:
-        Text("\(f.title) \(code)").privacySensitive()
+        Text("\(f.badgedTitle) \(code)").privacySensitive()
       case .accessoryCircular:
         VStack(spacing: 0) {
           Text(code.split(separator: " ").first.map(String.init) ?? code)
@@ -85,7 +85,7 @@ struct ComplicationView: View {
           .widgetLabel { countdown }
       default:
         VStack(alignment: .leading, spacing: 0) {
-          Text(f.title).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+          Text(f.badgedTitle).font(.caption2).foregroundStyle(f.tint ?? .secondary).lineLimit(1).widgetAccentable()
           Text(code).font(.system(.title3, design: .monospaced).weight(.bold)).privacySensitive()
           countdown.font(.caption2).foregroundStyle(.secondary)
         }

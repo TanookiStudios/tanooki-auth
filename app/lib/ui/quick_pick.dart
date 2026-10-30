@@ -7,8 +7,11 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../core/account.dart';
 import '../core/activity.dart';
+import '../core/totp.dart' show secondsLeft;
 import '../core/vault.dart';
+import 'brand_icon.dart';
 import 'clipboard.dart';
+import 'code_view.dart';
 import 'home.dart' show accountTitle, groupCode;
 import 'security_ui.dart' show confirmItsYou;
 
@@ -168,20 +171,26 @@ class _QuickPickScreenState extends State<QuickPickScreen> {
                   itemCount: list.length,
                   itemBuilder: (_, i) {
                     final a = list[i];
+                    final code = a.codeAt(now);
+                    final left = a.timeBased ? secondsLeft(now.millisecondsSinceEpoch ~/ 1000, period: a.period) : null;
                     return ListTile(
+                      leading: IssuerAvatar(a, size: 32),
                       title: Text(accountTitle(a)),
                       subtitle: Text(
-                        a.requireAuth ? '••• •••  (asks first)' : groupCode(a.codeAt(now)),
+                        a.requireAuth ? '••• •••  (asks first)' : groupCode(code),
+                        semanticsLabel: a.requireAuth ? 'Code hidden, asks first' : codeSemantics(code, left),
                         style: const TextStyle(fontFeatures: [FontFeature.tabularFigures()]),
                       ),
                       onTap: () => _copy(a),
-                      trailing: Platform.isMacOS || Platform.isWindows
-                          ? TextButton.icon(
-                              onPressed: () => _type(a),
-                              icon: const Icon(Icons.keyboard_outlined),
-                              label: const Text('Type'),
-                            )
-                          : null,
+                      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                        if (left != null && !a.requireAuth) Countdown(left: left, period: a.period, style: countdownOf(widget.vault.settings)),
+                        if (Platform.isMacOS || Platform.isWindows)
+                          TextButton.icon(
+                            onPressed: () => _type(a),
+                            icon: const Icon(Icons.keyboard_outlined),
+                            label: const Text('Type'),
+                          ),
+                      ]),
                     );
                   },
                 ),
