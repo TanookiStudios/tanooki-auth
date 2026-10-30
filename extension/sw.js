@@ -1,5 +1,5 @@
 // Chrome runs this as a service worker; Firefox and Safari load the same files as background scripts (see manifest).
-if (typeof importScripts === 'function') importScripts('jsqr.js', 'lookalike.js', 'link.js');
+if (typeof importScripts === 'function') importScripts('jsqr.js', 'lookalike.js', 'link.js', 'login.js');
 
 // Talks to the Tanooki Auth desktop app over 127.0.0.1 only. Holds the pairing token;
 // never sees a secret, only the current code for one account at a time.
@@ -102,11 +102,46 @@ async function accountsFor(host, ancestorHosts = []) {
 const lookalikeFor = (host, accounts) => tanookiLookalike.lookalikeOf(host, accounts.flatMap((a) => a.domains));
 const lookalikeError = (d) => new AppError('lookalike', `This site looks like ${d} but isn't. Tanooki Auth won't fill codes here.`);
 
-async function setBadge(tabId, text) {
+async function setBadge(tabId, text, color = '#2F80FF') {
   if (tabId == null) return;
-  await chrome.action.setBadgeBackgroundColor({ tabId, color: '#2F80FF' });
+  await chrome.action.setBadgeBackgroundColor({ tabId, color });
   await chrome.action.setBadgeText({ tabId, text });
 }
+
+// A new page in the tab starts with a clean badge (its content script sets it again if it matches).
+chrome.tabs.onUpdated.addListener((tabId, info) => {
+  if (info.status === 'loading') chrome.action.setBadgeText({ tabId, text: '' }).catch(() => {});
+});
+
+function decodeBitmap(bitmap) {
+  const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.fillStyle = '#fff'; // transparent QR backgrounds would read as black
+  ctx.fillRect(0, 0, bitmap.width, bitmap.height);
+  ctx.drawImage(bitmap, 0, 0);
+  return jsQR(ctx.getImageData(0, 0, bitmap.width, bitmap.height).data, bitmap.width, bitmap.height)?.data || '';
+}
+
+// The text of the QR code in an image: fetched here (works across sites thanks to the extension's
+// host permission), else read by the page's own script (SVG and blob: images).
+async function qrFromImage(srcUrl, tabId, frameId) {
+  try {
+    const r = await fetch(srcUrl, { credentials: 'include' });
+    const text = decodeBitmap(await createImageBitmap(await r.blob()));
+    if (text) return text;
+  } catch { /* unreadable here: let the page try */ }
+  const r = await chrome.tabs.sendMessage(tabId, { type: 'decodeImage', srcUrl }, { frameId }).catch(() => null);
+  return r?.text || '';
+}
+
+// Right-click menu on images. Menus outlive the worker, so they're made once per install or update.
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.create({ id: 'addQr', title: 'Add to Tanooki Auth', contexts: ['image'] }, () => void chrome.runtime.lastError);
+});
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId !== 'addQr' || !tab) return;
+  handlers.addImage({ srcUrl: info.srcUrl, frameId: info.frameId || 0 }, { tab }).catch(() => {});
+});
 
 // --- "Use my phone": when the desktop app isn't running, ask the paired phone instead (link.js). ---
 
@@ -202,12 +237,7 @@ const handlers = {
     const host = hostOf(tabUrl);
     if (!host) throw new AppError('badPage', 'Open the website\'s two-factor setup page first.');
     const shot = await chrome.tabs.captureVisibleTab(windowId, { format: 'png' });
-    const bitmap = await createImageBitmap(await (await fetch(shot)).blob());
-    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    ctx.drawImage(bitmap, 0, 0);
-    const found = jsQR(ctx.getImageData(0, 0, bitmap.width, bitmap.height).data, bitmap.width, bitmap.height);
-    const text = found?.data || '';
+    const text = decodeBitmap(await createImageBitmap(await (await fetch(shot)).blob()));
     if (text.startsWith('otpauth-migration://')) {
       throw new AppError('migration', 'That\'s a Google Authenticator transfer code. Use "Add account…" in the Tanooki Auth app to import it.');
     }
@@ -218,7 +248,7 @@ const handlers = {
   },
 
   // Content script found a code box: fill only when exactly one account is saved for this site.
-  async fillPage({ ancestorHosts }, sender) {
+  async fillPage({ ancestorHosts, logins }, sender) {
     const host = hostOf(sender.url);
     // Some browsers (older Firefox) have no location.ancestorOrigins, so also check the tab's own address.
     const above = [...(ancestorHosts || []), hostOf(sender.tab?.url || sender.url)].map((h) => h.replace(/^www\./, ''));
@@ -229,14 +259,16 @@ const handlers = {
       // Desktop app not running: ask the paired phone, if there is one.
       if (e.code !== 'noApp' || !(await phone.status()).paired) throw e;
       const r = await phoneCode(host, above, { auto: true });
-      return { code: r.code, account: { issuer: r.issuer } };
+      return { code: r.code, secondsLeft: r.expiresIn, account: { issuer: r.issuer } };
     }
     const { matches, lookalike } = found;
-    await setBadge(sender.tab?.id, lookalike ? '!' : matches.length > 1 ? String(matches.length) : '');
+    // Several accounts for this site: the one whose name matches the email or username on the page.
+    const pick = matches.length === 1 ? matches[0] : tanookiLogin.pickByLogin(matches, logins);
+    await setBadge(sender.tab?.id, lookalike ? '!' : matches.length > 1 && !pick ? String(matches.length) : '');
     if (lookalike) return { count: 0, lookalike, message: lookalikeError(lookalike).message };
-    if (matches.length !== 1) return { count: matches.length };
-    const { code } = await call({ type: 'code', accountId: matches[0].id });
-    return { code, account: matches[0] };
+    if (!pick) return { count: matches.length }; // unsure: the popup lists them to choose from
+    const { code, secondsLeft } = await call({ type: 'code', accountId: pick.id });
+    return { code, secondsLeft, account: pick };
   },
 
   // Content script found a password box but no code box yet: only warn about lookalikes.
@@ -260,10 +292,10 @@ const handlers = {
     const a = accounts.find((x) => x.id === accountId);
     const domain = a && a.domains.find((d) => hostMatches(host, d));
     if (!domain) throw new AppError('wrongSite', 'That account isn\'t saved for this website.');
-    const { code } = await call({ type: 'code', accountId });
+    const { code, secondsLeft } = await call({ type: 'code', accountId });
     let reply;
     try {
-      reply = await chrome.tabs.sendMessage(tabId, { type: 'fill', code, domain, issuer: a.issuer });
+      reply = await chrome.tabs.sendMessage(tabId, { type: 'fill', code, domain, issuer: a.issuer, secondsLeft, accountId });
     } catch {
       // No page script: the tab was open before the extension was installed or reloaded.
       throw new AppError('noPageScript', 'Reload this page, then try again.');
@@ -293,11 +325,40 @@ const handlers = {
     const r = await phoneCode(host);
     let reply = null;
     try {
-      reply = await chrome.tabs.sendMessage(tabId, { type: 'fill', code: r.code, domain: r.domain, issuer: r.issuer });
+      reply = await chrome.tabs.sendMessage(tabId, { type: 'fill', code: r.code, domain: r.domain, issuer: r.issuer, secondsLeft: r.expiresIn });
     } catch {
       // No page script (page opened before the extension loaded): the popup still shows the code to copy.
     }
     return { code: r.code, issuer: r.issuer, domain: r.domain, filled: !!reply?.filled };
+  },
+
+  // Toolbar countdown from the page's 1-second timer (content.js). Numbers only, never a code.
+  async badge({ text }, sender) {
+    const n = Number(text);
+    if (text !== '' && !(Number.isInteger(n) && n > 0 && n < 1000)) throw new AppError('badRequest', 'Badge takes seconds only.');
+    await setBadge(sender.tab?.id, text, n && n <= 5 ? '#B3261E' : '#2F80FF');
+    return { ok: true };
+  },
+
+  // The countdown ran out: how long the next code lasts (the code itself stays here).
+  async secondsLeft({ accountId }) {
+    const { codes } = await call({ type: 'codes', accountIds: [accountId] });
+    return { secondsLeft: codes[accountId]?.secondsLeft ?? null };
+  },
+
+  // Right-click "Add to Tanooki Auth" on an image. The app (or phone) always asks the user to confirm;
+  // the page gets a short notice, never the code's contents.
+  async addImage({ srcUrl, frameId = 0 }, { tab }) {
+    const notice = (text) => chrome.tabs.sendMessage(tab.id, { type: 'notice', text }, { frameId: 0 }).catch(() => {});
+    let r;
+    try {
+      r = await addFromImage(srcUrl, tab, frameId, notice);
+    } catch (e) {
+      await notice(e.message);
+      throw e;
+    }
+    await notice(r.accepted ? 'Added to Tanooki Auth.' : r.reason === 'duplicate' ? 'That account is already in Tanooki Auth.' : 'Not added.');
+    return r;
   },
 
   // Content script found a setup QR code and the user clicked "Add to Tanooki Auth".
@@ -306,6 +367,31 @@ const handlers = {
     return call({ type: 'add', uri, domain: hostOf(sender.url) }, { waitSeconds: 300 });
   },
 };
+
+async function addFromImage(srcUrl, tab, frameId, notice) {
+  const text = await qrFromImage(srcUrl, tab.id, frameId);
+  if (!text) throw new AppError('noQr', 'Couldn\'t find a QR code in that image.');
+  const migration = /^otpauth-migration:\/\//i.test(text);
+  if (!migration && !/^otpauth:\/\//i.test(text)) throw new AppError('notSetup', 'That QR code isn\'t a two-factor setup code.');
+  // A Google Authenticator transfer holds many accounts from many sites, so it isn't tied to this page.
+  const add = { type: 'add', uri: text, ...(migration ? {} : { domain: hostOf(tab.url) }) };
+  await notice('Check Tanooki Auth to confirm.');
+  try {
+    return await call(add, { waitSeconds: 300 });
+  } catch (e) {
+    if (migration && e.code === 'badRequest') {
+      throw new AppError('oldApp', 'This version of Tanooki Auth can\'t add Google Authenticator transfer codes from the browser yet. Update Tanooki Auth, or use "Add account…" in the app.');
+    }
+    if (e.code !== 'noApp' || !(await phone.status()).paired) throw e;
+  }
+  // No desktop app here: the paired phone adds it instead.
+  await notice('Check Tanooki Auth on your phone to confirm.');
+  try {
+    return await phone.requestAdd(text);
+  } catch (e) {
+    throw new AppError(e.code || 'phone', e.message);
+  }
+}
 
 self.handlersForTest = handlers; // lets the automated test call handlers directly from the worker
 

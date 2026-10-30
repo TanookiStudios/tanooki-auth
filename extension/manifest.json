@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "description": "Fills two-factor codes from the Tanooki Auth desktop app, or from your phone, only on the website each account belongs to.",
   "permissions": [
-    "storage"
+    "storage",
+    "contextMenus"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -15,6 +16,7 @@
       "jsqr.js",
       "lookalike.js",
       "link.js",
+      "login.js",
       "sw.js"
     ]
   },
