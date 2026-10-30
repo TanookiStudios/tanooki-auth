@@ -161,9 +161,10 @@ public static class Fg {
   [DllImport("user32.dll")] public static extern void keybd_event(byte k, byte s, uint f, UIntPtr e);
 }
 "@
-# Windows only lets a window take the front after a key press, so tap Alt first (the usual workaround).
+# Windows only lets a window take the front after a key press, so tap F24 first. Not Alt: a lone Alt tap puts the
+# window in menu mode, which eats the next key typed.
 $form.Add_Shown({
-  [Fg]::keybd_event(0x12, 0, 0, [UIntPtr]::Zero); [Fg]::keybd_event(0x12, 0, 2, [UIntPtr]::Zero)
+  [Fg]::keybd_event(0x87, 0, 0, [UIntPtr]::Zero); [Fg]::keybd_event(0x87, 0, 2, [UIntPtr]::Zero)
   [Fg]::SetForegroundWindow($form.Handle) | Out-Null
   $box.Focus() | Out-Null
   [IO.File]::WriteAllText("$Out.ready", "shown front=$([Fg]::GetForegroundWindow() -eq $form.Handle)")
