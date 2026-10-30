@@ -334,7 +334,7 @@ class _SyncScreenState extends State<SyncScreen> {
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const Text('Sync is part of Premium', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
             const SizedBox(height: 8),
-            Text('Add an account on one device and it shows up on all of them, end-to-end encrypted. \$5 once, no subscription.',
+            Text('Add an account on one device and it shows up on all of them, end-to-end encrypted. $payOnce, no subscription.',
                 style: TextStyle(color: Palette.muted, height: 1.4)),
             const SizedBox(height: 12),
             FilledButton(

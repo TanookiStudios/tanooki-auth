@@ -1,0 +1,55 @@
+{
+  "identifier" : "6A1F0C2E",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "4.99",
+      "familyShareable" : false,
+      "internalID" : "6828300001",
+      "localizations" : [
+        {
+          "description" : "Every theme, sync, and every future Premium feature. Pay once.",
+          "displayName" : "Tanooki Auth Premium",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.tanookistudios.auth.premium",
+      "referenceName" : "Premium",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "9.99",
+      "familyShareable" : true,
+      "internalID" : "6828300002",
+      "localizations" : [
+        {
+          "description" : "Premium for up to 5 people. Pay once.",
+          "displayName" : "Tanooki Auth Premium Family",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.tanookistudios.auth.family",
+      "referenceName" : "Family",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6828230444",
+    "_developerTeamID" : "NPT8NXJ7C8",
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+
+    ]
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

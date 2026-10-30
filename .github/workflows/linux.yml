@@ -4,7 +4,7 @@ name: Linux
 # (gnome-keyring over libsecret, under a virtual screen), a release build, and .deb + AppImage.
 on:
   push:
-    branches: [main, platforms-day]
+    branches: [main, platforms-day, pay-day]
   workflow_dispatch:
 
 jobs:
