@@ -63,6 +63,7 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
+  msix: ^3.18.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -125,3 +126,17 @@ flutter_launcher_icons:
     generate: true
     image_path: assets/icon/icon-rounded.png
     icon_size: 256
+
+# Microsoft Store package (MSIX). The three identity values below are placeholders: the
+# Windows workflow overrides them from the MSIX_IDENTITY_NAME, MSIX_PUBLISHER and
+# MSIX_PUBLISHER_DISPLAY_NAME repository variables once Partner Center gives them out
+# (see store/microsoft-store.md). Build: dart run msix:create --store
+msix_config:
+  display_name: Tanooki Auth
+  identity_name: TanookiStudios.TanookiAuth
+  publisher: CN=00000000-0000-0000-0000-000000000000
+  publisher_display_name: Tanooki Studios
+  logo_path: assets/icon/icon-rounded.png
+  capabilities: internetClient
+  store: true
+  build_windows: false
