@@ -13,6 +13,7 @@ import 'backup_ui.dart';
 import 'home.dart';
 import 'premium.dart';
 import 'security_ui.dart';
+import 'sync_ui.dart' show syncAndLinkSection;
 import 'theme.dart';
 import 'trash.dart';
 
@@ -338,7 +339,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: ListTile(
           leading: Icon(premium.value ? Icons.workspace_premium : Icons.workspace_premium_outlined, color: Palette.accent),
           title: Text(premium.value ? 'Premium: thank you!' : 'Get Premium'),
-          subtitle: Text(premium.value ? 'Every theme and future Premium feature is yours.' : '\$5 once: every theme, cloud sync when it arrives, and more.'),
+          subtitle: Text(premium.value ? 'Every theme and future Premium feature is yours.' : '\$5 once: every theme, sync across your devices, and more.'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () async {
             await Navigator.push(context, MaterialPageRoute(builder: (_) => PremiumScreen(vault: widget.vault)));
@@ -453,6 +454,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           ..._premiumAndAppearance(),
           ..._listSection(),
+          ...syncAndLinkSection(context, widget.vault, () => setState(() {})),
           const Padding(
             padding: EdgeInsets.fromLTRB(4, 0, 4, 8),
             child: CapsLabel('Security'),

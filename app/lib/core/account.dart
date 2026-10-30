@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'totp.dart';
 
 enum OtpType { totp, hotp }
@@ -23,10 +25,12 @@ class Account {
     this.lastUsedAt,
     this.iconDomain,
     this.deletedAt,
+    DateTime? updatedAt,
   })  : domains = domains ?? [],
         tags = tags ?? [],
         recoveryCodes = recoveryCodes ?? [],
-        createdAt = createdAt ?? DateTime.now().toUtc();
+        createdAt = createdAt ?? DateTime.now().toUtc(),
+        updatedAt = updatedAt ?? createdAt ?? DateTime.now().toUtc();
 
   final String id;
   final OtpType type;
@@ -49,6 +53,8 @@ class Account {
   String? iconDomain;
   /// Set when moved to Trash. Trashed accounts are hidden everywhere except the Trash screen.
   DateTime? deletedAt;
+  /// Last change to anything that syncs. Stamped by [Vault.save]; sync keeps whichever copy is newest.
+  DateTime updatedAt;
 
   bool get trashed => deletedAt != null;
 
@@ -80,7 +86,15 @@ class Account {
         'lastUsedAt': lastUsedAt?.toIso8601String(),
         'iconDomain': iconDomain,
         'deletedAt': deletedAt?.toIso8601String(),
+        'updatedAt': updatedAt.toIso8601String(),
       };
+
+  /// Everything a sync merge compares: the JSON minus per-device details (list position, last used)
+  /// and the timestamp itself.
+  String get syncContent => jsonEncode(toJson()
+    ..remove('order')
+    ..remove('lastUsedAt')
+    ..remove('updatedAt'));
 
   factory Account.fromJson(Map<String, dynamic> j) => Account(
         id: j['id'] as String,
@@ -105,6 +119,7 @@ class Account {
         lastUsedAt: _date(j['lastUsedAt']),
         iconDomain: j['iconDomain'] as String?,
         deletedAt: _date(j['deletedAt']),
+        updatedAt: _date(j['updatedAt']) ?? DateTime.parse(j['createdAt'] as String),
       );
 }
 

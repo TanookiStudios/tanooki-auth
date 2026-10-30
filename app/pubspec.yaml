@@ -46,6 +46,9 @@ dependencies:
   share_plus: ^13.3.1
   url_launcher: ^6.3.3
   pdf: ^3.13.1
+  # iCloud Drive sync folder and the iPhone notification token (packages/tanooki_cloud).
+  tanooki_cloud:
+    path: packages/tanooki_cloud
 
 dev_dependencies:
   flutter_test:

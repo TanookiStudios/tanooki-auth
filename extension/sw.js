@@ -1,5 +1,5 @@
 // Chrome runs this as a service worker; Firefox and Safari load the same files as background scripts (see manifest).
-if (typeof importScripts === 'function') importScripts('jsqr.js', 'lookalike.js');
+if (typeof importScripts === 'function') importScripts('jsqr.js', 'lookalike.js', 'link.js');
 
 // Talks to the Tanooki Auth desktop app over 127.0.0.1 only. Holds the pairing token;
 // never sees a secret, only the current code for one account at a time.
@@ -108,12 +108,51 @@ async function setBadge(tabId, text) {
   await chrome.action.setBadgeText({ tabId, text });
 }
 
+// --- "Use my phone": when the desktop app isn't running, ask the paired phone instead (link.js). ---
+
+const phone = tanookiLink.makeLink({
+  storage: {
+    get: async () => (await chrome.storage.local.get('link')).link || null,
+    set: (link) => chrome.storage.local.set({ link }),
+    clear: () => chrome.storage.local.remove('link'),
+  },
+});
+const phoneAsks = new Map(); // host -> pending request, so busy pages don't send the same request twice
+const phoneQuiet = new Map(); // host -> time; after a Deny or no answer, pages don't ask again for 2 minutes
+
+/** A code from the phone for [host]. Fills nothing itself; checks the phone's account is saved for this site. */
+async function phoneCode(host, framesAbove = [], { auto = false } = {}) {
+  if (!host) throw new AppError('badPage', 'Codes can only be filled on websites.');
+  // Don't make the phone buzz for a page framed inside some other site.
+  if (!framesAbove.every((h) => hostMatches(h, host) || hostMatches(host, h))) throw new AppError('framed', 'This page is inside another website, so Tanooki Auth won\'t fill it.');
+  if (auto && phoneQuiet.get(host) > Date.now()) throw new AppError('quiet', 'Asked your phone a moment ago.');
+  if (!phoneAsks.has(host)) {
+    phoneAsks.set(host, phone.requestCode(host).finally(() => phoneAsks.delete(host)));
+  }
+  let r;
+  try {
+    r = await phoneAsks.get(host);
+  } catch (e) {
+    phoneQuiet.set(host, Date.now() + 120000);
+    throw new AppError(e.code || 'phone', e.message);
+  }
+  // The phone only offers accounts saved for this site, but check again here: never fill a code on any
+  // site but the one its account is saved for, or anywhere framed by another site, or on a lookalike.
+  const domain = r.domain.toLowerCase();
+  if (!hostMatches(host, domain) || !framesAbove.every((h) => hostMatches(h, domain))) {
+    throw new AppError('wrongSite', `Your phone sent a code for ${domain || 'another website'}, which isn't this page. Nothing was filled.`);
+  }
+  const lookalike = tanookiLookalike.lookalikeOf(host, [domain]);
+  if (lookalike) throw lookalikeError(lookalike);
+  return { ...r, domain };
+}
+
 const handlers = {
   async status() {
     try {
       await call({ type: 'ping' });
     } catch (e) {
-      return { state: e.code === 'locked' ? 'locked' : 'noApp', message: e.message };
+      return { state: e.code === 'locked' ? 'locked' : 'noApp', message: e.message, phone: await phone.status() };
     }
     const { token } = await chrome.storage.local.get('token');
     if (!token) return { state: 'notPaired' };
@@ -183,7 +222,16 @@ const handlers = {
     const host = hostOf(sender.url);
     // Some browsers (older Firefox) have no location.ancestorOrigins, so also check the tab's own address.
     const above = [...(ancestorHosts || []), hostOf(sender.tab?.url || sender.url)].map((h) => h.replace(/^www\./, ''));
-    const { matches, lookalike } = await accountsFor(host, above);
+    let found;
+    try {
+      found = await accountsFor(host, above);
+    } catch (e) {
+      // Desktop app not running: ask the paired phone, if there is one.
+      if (e.code !== 'noApp' || !(await phone.status()).paired) throw e;
+      const r = await phoneCode(host, above, { auto: true });
+      return { code: r.code, account: { issuer: r.issuer } };
+    }
+    const { matches, lookalike } = found;
     await setBadge(sender.tab?.id, lookalike ? '!' : matches.length > 1 ? String(matches.length) : '');
     if (lookalike) return { count: 0, lookalike, message: lookalikeError(lookalike).message };
     if (matches.length !== 1) return { count: matches.length };
@@ -224,6 +272,32 @@ const handlers = {
       throw new AppError('noField', 'Couldn\'t find the code box on this page. Click into the box and try again, or use Copy and paste.');
     }
     return { ok: true };
+  },
+
+  async phoneStart() {
+    return phone.startPairing();
+  },
+
+  async phoneCheck() {
+    return phone.checkPairing();
+  },
+
+  async phoneUnpair() {
+    await phone.unpair();
+    return { ok: true };
+  },
+
+  // Popup "Get code from my phone": ask, then fill the tab (the content script checks every frame's site).
+  async phoneFillTab({ tabId, tabUrl }) {
+    const host = hostOf(tabUrl);
+    const r = await phoneCode(host);
+    let reply = null;
+    try {
+      reply = await chrome.tabs.sendMessage(tabId, { type: 'fill', code: r.code, domain: r.domain, issuer: r.issuer });
+    } catch {
+      // No page script (page opened before the extension loaded): the popup still shows the code to copy.
+    }
+    return { code: r.code, issuer: r.issuer, domain: r.domain, filled: !!reply?.filled };
   },
 
   // Content script found a setup QR code and the user clicked "Add to Tanooki Auth".

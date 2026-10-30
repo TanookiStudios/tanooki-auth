@@ -111,8 +111,10 @@ class _PremiumScreenState extends State<PremiumScreen> {
                   child: Column(children: [
                     perk(Icons.palette_outlined, 'Every Premium theme',
                         'Pastel Pink, Pastel Blue, Lavender, Mint and Midnight, plus every theme added later.'),
-                    perk(Icons.sync, 'Cloud sync, when it arrives',
-                        'Add an account on one device and see it on all of them, end-to-end encrypted. Included at no extra cost once it launches.'),
+                    perk(Icons.sync, 'Sync across your devices',
+                        'Add an account on one device and see it on all of them, end-to-end encrypted. Through iCloud on Apple devices, or the Tanooki relay for any mix.'),
+                    perk(Icons.phonelink_lock_outlined, 'Approve codes from your phone',
+                        'Use the browser extension on any computer: it asks your phone, you tap Approve, and the code fills in.'),
                     perk(Icons.auto_awesome_outlined, 'Every future Premium feature',
                         'Pay once and get whatever Premium grows into. No subscription, ever.'),
                     perk(Icons.favorite_outline, 'Keeps privacy apps free',

@@ -13,6 +13,7 @@ import 'ui/add.dart';
 import 'ui/backup_ui.dart';
 import 'ui/brand_icon.dart';
 import 'ui/home.dart';
+import 'ui/phone_link_ui.dart' show resumeSyncAndLink, startSyncAndLink, stopSyncAndLink;
 import 'ui/premium.dart';
 import 'ui/security_ui.dart';
 import 'ui/settings.dart';
@@ -264,6 +265,7 @@ class _GateState extends State<Gate> implements BridgeHost {
 
   @override
   void dispose() {
+    stopSyncAndLink();
     activeBridge?.stop();
     activeBridge = null;
     _lifecycle.dispose();
@@ -308,6 +310,7 @@ class _GateState extends State<Gate> implements BridgeHost {
       _pin.clear();
       _pinError = null;
     });
+    if (mounted) startSyncAndLink(context, v, bringToFront);
     if (v != _real) return;
     if (v.settings[kitShownKey] != true) {
       v.settings[kitShownKey] = true;
@@ -402,8 +405,10 @@ class _GateState extends State<Gate> implements BridgeHost {
     } else if (state == AppLifecycleState.resumed) {
       final away = _backgroundedAt;
       _backgroundedAt = null;
+      if (!_locked && away != null) resumeSyncAndLink();
       if (!_locked && away != null && _real != null && shouldRelock(_real!.settings, DateTime.now().difference(away))) {
         setState(() => _locked = true);
+        stopSyncAndLink();
         if (_biometricOn) _unlock();
       }
     }

@@ -32,6 +32,9 @@
 		4C6B528B30942B0900469615 /* jsqr.LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528030942B0900469615 /* jsqr.LICENSE */; };
 		4C6B528C30942B0900469615 /* popup.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528130942B0900469615 /* popup.js */; };
 		4C6B528E30942B0900469615 /* lookalike.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528330942B0900469615 /* lookalike.js */; };
+		A111111111111111111111A1 /* link.js in Resources */ = {isa = PBXBuildFile; fileRef = A100000000000000000000A1 /* link.js */; };
+		A211111111111111111111A2 /* qrcode.js in Resources */ = {isa = PBXBuildFile; fileRef = A200000000000000000000A2 /* qrcode.js */; };
+		A311111111111111111111A3 /* qrcode.LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = A300000000000000000000A3 /* qrcode.LICENSE */; };
 		4C6B528F30942B0900469615 /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528430942B0900469615 /* popup.html */; };
 		4C6B529030942B0900469615 /* jsqr.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528530942B0900469615 /* jsqr.js */; };
 		4C6B529230942B0900469615 /* icons in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528730942B0900469615 /* icons */; };
@@ -41,6 +44,9 @@
 		4C6B529630942B0900469615 /* jsqr.LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528030942B0900469615 /* jsqr.LICENSE */; };
 		4C6B529730942B0900469615 /* popup.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528130942B0900469615 /* popup.js */; };
 		4C6B529930942B0900469615 /* lookalike.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528330942B0900469615 /* lookalike.js */; };
+		A122222222222222222222A1 /* link.js in Resources */ = {isa = PBXBuildFile; fileRef = A100000000000000000000A1 /* link.js */; };
+		A222222222222222222222A2 /* qrcode.js in Resources */ = {isa = PBXBuildFile; fileRef = A200000000000000000000A2 /* qrcode.js */; };
+		A322222222222222222222A3 /* qrcode.LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = A300000000000000000000A3 /* qrcode.LICENSE */; };
 		4C6B529A30942B0900469615 /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528430942B0900469615 /* popup.html */; };
 		4C6B529B30942B0900469615 /* jsqr.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528530942B0900469615 /* jsqr.js */; };
 		4C6B529D30942B0900469615 /* icons in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528730942B0900469615 /* icons */; };
@@ -112,6 +118,9 @@
 		4C6B528030942B0900469615 /* jsqr.LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; name = jsqr.LICENSE; path = ../../../extension/jsqr.LICENSE; sourceTree = "<group>"; };
 		4C6B528130942B0900469615 /* popup.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = popup.js; path = ../../../extension/popup.js; sourceTree = "<group>"; };
 		4C6B528330942B0900469615 /* lookalike.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = lookalike.js; path = ../../../extension/lookalike.js; sourceTree = "<group>"; };
+		A100000000000000000000A1 /* link.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = link.js; path = ../../../extension/link.js; sourceTree = "<group>"; };
+		A200000000000000000000A2 /* qrcode.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = qrcode.js; path = ../../../extension/qrcode.js; sourceTree = "<group>"; };
+		A300000000000000000000A3 /* qrcode.LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; name = qrcode.LICENSE; path = ../../../extension/qrcode.LICENSE; sourceTree = "<group>"; };
 		4C6B528430942B0900469615 /* popup.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = popup.html; path = ../../../extension/popup.html; sourceTree = "<group>"; };
 		4C6B528530942B0900469615 /* jsqr.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = jsqr.js; path = ../../../extension/jsqr.js; sourceTree = "<group>"; };
 		4C6B528730942B0900469615 /* icons */ = {isa = PBXFileReference; lastKnownFileType = folder; name = icons; path = ../../../extension/icons; sourceTree = "<group>"; };
@@ -242,6 +251,9 @@
 				4C6B528030942B0900469615 /* jsqr.LICENSE */,
 				4C6B528130942B0900469615 /* popup.js */,
 				4C6B528330942B0900469615 /* lookalike.js */,
+				A100000000000000000000A1 /* link.js */,
+				A200000000000000000000A2 /* qrcode.js */,
+				A300000000000000000000A3 /* qrcode.LICENSE */,
 				4C6B528430942B0900469615 /* popup.html */,
 				4C6B528530942B0900469615 /* jsqr.js */,
 				4C6B528730942B0900469615 /* icons */,
@@ -406,6 +418,9 @@
 				4C6B529E30942B0900469615 /* manifest.json in Resources */,
 				4C6B529730942B0900469615 /* popup.js in Resources */,
 				4C6B529930942B0900469615 /* lookalike.js in Resources */,
+				A122222222222222222222A1 /* link.js in Resources */,
+				A222222222222222222222A2 /* qrcode.js in Resources */,
+				A322222222222222222222A3 /* qrcode.LICENSE in Resources */,
 			);
 		};
 		4C6B525930942B0900469615 /* Resources */ = {
@@ -420,6 +435,9 @@
 				4C6B529330942B0900469615 /* manifest.json in Resources */,
 				4C6B528C30942B0900469615 /* popup.js in Resources */,
 				4C6B528E30942B0900469615 /* lookalike.js in Resources */,
+				A111111111111111111111A1 /* link.js in Resources */,
+				A211111111111111111111A2 /* qrcode.js in Resources */,
+				A311111111111111111111A3 /* qrcode.LICENSE in Resources */,
 			);
 		};
 /* End PBXResourcesBuildPhase section */

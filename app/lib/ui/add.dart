@@ -344,7 +344,11 @@ class _AddScreenState extends State<AddScreen> {
 }
 
 class ScanScreen extends StatefulWidget {
-  const ScanScreen({super.key});
+  const ScanScreen({super.key, this.prefixes = const ['otpauth://', 'otpauth-migration://'], this.title = 'Scan QR code', this.wrongCode = 'That QR code isn\'t a two-factor setup code.'});
+  /// QR codes this scan accepts; anything else shows [wrongCode].
+  final List<String> prefixes;
+  final String title;
+  final String wrongCode;
 
   @override
   State<ScanScreen> createState() => _ScanScreenState();
@@ -359,19 +363,19 @@ class _ScanScreenState extends State<ScanScreen> {
     for (final b in capture.barcodes) {
       final v = b.rawValue;
       if (v == null) continue;
-      if (v.startsWith('otpauth://') || v.startsWith('otpauth-migration://')) {
+      if (widget.prefixes.any(v.startsWith)) {
         _done = true;
         Navigator.pop(context, v);
         return;
       }
-      setState(() => _hint = 'That QR code isn\'t a two-factor setup code.');
+      setState(() => _hint = widget.wrongCode);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan QR code')),
+      appBar: AppBar(title: Text(widget.title)),
       body: Stack(children: [
         MobileScanner(
           onDetect: _onDetect,

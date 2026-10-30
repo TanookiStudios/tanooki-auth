@@ -228,7 +228,7 @@ Receivers **must** drop a message whose `ts` is more than 120 s old or 30 s in t
 |---|---|---|
 | `hello` | phone → ext | `device` (display name, e.g. "Maddie's iPhone") |
 | `fill-request` | ext → phone | `host` (page host, e.g. `github.com`), optional `accountHint` |
-| `code` | phone → ext | `re` (the request `id`), `code` (digits), optional `expiresIn` (seconds left in the period) |
+| `code` | phone → ext | `re` (the request `id`), `code` (digits), optional `expiresIn` (seconds left in the period); the app also sends `domain` (the account's saved domain that matched `host`) and `issuer`, and the extension fills only when the page is on `domain` |
 | `deny` | phone → ext | `re` |
 
 Flow: extension sends `fill-request` with `notify: true` → phone shows Approve / Deny for `host` → on Approve

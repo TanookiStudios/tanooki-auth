@@ -3,6 +3,7 @@
 # into a temp folder with the bridge ports moved from 4198x/4199x to 5198x/5199x, so the test
 # never talks to the real app. Usage (repo root): extension/test/isolated.sh
 # ENGINE=firefox extension/test/isolated.sh runs it in Firefox.
+# SCRIPT=phone-e2e.cjs extension/test/isolated.sh runs the "Use my phone" test instead (no app reachable).
 set -euo pipefail
 root="$(cd "$(dirname "$0")/../.." && pwd)"
 tmp="$(mktemp -d)"
@@ -16,6 +17,7 @@ if [ "${ENGINE:-}" = firefox ]; then
   python3 - "$tmp/app/lib/bridge/server.dart" <<'PY'
 import sys
 p = sys.argv[1]; s = open(p).read()
+if '(moz|' in s: sys.exit(0)  # the bridge accepts Firefox itself since Phase C
 old = "r'^chrome-extension://[a-p]{32}$'"
 assert old in s, 'origin check not found in server.dart; update isolated.sh'
 s = s.replace(old, "r'^(chrome-extension://[a-p]{32}|moz-extension://[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$'")
@@ -24,4 +26,4 @@ PY
 fi
 (cd "$tmp/app" && flutter pub get >/dev/null)
 EXT_DIR="$tmp/extension" APP_DIR="$tmp/app" BRIDGE_PORT=51984 NODE_PATH="${NODE_PATH:-$(npm root -g)}" \
-  node "$root/extension/test/e2e.cjs" "$@"
+  node "$root/extension/test/${SCRIPT:-e2e.cjs}" "$@"

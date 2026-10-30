@@ -61,8 +61,8 @@ void main() {
     ]) {
       final a = parseOtpauthUri(src);
       final b = parseOtpauthUri(toOtpauthUri(a));
-      expect(b.toJson()..remove('id')..remove('createdAt'),
-          a.toJson()..remove('id')..remove('createdAt'));
+      expect(b.toJson()..remove('id')..remove('createdAt')..remove('updatedAt'),
+          a.toJson()..remove('id')..remove('createdAt')..remove('updatedAt'));
     }
   });
 }
