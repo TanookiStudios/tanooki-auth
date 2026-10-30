@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tanooki_auth/core/account.dart';
+import 'package:tanooki_auth/core/share.dart';
 import 'package:tanooki_auth/core/vault.dart';
 import 'package:tanooki_auth/ui/add.dart';
 import 'package:tanooki_auth/ui/theme.dart';
@@ -37,5 +39,19 @@ void main() {
     expect(find.text('Added 2, skipped 1.'), findsOneWidget);
     expect(find.text('• Line 2: That is not an otpauth:// link.'), findsOneWidget);
     expect(vault.live.map((a) => a.issuer), ['GitHub', 'Discord']);
+  });
+
+  testWidgets('a tapped shared-account file opens the code prompt; any other file says so', (t) async {
+    final dir = Directory.systemTemp.createTempSync('share_file_test');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final vault = Vault(File('${dir.path}/vault.json'), MemoryKeyStore()..value = base64.encode(List.filled(32, 3)));
+    final share = (await t.runAsync(() => createShare(Account(id: 's', issuer: 'Shared', secret: 'JBSWY3DPEHPK3PXP'))))!;
+    await t.pumpWidget(MaterialApp(theme: buildTheme(darkPalette), home: AddScreen(vault: vault, sharedFile: share.text)));
+    await t.pumpAndSettle();
+    expect(find.text('Type the 6-digit code the person who shared it gave you.'), findsOneWidget);
+
+    await t.pumpWidget(MaterialApp(theme: buildTheme(darkPalette), home: AddScreen(key: UniqueKey(), vault: vault, sharedFile: 'just some PDF bytes')));
+    await t.pumpAndSettle();
+    expect(find.text('That file isn\'t a Tanooki Auth shared account. Ask the person to share it again.'), findsOneWidget);
   });
 }

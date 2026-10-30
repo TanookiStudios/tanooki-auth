@@ -49,6 +49,26 @@ final class Extras: NSObject, FlutterSceneLifeCycleDelegate, WCSessionDelegate {
       case "takeAction":
         result(self.pendingAction)
         self.pendingAction = nil
+      case "getAppIcon":
+        // Alternate icon sets are named AppIcon-<id> in Assets.xcassets; nil is the main icon.
+        result(UIApplication.shared.alternateIconName.map { String($0.dropFirst("AppIcon-".count)) } ?? "default")
+      case "setAppIcon":
+        let id = call.arguments as? String ?? "default"
+        guard UIApplication.shared.supportsAlternateIcons else {
+          return result(FlutterError(code: "unsupported", message: nil, details: nil))
+        }
+        // iOS shows its own "You have changed the icon" alert; that's expected.
+        UIApplication.shared.setAlternateIconName(id == "default" ? nil : "AppIcon-\(id)") { error in
+          DispatchQueue.main.async {
+            if let error {
+              NSLog("TanookiAppIcon failed: %@", error.localizedDescription)
+              result(FlutterError(code: "failed", message: error.localizedDescription, details: nil))
+            } else {
+              NSLog("TanookiAppIcon set: %@", id)
+              result(nil)
+            }
+          }
+        }
       #if DEBUG
       case "debugWidgetCodes":
         // Test-only: the codes the widgets would show right now, worked out by the widget code (never secrets).
@@ -70,6 +90,16 @@ final class Extras: NSObject, FlutterSceneLifeCycleDelegate, WCSessionDelegate {
   // MARK: Control Center button -> tanookiauth://scan
 
   private func handle(_ urls: Set<UIOpenURLContext>) -> Bool {
+    if let file = urls.first(where: { $0.url.isFileURL && $0.url.pathExtension == "tanookishare" })?.url {
+      // A shared account file tapped in Files, Mail or Messages: hand its text to the "Open a shared
+      // account" flow. iOS copies it into our Inbox; delete that copy once read.
+      let text = (try? String(contentsOf: file, encoding: .utf8)) ?? ""
+      try? FileManager.default.removeItem(at: file)
+      NSLog("TanookiShareFile: opened %ld bytes", text.utf8.count)
+      pendingAction = "share:" + text
+      channel?.invokeMethod("action", arguments: nil)
+      return true
+    }
     guard urls.contains(where: { $0.url.scheme == "tanookiauth" && $0.url.host == "scan" }) else { return false }
     pendingAction = "scan"
     channel?.invokeMethod("action", arguments: nil)

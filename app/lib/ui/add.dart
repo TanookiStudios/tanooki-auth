@@ -85,10 +85,12 @@ Future<bool> showAccountDialog(BuildContext context, Account a,
 }
 
 class AddScreen extends StatefulWidget {
-  const AddScreen({super.key, required this.vault, this.scanOnOpen = false});
+  const AddScreen({super.key, required this.vault, this.scanOnOpen = false, this.sharedFile});
   final Vault vault;
   /// Opens the camera straight away (from the Control Center button or quick settings tile).
   final bool scanOnOpen;
+  /// The text of a shared-account file the person tapped in another app; opened straight away.
+  final String? sharedFile;
 
   @override
   State<AddScreen> createState() => _AddScreenState();
@@ -99,6 +101,12 @@ class _AddScreenState extends State<AddScreen> {
   void initState() {
     super.initState();
     if (widget.scanOnOpen) WidgetsBinding.instance.addPostFrameCallback((_) => _scan());
+    final shared = widget.sharedFile;
+    if (shared != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => shared.trim().startsWith(sharePrefix)
+          ? _fromText(shared)
+          : _say('That file isn\'t a Tanooki Auth shared account. Ask the person to share it again.'));
+    }
   }
 
   void _say(String msg) => ScaffoldMessenger.of(context)

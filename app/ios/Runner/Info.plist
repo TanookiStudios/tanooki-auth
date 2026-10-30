@@ -43,6 +43,43 @@
 			</array>
 		</dict>
 	</array>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Tanooki Auth shared account</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.tanookistudios.auth.share</string>
+			</array>
+		</dict>
+	</array>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<false/>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Tanooki Auth shared account</string>
+			<key>UTTypeIdentifier</key>
+			<string>com.tanookistudios.auth.share</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>tanookishare</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
 	<key>TAKeychainGroup</key>
 	<string>$(AppIdentifierPrefix)com.tanookistudios.auth.shared</string>
 	<key>UIApplicationSceneManifest</key>

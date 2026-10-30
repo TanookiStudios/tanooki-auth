@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 
 import '../bridge/server.dart';
@@ -10,6 +11,7 @@ import '../core/vault.dart';
 import '../core/widget_share.dart';
 import '../main.dart' show createDecoyVault, deleteDecoyVault, isDecoyVault;
 import 'about_maddie.dart';
+import 'app_icon.dart';
 import 'backup_ui.dart';
 import 'home.dart';
 import 'premium.dart';
@@ -34,6 +36,85 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     _tick = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
+    if (appIconsSupported) currentAppIcon(widget.vault).then((id) => mounted ? setState(() => _appIcon = id) : null);
+  }
+
+  String _appIcon = 'default';
+
+  Future<void> _pickAppIcon(String id) async {
+    if (id == _appIcon) return;
+    if (!premium.value) {
+      await Navigator.push(context, MaterialPageRoute(builder: (_) => PremiumScreen(vault: widget.vault)));
+      if (!premium.value || !mounted) return setState(() {});
+    }
+    try {
+      await setAppIcon(widget.vault, id);
+    } on PlatformException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Couldn\'t change the app icon${e.message == null ? '' : ' (${e.message})'}. Try again, or restart the app.')));
+      return;
+    }
+    if (mounted) setState(() => _appIcon = id);
+  }
+
+  Widget _appIconPicker() {
+    Widget tile(String id, String name) {
+      final selected = _appIcon == id;
+      final locked = !premium.value;
+      return Semantics(
+        button: true,
+        selected: selected,
+        label: '$name app icon${locked ? ', Premium' : ''}',
+        excludeSemantics: true,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () => _pickAppIcon(id),
+          child: SizedBox(
+            width: 72,
+            child: Column(children: [
+              Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: selected ? Palette.accent : Colors.transparent, width: 2.5),
+                ),
+                child: Stack(alignment: Alignment.center, children: [
+                  Image.asset(appIconAsset(id), width: 58, height: 58),
+                  if (locked && id != 'default') Icon(Icons.lock, size: 16, color: Palette.muted),
+                ]),
+              ),
+              const SizedBox(height: 4),
+              Text(name, textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: Palette.text)),
+            ]),
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(premium.value ? 'App icon' : 'App icon (Premium)', style: const TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 4),
+          Text(
+            Platform.isIOS || Platform.isAndroid
+                ? 'The icon on your home screen.${Platform.isAndroid ? ' It may disappear for a moment while your phone swaps it.' : ''}'
+                : Platform.isMacOS
+                    ? 'Changes the Dock icon while Tanooki Auth is open. Macs can\'t keep a different icon after the app quits, so Finder and Launchpad keep the blue one.'
+                    : 'App icons can be changed on iPhone and Android.',
+            style: TextStyle(color: Palette.muted, height: 1.4),
+          ),
+          if (appIconsSupported) ...[
+            const SizedBox(height: 12),
+            Wrap(spacing: 10, runSpacing: 12, children: [
+              for (final e in appIcons.entries) tile(e.key, e.value),
+            ]),
+          ],
+        ]),
+      ),
+    );
   }
 
   @override
@@ -357,6 +438,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ]),
         ),
       ),
+      const SizedBox(height: 10),
+      _appIconPicker(),
       const SizedBox(height: 20),
     ];
   }

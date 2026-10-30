@@ -32,6 +32,16 @@ class MainFlutterWindow: NSWindow {
           MainFlutterWindow.captureScreens(result)
         case "typeText":
           MainFlutterWindow.typeText(call.arguments as? String ?? "", result)
+        case "setDockIcon":
+          // Premium app icon: changes the Dock icon while the app runs (nil puts the bundle icon back).
+          // macOS has no lasting switch for this, so the app sets it again at every launch.
+          let data = (call.arguments as? FlutterStandardTypedData)?.data
+          let image = data.flatMap(NSImage.init(data:))
+          if data != nil && image == nil {
+            return result(FlutterError(code: "badImage", message: nil, details: nil))
+          }
+          NSApp.applicationIconImage = image
+          result(nil)
         default:
           result(FlutterMethodNotImplemented)
         }

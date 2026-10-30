@@ -11,6 +11,7 @@ import 'core/security.dart';
 import 'core/vault.dart';
 import 'core/widget_share.dart';
 import 'ui/add.dart';
+import 'ui/app_icon.dart';
 import 'ui/backup_ui.dart';
 import 'ui/brand_icon.dart';
 import 'ui/home.dart';
@@ -302,6 +303,7 @@ class _GateState extends State<Gate> implements BridgeHost {
     await publishSharedFavorites(vault);
     _pendingAction = await takePendingAction() ?? _pendingAction;
     await loadPremiumAndTheme(vault);
+    await restoreDockIcon(vault, premium: premium.value);
     await loadBrandIcons();
     await applyScreenshotBlocking(blockScreenshotsOn(vault.settings));
     setState(() {
@@ -347,7 +349,11 @@ class _GateState extends State<Gate> implements BridgeHost {
     final nav = Navigator.of(context);
     nav.popUntil((r) => r.isFirst);
     await nav.push(MaterialPageRoute<void>(
-      builder: (_) => action == 'pick' ? QuickPickScreen(vault: _vault!) : AddScreen(vault: _vault!, scanOnOpen: true),
+      builder: (_) => action == 'pick'
+          ? QuickPickScreen(vault: _vault!)
+          : action.startsWith('share:')
+              ? AddScreen(vault: _vault!, sharedFile: action.substring('share:'.length))
+              : AddScreen(vault: _vault!, scanOnOpen: true),
     ));
     if (mounted) setState(() {});
   }
