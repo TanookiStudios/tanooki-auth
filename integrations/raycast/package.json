@@ -1,0 +1,32 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "tanooki-auth",
+  "title": "Tanooki Auth",
+  "description": "Copy or paste two-factor codes from the Tanooki Auth app.",
+  "icon": "icon.png",
+  "author": "tanookistudios",
+  "categories": ["Security", "Productivity"],
+  "license": "MIT",
+  "platforms": ["macOS"],
+  "commands": [
+    {
+      "name": "search-codes",
+      "title": "Search Codes",
+      "subtitle": "Tanooki Auth",
+      "description": "Search your two-factor accounts and copy or paste the current code.",
+      "mode": "view"
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^1.93.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "@types/react": "^19.0.0",
+    "typescript": "^5.7.0"
+  },
+  "scripts": {
+    "build": "ray build -e dist -o dist",
+    "dev": "ray develop"
+  }
+}
