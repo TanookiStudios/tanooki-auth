@@ -1,8 +1,12 @@
 #!/bin/bash
 # Builds a Developer ID signed, notarized, stapled Tanooki Auth DMG in dist/.
 # Needs: the "Developer ID Application" certificate and a notarytool keychain profile named "notarytool"
-# (the same setup as Maddie's other Mac apps).
+# (the same setup as Maddie's other Mac apps), plus the Developer ID provisioning profile that grants
+# iCloud, saved at ~/.tanooki-auth-signing/mac-developer-id.provisionprofile (made with the App Store Connect key).
+# `--probe-icloud` builds tool/icloud_probe_main.dart instead of the app, signs it the same way, runs it,
+# and stops: proof the signed download can use iCloud Drive. Nothing is notarized or packaged.
 set -euo pipefail
+PROBE=0; [ "${1:-}" = "--probe-icloud" ] && PROBE=1
 cd "$(dirname "$0")/../app"
 # The signing identity is looked up from the keychain, so no name lives in this file.
 ID=$(security find-identity -v -p codesigning | awk -F'"' '/Developer ID Application: .*\(NPT8NXJ7C8\)/ {print $2; exit}')
@@ -11,13 +15,25 @@ VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //; s/+.*//')
 APP="build/macos/Build/Products/Release/Tanooki Auth.app"
 OUT="../dist"; DMG="$OUT/Tanooki-Auth-$VERSION-mac.dmg"
 
-flutter build macos --release
+PROFILE="$HOME/.tanooki-auth-signing/mac-developer-id.provisionprofile"
+[ -f "$PROFILE" ] || { echo "Missing $PROFILE (the iCloud permission file for the Mac download)" >&2; exit 1; }
+
+if [ $PROBE = 1 ]; then flutter build macos --release -t tool/icloud_probe_main.dart; else flutter build macos --release; fi
+cp "$PROFILE" "$APP/Contents/embedded.provisionprofile"
 # Re-sign everything for distribution: hardened runtime, timestamp, no debug entitlements.
 find "$APP/Contents/Frameworks" -depth \( -name "*.framework" -o -name "*.dylib" \) -print0 |
   xargs -0 -I{} codesign --force --options runtime --timestamp --sign "$ID" {}
-codesign --force --options runtime --timestamp --entitlements macos/Runner/Release.entitlements --sign "$ID" "$APP"
+codesign --force --options runtime --timestamp --entitlements macos/Runner/DeveloperID.entitlements --sign "$ID" "$APP"
 codesign --verify --deep --strict "$APP"
 if codesign -d --entitlements - "$APP" 2>/dev/null | grep -q get-task-allow; then echo "debug entitlement leaked into release" >&2; exit 1; fi
+if [ $PROBE = 1 ]; then
+  "$APP/Contents/MacOS/Tanooki Auth" & PID=$!
+  ( sleep 60; kill $PID 2>/dev/null ) & WATCH=$!
+  set +e; wait $PID; CODE=$?; set -e; kill $WATCH 2>/dev/null || true
+  rm -rf "$APP"  # the probe must never be mistaken for the real app
+  [ $CODE = 0 ] && echo "iCloud probe passed" || { echo "iCloud probe failed (exit $CODE)" >&2; exit 1; }
+  exit 0
+fi
 
 mkdir -p "$OUT"; STAGE=$(mktemp -d)
 ditto "$APP" "$STAGE/Tanooki Auth.app"

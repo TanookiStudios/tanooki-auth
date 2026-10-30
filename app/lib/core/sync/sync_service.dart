@@ -46,8 +46,8 @@ class ICloudFolder implements SyncFolder {
     return switch (status) {
       'ok' => null,
       'signedOut' => 'iCloud Drive is off on this device. Sign in to iCloud and turn on iCloud Drive in Settings to use it.',
-      // deferred(icloud-container): needs the iCloud container made in Apple's developer site (Maddie's login),
-      // then the iCloud entitlement added to ios/Runner/Runner.entitlements and the Mac entitlements.
+      // iPhone builds always have iCloud. On Mac only the Developer ID download does (scripts/release-mac.sh);
+      // debug and test builds are ad-hoc signed, and macOS won't open an ad-hoc app that claims iCloud.
       _ => 'iCloud sync isn\'t switched on in this version of Tanooki Auth yet. Use the Tanooki relay for now; it works on every device.',
     };
   }
