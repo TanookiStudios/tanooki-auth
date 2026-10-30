@@ -113,7 +113,10 @@ void main() {
           await t.pump(const Duration(milliseconds: 100));
         }
         step('target window: ${ready.existsSync() ? ready.readAsStringSync() : 'not shown'}');
-        expect(ready.existsSync(), isTrue, reason: 'the target text box window never opened');
+        expect(ready.existsSync() ? ready.readAsStringSync() : 'not shown', contains('front=True'),
+            reason: 'the target text box must be the window in front before Tanooki Auth comes up');
+        await window.invokeMethod<void>('trayClick'); // like the user clicking the tray icon while in the text box
+        await pumpFor(t, const Duration(seconds: 1));
         await awayFromRollover(t);
         final typed = code();
         step('tapping Type');
@@ -131,6 +134,7 @@ void main() {
         step('target output: ${await target.stdout.transform(systemEncoding.decoder).join()} ${await target.stderr.transform(systemEncoding.decoder).join()}');
         await window.invokeMethod<void>('focus');
         await pumpFor(t, const Duration(seconds: 1));
+        step('on screen after: ${find.byType(AlertDialog).evaluate().isEmpty ? 'no dialog' : find.descendant(of: find.byType(AlertDialog), matching: find.byType(Text)).evaluate().map((e) => (e.widget as Text).data).join(' | ')}');
       }
     }
   }, skip: !(Platform.isMacOS || Platform.isWindows), timeout: const Timeout(Duration(minutes: 4)));
@@ -148,7 +152,22 @@ $box = New-Object Windows.Forms.TextBox
 $box.Dock = 'Fill'
 $form.Controls.Add($box)
 $box.Add_TextChanged({ [IO.File]::WriteAllText($Out, $box.Text) })
-$form.Add_Shown({ $form.Activate(); [IO.File]::WriteAllText("$Out.ready", 'shown') })
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+public static class Fg {
+  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
+  [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+  [DllImport("user32.dll")] public static extern void keybd_event(byte k, byte s, uint f, UIntPtr e);
+}
+"@
+# Windows only lets a window take the front after a key press, so tap Alt first (the usual workaround).
+$form.Add_Shown({
+  [Fg]::keybd_event(0x12, 0, 0, [UIntPtr]::Zero); [Fg]::keybd_event(0x12, 0, 2, [UIntPtr]::Zero)
+  [Fg]::SetForegroundWindow($form.Handle) | Out-Null
+  $box.Focus() | Out-Null
+  [IO.File]::WriteAllText("$Out.ready", "shown front=$([Fg]::GetForegroundWindow() -eq $form.Handle)")
+})
 $form.Add_Activated({ $box.Focus() | Out-Null; [IO.File]::AppendAllText("$Out.ready", ' activated') })
 $quit = New-Object Windows.Forms.Timer
 $quit.Interval = 120000
