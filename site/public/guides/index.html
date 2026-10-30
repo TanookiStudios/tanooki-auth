@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Two-factor authentication guides for popular sites | Tanooki Auth</title>
+<meta name="description" content="Step-by-step guides to turn on two-factor authentication with an authenticator app for 40 sites, including 1Password, Akamai Cloud (Linode), Amazon Web Services and more.">
+<link rel="canonical" href="https://auth.tanookistudios.com/guides/">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/favicon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;650&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<link rel="stylesheet" href="/pages.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="container">
+    <nav class="pill" aria-label="Main">
+      <a class="brand" href="/" aria-label="Tanooki Auth home"><img src="/icon.png" alt="" width="28" height="28">Tanooki Auth</a>
+      <ul>
+        <li><a href="/#promise">Privacy</a></li>
+        <li><a href="/#how">How it works</a></li>
+        <li><a href="/#themes">Premium</a></li>
+        <li><a href="/guides/" aria-current="page">Guides</a></li>
+        <li><a href="https://tanookistudios.com/SupportMe">Donate</a></li>
+      </ul>
+      <a class="btn" href="/#download">Download</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="page">
+    <div class="container">
+      <h1>Two-factor guides</h1>
+      <p class="lead">How to turn on two-factor authentication with an authenticator app, site by site. 40 guides so far.</p>
+      <div class="search" role="search" hidden>
+        <label for="q">Find a site</label>
+        <input id="q" type="search" autocomplete="off" placeholder="GitHub, Google, PayPal…">
+      </div>
+      <p id="none" class="block" role="status" aria-live="polite"></p>
+      <div class="letters">
+        <section class="letter" aria-label="Numbers">
+          <h2 aria-hidden="true">#</h2>
+          <ul>
+            <li data-q="1password 1password.com"><a href="/guides/1password/">1Password</a><small>1password.com</small></li>
+          </ul>
+        </section>
+        <section class="letter" aria-label="A">
+          <h2 aria-hidden="true">A</h2>
+          <ul>
+            <li data-q="akamai cloud (linode) linode.com"><a href="/guides/linode/">Akamai Cloud (Linode)</a><small>linode.com</small></li>
+            <li data-q="amazon web services aws.amazon.com"><a href="/guides/aws/">Amazon Web Services</a><small>aws.amazon.com</small></li>
+            <li data-q="atlassian atlassian.com"><a href="/guides/atlassian/">Atlassian</a><small>atlassian.com</small></li>
+          </ul>
+        </section>
+        <section class="letter" aria-label="B">
+          <h2 aria-hidden="true">B</h2>
+          <ul>
+            <li data-q="binance binance.com"><a href="/guides/binance/">Binance</a><small>binance.com</small></li>
+            <li data-q="bitwarden bitwarden.com"><a href="/guides/bitwarden/">Bitwarden</a><small>bitwarden.com</small></li>
+          </ul>
+        </section>
+        <section class="letter" aria-label="C">
+          <h2 aria-hidden="true">C</h2>
+          <ul>
+            <li data-q="cloudflare cloudflare.com"><a href="/guides/cloudflare/">Cloudflare</a><small>cloudflare.com</small></li>
+          </ul>
+        </section>
+        <section class="letter" aria-label="D">
+          <h2 aria-hidden="true">D</h2>
+          <ul>
+            <li data-q="digitalocean digitalocean.com"><a href="/guides/digitalocean/">DigitalOcean</a><small>digitalocean.com</small></li>
+            <li data-q="docker hub docker.com"><a href="/guides/dockerhub/">Docker Hub</a><small>docker.com</small></li>
+            <li data-q="dropbox dropbox.com"><a href="/guides/dropbox/">Dropbox</a><small>dropbox.com</small></li>
+          </ul>
+        </section>
+        <section class="letter" aria-label="E">
+          <h2 aria-hidden="true">E</h2>
+          <ul>
+            <li data-q="etsy etsy.com"><a href="/guides/etsy/">Etsy</a><small>etsy.com</small></li>
+          </ul>
+        </section>
+        <section class="letter" aria-label="F">
+          <h2 aria-hidden="true">F</h2>
+          <ul>
+            <li data-q="facebook facebook.com"><a href="/guides/facebook/">Facebook</a><small>facebook.com</small></li>
+            <li data-q="figma figma.com"><a href="/guides/figma/">Figma</a><small>figma.com</small></li>
+          </ul>
+        </section>
+        <section class="letter" aria-label="G">
+          <h2 aria-hidden="true">G</h2>
+          <ul>
+            <li data-q="github github.com"><a href="/guides/github/">GitHub</a><small>github.com</small></li>
+            <li data-q="gitlab gitlab.com"><a href="/guides/gitlab/">GitLab</a><small>gitlab.com</small></li>
+            <li data-q="google google.com"><a href="/guides/google/">Google</a><small>google.com</small></li>
+          </ul>
+        </section>
+        <section class="letter" aria-label="H">
+          <h2 aria-hidden="true">H</h2>
+          <ul>
+            <li data-q="heroku heroku.com"><a href="/guides/heroku/">Heroku</a><small>heroku.com</small></li>
+          </ul>
+        </section>
+        <section class="letter" aria-label="I">
+          <h2 aria-hidden="true">I</h2>
+          <ul>
+            <li data-q="instagram instagram.com"><a href="/guides/instagram/">Instagram</a><small>instagram.com</small></li>
+          </ul>
+        </section>
+        <section class="letter" aria-label="K">
+          <h2 aria-hidden="true">K</h2>
+          <ul>
+            <li data-q="kraken kraken.com"><a href="/guides/kraken/">Kraken</a><small>kraken.com</small></li>
+          </ul>
+        </section>
+        <section class="letter" aria-label="L">
+          <h2 aria-hidden="true">L</h2>
+          <ul>
+            <li data-q="linkedin linkedin.com"><a href="/guides/linkedin/">LinkedIn</a><small>linkedin.com</small></li>
+          </ul>
+        </section>
+        <section class="letter" aria-label="M">
+          <h2 aria-hidden="true">M</h2>
+          <ul>
+            <li data-q="mailchimp mailchimp.com"><a href="/guides/mailchimp/">Mailchimp</a><small>mailchimp.com</small></li>
+          </ul>
+        </section>
+        <section class="letter" aria-label="N">
+          <h2 aria-hidden="true">N</h2>
+          <ul>
+            <li data-q="namecheap namecheap.com"><a href="/guides/namecheap/">Namecheap</a><small>namecheap.com</small></li>
+            <li data-q="netlify netlify.com"><a href="/guides/netlify/">Netlify</a><small>netlify.com</small></li>
+            <li data-q="nintendo nintendo.com"><a href="/guides/nintendo/">Nintendo</a><small>nintendo.com</small></li>
+            <li data-q="notion notion.com"><a href="/guides/notion/">Notion</a><small>notion.com</small></li>
+          </ul>
+        </section>
+        <section class="letter" aria-label="P">
+          <h2 aria-hidden="true">P</h2>
+          <ul>
+            <li data-q="paypal paypal.com"><a href="/guides/paypal/">PayPal</a><small>paypal.com</small></li>
+            <li data-q="playstation playstation.com"><a href="/guides/playstation/">PlayStation</a><small>playstation.com</small></li>
+            <li data-q="proton proton.me"><a href="/guides/proton/">Proton</a><small>proton.me</small></li>
+          </ul>
+        </section>
+        <section class="letter" aria-label="S">
+          <h2 aria-hidden="true">S</h2>
+          <ul>
+            <li data-q="slack slack.com"><a href="/guides/slack/">Slack</a><small>slack.com</small></li>
+            <li data-q="snapchat snapchat.com"><a href="/guides/snapchat/">Snapchat</a><small>snapchat.com</small></li>
+            <li data-q="squarespace squarespace.com"><a href="/guides/squarespace/">Squarespace</a><small>squarespace.com</small></li>
+            <li data-q="stripe stripe.com"><a href="/guides/stripe/">Stripe</a><small>stripe.com</small></li>
+          </ul>
+        </section>
+        <section class="letter" aria-label="T">
+          <h2 aria-hidden="true">T</h2>
+          <ul>
+            <li data-q="tumblr tumblr.com"><a href="/guides/tumblr/">Tumblr</a><small>tumblr.com</small></li>
+            <li data-q="twilio twilio.com"><a href="/guides/twilio/">Twilio</a><small>twilio.com</small></li>
+            <li data-q="twitch twitch.tv"><a href="/guides/twitch/">Twitch</a><small>twitch.tv</small></li>
+          </ul>
+        </section>
+        <section class="letter" aria-label="V">
+          <h2 aria-hidden="true">V</h2>
+          <ul>
+            <li data-q="vercel vercel.com"><a href="/guides/vercel/">Vercel</a><small>vercel.com</small></li>
+          </ul>
+        </section>
+        <section class="letter" aria-label="W">
+          <h2 aria-hidden="true">W</h2>
+          <ul>
+            <li data-q="wix wix.com"><a href="/guides/wix/">Wix</a><small>wix.com</small></li>
+            <li data-q="wordpress.com wordpress.com"><a href="/guides/wordpress/">WordPress.com</a><small>wordpress.com</small></li>
+          </ul>
+        </section>
+        <section class="letter" aria-label="Y">
+          <h2 aria-hidden="true">Y</h2>
+          <ul>
+            <li data-q="yahoo yahoo.com"><a href="/guides/yahoo/">Yahoo</a><small>yahoo.com</small></li>
+          </ul>
+        </section>
+        <section class="letter" aria-label="Z">
+          <h2 aria-hidden="true">Z</h2>
+          <ul>
+            <li data-q="zoom zoom.us"><a href="/guides/zoom/">Zoom</a><small>zoom.us</small></li>
+          </ul>
+        </section>
+      </div>
+    </div>
+  </section>
+  <script>
+    // Without script every guide shows; with it, the box filters by name or web address and hides empty letters.
+    const form = document.querySelector('.search'), q = document.getElementById('q'), none = document.getElementById('none');
+    form.hidden = false;
+    q.addEventListener('input', () => {
+      const t = q.value.trim().toLowerCase();
+      let shown = 0;
+      document.querySelectorAll('.letter').forEach((sec) => {
+        let n = 0;
+        sec.querySelectorAll('li').forEach((li) => { const hit = li.dataset.q.includes(t); li.hidden = !hit; n += hit; });
+        sec.hidden = !n; shown += n;
+      });
+      none.textContent = shown ? '' : 'No guide for “' + q.value.trim() + '” yet.';
+    });
+  </script>
+
+  <section class="support" aria-labelledby="cta-h">
+    <div class="container">
+      <div>
+        <h2 id="cta-h">Get Tanooki Auth</h2>
+        <p>A free authenticator for Mac, Windows and Android. No account, no cloud.</p>
+      </div>
+      <a class="btn" href="/">Get Tanooki Auth</a>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="container">
+    <p class="mast">Tanooki Auth</p>
+    <nav aria-label="Footer">
+      <ul>
+        <li><a href="/guides/">2FA guides</a></li>
+        <li><a href="/status/">Status</a></li>
+        <li><a href="/press/">Press kit</a></li>
+        <li><a href="https://tanooki-auth-premium.kirbymail.workers.dev/privacy">Privacy policy</a></li>
+        <li><a href="https://github.com/TanookiStudios/tanooki-auth">Source code</a></li>
+        <li><a href="https://tanookistudios.com">Tanooki Studios</a></li>
+        <li><a href="https://tanookistudios.com/SupportMe">Donate</a></li>
+      </ul>
+    </nav>
+    <small>© 2026 Maddie</small>
+  </div>
+</footer>
+</body>
+</html>

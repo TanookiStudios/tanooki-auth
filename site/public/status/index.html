@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Status | Tanooki Auth</title>
+<meta name="description" content="Live status of the Tanooki Auth website, the sync and phone link relay, and the Premium key service, checked from your browser every minute.">
+<link rel="canonical" href="https://auth.tanookistudios.com/status/">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/favicon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;650&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<link rel="stylesheet" href="/pages.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="container">
+    <nav class="pill" aria-label="Main">
+      <a class="brand" href="/" aria-label="Tanooki Auth home"><img src="/icon.png" alt="" width="28" height="28">Tanooki Auth</a>
+      <ul>
+        <li><a href="/#promise">Privacy</a></li>
+        <li><a href="/#how">How it works</a></li>
+        <li><a href="/#themes">Premium</a></li>
+        <li><a href="/guides/">Guides</a></li>
+        <li><a href="https://tanookistudios.com/SupportMe">Donate</a></li>
+      </ul>
+      <a class="btn" href="/#download">Download</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="page">
+    <div class="container">
+      <h1>Status</h1>
+      <p class="lead">Your codes never depend on any of this: they come from your device and work offline. These services only matter for the extras below.</p>
+      <noscript><p class="block">This page checks each service from your browser, so it needs JavaScript turned on.</p></noscript>
+      <dl class="rows block" aria-live="polite">
+        <div><dt>Website</dt><dd><span class="state" id="s-site">Checking…</span><span class="what">This site, auth.tanookistudios.com, where you download the app. <span class="muted" id="t-site"></span></span></dd></div>
+        <div><dt>Sync and phone link</dt><dd><span class="state" id="s-relay">Checking…</span><span class="what">The relay that carries end-to-end encrypted sync between your devices and lets you approve codes from your phone in the browser extension. Premium only. <span class="muted" id="t-relay"></span></span></dd></div>
+        <div><dt>Premium keys</dt><dd><span class="state" id="s-premium">Checking…</span><span class="what">The service that turns a Premium purchase into a license key and checks it. <span class="muted" id="t-premium"></span></span></dd></div>
+      </dl>
+      <p class="muted block">Checked again every 60 seconds while this page is open.</p>
+    </div>
+  </section>
+  <script>
+    const checks = [
+      { id: 'site', url: '/' },
+      { id: 'relay', url: 'https://tanooki-auth-relay.kirbymail.workers.dev/health', json: true },
+      { id: 'premium', url: 'https://tanooki-auth-premium.kirbymail.workers.dev/health', json: true },
+    ];
+    const show = (id, state, word) => {
+      const el = document.getElementById('s-' + id);
+      el.dataset.state = state; el.textContent = word;
+      document.getElementById('t-' + id).textContent = 'Checked at ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' }) + '.';
+    };
+    async function check(c) {
+      if (!navigator.onLine) return show(c.id, 'unknown', 'Can’t check: you’re offline');
+      try {
+        const r = await fetch(c.url, { method: c.json ? 'GET' : 'HEAD', cache: 'no-store', signal: AbortSignal.timeout(10000) });
+        const up = c.json ? r.ok && (await r.json()).ok === true : r.ok;
+        show(c.id, up ? 'up' : 'down', up ? 'Working' : 'Not responding');
+      } catch { show(c.id, 'down', 'Not responding'); }
+    }
+    const run = () => checks.forEach(check);
+    run();
+    setInterval(run, 60000);
+  </script>
+</main>
+
+<footer class="foot">
+  <div class="container">
+    <p class="mast">Tanooki Auth</p>
+    <nav aria-label="Footer">
+      <ul>
+        <li><a href="/guides/">2FA guides</a></li>
+        <li><a href="/status/">Status</a></li>
+        <li><a href="/press/">Press kit</a></li>
+        <li><a href="https://tanooki-auth-premium.kirbymail.workers.dev/privacy">Privacy policy</a></li>
+        <li><a href="https://github.com/TanookiStudios/tanooki-auth">Source code</a></li>
+        <li><a href="https://tanookistudios.com">Tanooki Studios</a></li>
+        <li><a href="https://tanookistudios.com/SupportMe">Donate</a></li>
+      </ul>
+    </nav>
+    <small>© 2026 Maddie</small>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,650 @@
+[
+  {
+    "slug": "github",
+    "name": "GitHub",
+    "domain": "github.com",
+    "officialUrl": "https://docs.github.com/en/authentication/securing-your-account-with-two-factor-authentication-2fa/configuring-two-factor-authentication",
+    "settingsUrl": "https://github.com/settings/security",
+    "steps": [
+      "Click your profile picture, then Settings",
+      "Open Password and authentication",
+      "In the Two-factor authentication section, start the setup and choose the authenticator app option",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "gitlab",
+    "name": "GitLab",
+    "domain": "gitlab.com",
+    "officialUrl": "https://docs.gitlab.com/ee/user/profile/account/two_factor_authentication.html",
+    "settingsUrl": "https://gitlab.com/-/user_settings/two_factor_auth",
+    "steps": [
+      "Click your avatar, then Edit profile, then Access > Password and authentication",
+      "In One-time password authenticator, click Register authenticator",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Enter your current password",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "Your email must be verified first. GitLab also asks for your current password with the code.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "facebook",
+    "name": "Facebook",
+    "domain": "facebook.com",
+    "officialUrl": "https://www.facebook.com/help/148233965247823",
+    "settingsUrl": "https://accountscenter.facebook.com/password_and_security/two_factor",
+    "steps": [
+      "Click your profile picture, then Settings and privacy, then Settings",
+      "In Accounts Center, open Password and security, then Two-factor authentication",
+      "Pick the account, then choose the authentication app option",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "Facebook can also give you 10 recovery login codes.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "instagram",
+    "name": "Instagram",
+    "domain": "instagram.com",
+    "officialUrl": "https://help.instagram.com/1582474155197965",
+    "settingsUrl": "https://accountscenter.instagram.com/password_and_security/two_factor",
+    "steps": [
+      "Open Settings, then Accounts Center",
+      "Tap Password and security, then Two-factor authentication",
+      "Pick your account and choose the authentication app option",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "Shares settings with your Meta Account in Accounts Center.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "google",
+    "name": "Google",
+    "domain": "google.com",
+    "officialUrl": "https://support.google.com/accounts/answer/185839",
+    "settingsUrl": "https://myaccount.google.com/signinoptions/two-step-verification",
+    "steps": [
+      "Open your Google Account and go to Security",
+      "Turn on 2-Step Verification and finish the prompts",
+      "Back on the 2-Step Verification page, choose Authenticator app and tap Set up authenticator",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish"
+    ],
+    "notes": "Google's own page for adding an authenticator app is the same page that turns on 2-Step Verification.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "slack",
+    "name": "Slack",
+    "domain": "slack.com",
+    "officialUrl": "https://slack.com/help/articles/204509068-Set-up-two-factor-authentication",
+    "settingsUrl": "https://my.slack.com/account/settings",
+    "steps": [
+      "Sign in to your workspace and open your Account settings page",
+      "Next to Two-factor Authentication, click Expand, then Set Up Two-Factor Authentication",
+      "Enter your password and click Use an app",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish"
+    ],
+    "notes": "Each workspace needs its own 2FA setup.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "digitalocean",
+    "name": "DigitalOcean",
+    "domain": "digitalocean.com",
+    "officialUrl": "https://docs.digitalocean.com/products/accounts/security/2fa/",
+    "settingsUrl": "https://cloud.digitalocean.com/account/security",
+    "steps": [
+      "Sign in to the control panel and open your account security settings",
+      "Turn on two-factor authentication and choose Authenticator app",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "DigitalOcean also asks you to add a backup method after you set the first one.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "cloudflare",
+    "name": "Cloudflare",
+    "domain": "cloudflare.com",
+    "officialUrl": "https://developers.cloudflare.com/fundamentals/user-profiles/2fa/",
+    "settingsUrl": "https://dash.cloudflare.com/profile/authentication",
+    "steps": [
+      "Go to Profile, then Authentication",
+      "Under Two-Factor Authentication, click Set up",
+      "Under Mobile App Authentication, click Add and enter your Cloudflare password",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "Cloudflare calls the recovery codes backup codes.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "aws",
+    "name": "Amazon Web Services",
+    "domain": "aws.amazon.com",
+    "officialUrl": "https://docs.aws.amazon.com/IAM/latest/UserGuide/enable-virt-mfa-for-root.html",
+    "settingsUrl": "https://console.aws.amazon.com/iam/home#/security_credentials",
+    "steps": [
+      "Sign in to the AWS console and open Security credentials",
+      "Choose to assign an MFA device and pick Authenticator app",
+      "Click Show QR code in the setup wizard",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish"
+    ],
+    "notes": "Shown for the account owner (root) sign-in. AWS asks for two codes in a row; wait for the next code before typing the second.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "bitwarden",
+    "name": "Bitwarden",
+    "domain": "bitwarden.com",
+    "officialUrl": "https://bitwarden.com/help/setup-two-step-login-authenticator/",
+    "settingsUrl": "https://vault.bitwarden.com/#/settings/security/two-factor",
+    "steps": [
+      "Log in to the Bitwarden web app",
+      "Go to Settings, then Security, then Two-step login",
+      "Find Authenticator App and click Manage, then enter your master password",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "Bitwarden also shows a recovery code on the Two-step login screen; save it right away. Don't store this code in Bitwarden itself.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "1password",
+    "name": "1Password",
+    "domain": "1password.com",
+    "officialUrl": "https://support.1password.com/two-factor-authentication/",
+    "settingsUrl": null,
+    "steps": [
+      "Sign in at 1Password.com and click your name, then Manage Account",
+      "Choose More Actions, then Manage Two-Factor Authentication",
+      "Click Set Up App",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish"
+    ],
+    "notes": "Write down the 16-character secret shown next to the QR code and keep it somewhere safe. Use a different app than 1Password to hold this code.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "notion",
+    "name": "Notion",
+    "domain": "notion.com",
+    "officialUrl": "https://www.notion.com/help/two-step-verification",
+    "settingsUrl": null,
+    "steps": [
+      "In Notion, open Settings and click your name",
+      "Under Account security, turn on 2-step verification",
+      "Choose Authenticator",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "Notion asks you to name the method, and shows backup codes with your first method.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "heroku",
+    "name": "Heroku",
+    "domain": "heroku.com",
+    "officialUrl": "https://devcenter.heroku.com/articles/multi-factor-authentication",
+    "settingsUrl": "https://dashboard.heroku.com/account",
+    "steps": [
+      "Open Account Settings",
+      "Click Setup Multi-Factor Authentication",
+      "Next to the authenticator app method, click Add and follow the prompts",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "Heroku recommends adding a second verification method as a backup.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "vercel",
+    "name": "Vercel",
+    "domain": "vercel.com",
+    "officialUrl": "https://vercel.com/docs/two-factor-authentication",
+    "settingsUrl": null,
+    "steps": [
+      "Open your Vercel account settings",
+      "Turn on the two-factor authentication switch and choose Authenticator App",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "atlassian",
+    "name": "Atlassian",
+    "domain": "atlassian.com",
+    "officialUrl": "https://support.atlassian.com/atlassian-account/docs/manage-two-step-verification-for-your-atlassian-account/",
+    "settingsUrl": "https://id.atlassian.com/manage-profile/security",
+    "steps": [
+      "Open your Atlassian account security page and click Manage two-step verification",
+      "Enter your password and click Set up",
+      "Choose the authenticator app method",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish"
+    ],
+    "notes": "Atlassian gives you an emergency recovery key. Save it somewhere safe.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "yahoo",
+    "name": "Yahoo",
+    "domain": "yahoo.com",
+    "officialUrl": "https://help.yahoo.com/kb/SLN5013.html",
+    "settingsUrl": "https://login.yahoo.com/account/security",
+    "steps": [
+      "Open your Yahoo Account Security page",
+      "Under Ways of signing in, click 2-step verification",
+      "Choose Authenticator app and click Continue",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish"
+    ],
+    "notes": "Yahoo needs at least two recovery methods on the account before this option shows up.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "wordpress",
+    "name": "WordPress.com",
+    "domain": "wordpress.com",
+    "officialUrl": "https://wordpress.com/support/security/two-step-authentication/",
+    "settingsUrl": "https://wordpress.com/me/security/two-step",
+    "steps": [
+      "Open Security, then Two-Step Authentication in your WordPress.com account",
+      "Click Set up using an app",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "WordPress.com makes you confirm one backup code to finish.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "dockerhub",
+    "name": "Docker Hub",
+    "domain": "docker.com",
+    "officialUrl": "https://docs.docker.com/security/authentication/2fa/",
+    "settingsUrl": null,
+    "steps": [
+      "Sign in to your Docker account and open your account security settings",
+      "Turn on two-factor authentication",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "Docker gives you one recovery code. After 2FA is on, command-line logins need a personal access token.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "dropbox",
+    "name": "Dropbox",
+    "domain": "dropbox.com",
+    "officialUrl": "https://help.dropbox.com/security/enable-two-step-verification",
+    "settingsUrl": "https://www.dropbox.com/account/security",
+    "steps": [
+      "Log in at dropbox.com (this can't be done in the app)",
+      "Click your avatar, then Settings, then the Security tab",
+      "Switch on 2-factor authentication and re-enter your password",
+      "Choose Use an authenticator app",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "tumblr",
+    "name": "Tumblr",
+    "domain": "tumblr.com",
+    "officialUrl": "https://help.tumblr.com/knowledge-base/two-factor-authentication/",
+    "settingsUrl": "https://www.tumblr.com/settings/account",
+    "steps": [
+      "Open Settings and find the Security section",
+      "Turn on Two-factor authentication and enter your password",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish"
+    ],
+    "notes": "Tumblr backup codes come from the Generate backup codes button in Security.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "proton",
+    "name": "Proton",
+    "domain": "proton.me",
+    "officialUrl": "https://proton.me/support/2fa-authenticator-app",
+    "settingsUrl": "https://account.proton.me",
+    "steps": [
+      "Sign in at account.proton.me and open Settings",
+      "Choose Account and password, then find Two-factor authentication",
+      "Turn on the Authenticator app option and enter your password",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "Proton asks for your password again along with the code.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "namecheap",
+    "name": "Namecheap",
+    "domain": "namecheap.com",
+    "officialUrl": "https://www.namecheap.com/support/knowledgebase/article.aspx/10073/45/how-can-i-use-the-totp-method-for-twofactor-authentication/",
+    "settingsUrl": null,
+    "steps": [
+      "Sign in to Namecheap and go to Profile, then Security",
+      "In the Access section, find Two-Factor Authentication and click Manage",
+      "Choose the Authentication app (TOTP) option and enter your password",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "Namecheap also offers backup codes after setup.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "kraken",
+    "name": "Kraken",
+    "domain": "kraken.com",
+    "officialUrl": "https://support.kraken.com/articles/360000572186-using-an-authenticator-app-for-two-factor-authentication-2fa-",
+    "settingsUrl": "https://www.kraken.com/u/security",
+    "steps": [
+      "Sign in to Kraken and open Security",
+      "Under Sign-in Two-Factor Authentication, click Enable next to Authenticator app",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish"
+    ],
+    "notes": "Kraken says the setup key is your backup for the app; treat it like a password.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "stripe",
+    "name": "Stripe",
+    "domain": "stripe.com",
+    "officialUrl": "https://support.stripe.com/questions/enable-two-step-authentication-using-an-authenticator-app",
+    "settingsUrl": "https://dashboard.stripe.com/settings/user",
+    "steps": [
+      "Sign in to the Stripe Dashboard and open Personal details",
+      "In Two-step authentication, add a method and choose Authenticator app",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "Stripe gives you a backup code during setup.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "figma",
+    "name": "Figma",
+    "domain": "figma.com",
+    "officialUrl": "https://help.figma.com/hc/en-us/articles/360039817634-Enable-two-factor-authentication-2FA",
+    "settingsUrl": null,
+    "steps": [
+      "Click your name at the top left of the file browser and choose Settings",
+      "Open the Security tab and click Enable two-factor authentication",
+      "Choose the authenticator app option and enter your password",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "Not available if you sign in with Google or SAML single sign-on.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "linkedin",
+    "name": "LinkedIn",
+    "domain": "linkedin.com",
+    "officialUrl": "https://www.linkedin.com/help/linkedin/answer/a1354987",
+    "settingsUrl": "https://www.linkedin.com/psettings/two-step-verification",
+    "steps": [
+      "Click your profile icon, then Settings & Privacy",
+      "Under Sign-in & security, choose Two-step verification",
+      "Turn it on, choose Authenticator App, and enter your password",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish"
+    ],
+    "notes": "LinkedIn may show a secret key instead of a QR code on some screens; Tanooki Auth can also add accounts by typing the key.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "paypal",
+    "name": "PayPal",
+    "domain": "paypal.com",
+    "officialUrl": "https://www.paypal.com/us/cshelp/article/what-is-2-step-verification-help167",
+    "settingsUrl": "https://www.paypal.com/myaccount/security",
+    "steps": [
+      "Log in to PayPal on the web",
+      "Click the Settings icon, then Security",
+      "Next to 2-step verification, click Set Up, then choose Use an authenticator app",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish"
+    ],
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "snapchat",
+    "name": "Snapchat",
+    "domain": "snapchat.com",
+    "officialUrl": "https://help.snapchat.com/hc/en-us/articles/7012345351700-How-do-I-set-up-Two-Factor-Authentication-2FA-on-Snapchat-with-an-authentication-app",
+    "settingsUrl": null,
+    "steps": [
+      "Open Snapchat, go to your profile, then Settings",
+      "Tap My Account, then Two-Factor Authentication, then Continue",
+      "Choose Authentication App",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish"
+    ],
+    "notes": "You need a phone number and email on the account first. Snapchat uses a separate Recovery Code that you create under the same setting; using it turns 2FA off.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "twitch",
+    "name": "Twitch",
+    "domain": "twitch.tv",
+    "officialUrl": "https://help.twitch.tv/s/article/two-factor-authentication",
+    "settingsUrl": "https://www.twitch.tv/settings/security",
+    "steps": [
+      "Open Settings, then Security and Privacy",
+      "Turn on Two-Factor Authentication and finish the text-message check first",
+      "Then choose the authenticator app option",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "Twitch requires a phone number first, and landline numbers don't work.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "zoom",
+    "name": "Zoom",
+    "domain": "zoom.us",
+    "officialUrl": "https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0066054",
+    "settingsUrl": "https://zoom.us/profile",
+    "steps": [
+      "Sign in to the Zoom web portal and open your Profile",
+      "Under Sign In, turn on Two-Step Verification",
+      "Click Set Up next to Authentication App and enter your password",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "Needs a paid plan, and the account admin may need to turn it on first.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "mailchimp",
+    "name": "Mailchimp",
+    "domain": "mailchimp.com",
+    "officialUrl": "https://mailchimp.com/help/set-up-a-two-factor-authentication-app-at-login/",
+    "settingsUrl": null,
+    "steps": [
+      "Open your Mailchimp Account security page",
+      "Choose Authenticator app under 2-factor authentication and click Next",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "Once on, Mailchimp 2FA can't be turned off, only changed.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "squarespace",
+    "name": "Squarespace",
+    "domain": "squarespace.com",
+    "officialUrl": "https://support.squarespace.com/hc/en-us/articles/360000044827-Protect-your-account-with-two-factor-authentication",
+    "settingsUrl": null,
+    "steps": [
+      "Open your Squarespace account settings and find Two-factor authentication",
+      "Click Set Up next to Authentication App",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "etsy",
+    "name": "Etsy",
+    "domain": "etsy.com",
+    "officialUrl": "https://help.etsy.com/hc/en-us/articles/115015569567-How-to-Make-Your-Account-More-Secure",
+    "settingsUrl": "https://www.etsy.com/your/account/security",
+    "steps": [
+      "Open Account settings, then Security",
+      "Under 2 factor authentication, choose Turn on 2FA",
+      "Pick Authenticator App",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "Etsy asks you to press Confirm and then Complete.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "netlify",
+    "name": "Netlify",
+    "domain": "netlify.com",
+    "officialUrl": "https://docs.netlify.com/manage/security/secure-netlify-access/enforce-2fa/",
+    "settingsUrl": null,
+    "steps": [
+      "Open User settings, then Security",
+      "Under Two-factor authentication, turn it on",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "Netlify shows recovery codes only once.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "twilio",
+    "name": "Twilio",
+    "domain": "twilio.com",
+    "officialUrl": "https://support.twilio.com/hc/en-us/articles/360046874054-Setting-Up-Twilio-Two-Factor-Authentication-2FA-in-a-TOTP-Authenticator-App",
+    "settingsUrl": null,
+    "steps": [
+      "Open User Settings in the Twilio Console",
+      "In Two-factor authentication, click Edit and choose to add an authenticator app (listed as Another authenticator app)",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "Twilio gives a recovery code when you first turn it on.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "wix",
+    "name": "Wix",
+    "domain": "wix.com",
+    "officialUrl": "https://support.wix.com/en/article/using-an-authenticator-app-for-2-step-verification-for-your-wix-account",
+    "settingsUrl": "https://manage.wix.com/account/account-settings",
+    "steps": [
+      "Open Account Settings and find 2-step verification",
+      "Turn on the authenticator app option and enter your Wix password",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish"
+    ],
+    "notes": "If you remove the Wix account from the app, you can't use this method to sign in until you use Reset App.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "playstation",
+    "name": "PlayStation",
+    "domain": "playstation.com",
+    "officialUrl": "https://www.playstation.com/en-us/support/account/2sv-login/",
+    "settingsUrl": null,
+    "steps": [
+      "Sign in to Account Management and open Security",
+      "Edit your 2-step verification status and choose the authenticator app method",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "PlayStation gives 10 single-use backup codes.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "nintendo",
+    "name": "Nintendo",
+    "domain": "nintendo.com",
+    "officialUrl": "https://en-americas-support.nintendo.com/app/answers/detail/a_id/27496/~/how-to-set-up-2-step-verification-for-a-nintendo-account",
+    "settingsUrl": null,
+    "steps": [
+      "Sign in to your Nintendo Account on the web and open Sign-in and security settings",
+      "Open 2-Step Verification and start the setup",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "Nintendo only tests Google Authenticator, but its codes follow the standard, so Tanooki Auth should also work. Child accounts can't use it.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "binance",
+    "name": "Binance",
+    "domain": "binance.com",
+    "officialUrl": "https://www.binance.com/en/support/faq/115000433432",
+    "settingsUrl": "https://www.binance.com/en/my/security",
+    "steps": [
+      "Sign in to Binance and open Security",
+      "Next to Google Authenticator, click Enable",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "Binance calls it Google Authenticator but any standard app works. It shows a backup key; write it down.",
+    "checked": "2026-10-30"
+  },
+  {
+    "slug": "linode",
+    "name": "Akamai Cloud (Linode)",
+    "domain": "linode.com",
+    "officialUrl": "https://techdocs.akamai.com/cloud-computing/docs/manage-2fa",
+    "settingsUrl": "https://cloud.linode.com/profile/auth",
+    "steps": [
+      "Click your username in Cloud Manager and choose Login & Authentication",
+      "Set the login method to Cloud Manager and turn on two-factor authentication",
+      "Scan the QR code with Tanooki Auth (tap +, then Scan QR)",
+      "Type the 6-digit code from Tanooki Auth to finish",
+      "Save the recovery codes. In Tanooki Auth you can store them in the account's Recovery codes"
+    ],
+    "notes": "You must set up security questions first. Akamai shows a scratch code to keep as your backup.",
+    "checked": "2026-10-30"
+  }
+]
