@@ -4,7 +4,7 @@ name: Windows
 # vault on disk), and a release build uploaded as an artifact.
 on:
   push:
-    branches: [main]
+    branches: [main, platforms-day]
   workflow_dispatch:
 
 jobs:
@@ -32,6 +32,31 @@ jobs:
         shell: pwsh
         run: Get-Content "$env:TEMP\ta_quickpick_log.txt" -ErrorAction SilentlyContinue
       - run: flutter build windows --release
+      # Unsigned Store package; Partner Center signs it on upload. Identity comes from repo
+      # variables once Maddie has them (store/microsoft-store.md); until then, pubspec placeholders.
+      - name: Build Microsoft Store package (MSIX)
+        shell: pwsh
+        env:
+          MSIX_IDENTITY_NAME: ${{ vars.MSIX_IDENTITY_NAME }}
+          MSIX_PUBLISHER: ${{ vars.MSIX_PUBLISHER }}
+          MSIX_PUBLISHER_DISPLAY_NAME: ${{ vars.MSIX_PUBLISHER_DISPLAY_NAME }}
+        run: |
+          $a = @('--store', '--output-path', '..\dist', '--output-name', 'TanookiAuth')
+          if ($env:MSIX_IDENTITY_NAME) { $a += '--identity-name', $env:MSIX_IDENTITY_NAME }
+          if ($env:MSIX_PUBLISHER) { $a += '--publisher', $env:MSIX_PUBLISHER }
+          if ($env:MSIX_PUBLISHER_DISPLAY_NAME) { $a += '--publisher-display-name', $env:MSIX_PUBLISHER_DISPLAY_NAME }
+          dart run msix:create @a
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $zip = [IO.Compression.ZipFile]::OpenRead((Resolve-Path ..\dist\TanookiAuth.msix))
+          $entry = $zip.Entries | Where-Object FullName -eq 'AppxManifest.xml'
+          $xml = [xml](New-Object IO.StreamReader($entry.Open())).ReadToEnd()
+          $hasExe = $zip.Entries.FullName -contains 'TanookiAuth.exe'
+          $zip.Dispose()
+          if (-not $hasExe) { Write-Error 'TanookiAuth.exe is missing from the MSIX'; exit 1 }
+          $id = $xml.Package.Identity
+          Write-Host "MSIX identity: $($id.Name) $($id.Publisher) $($id.Version)"
+          if (-not $id.Name -or -not $id.Version) { Write-Error 'MSIX has no identity'; exit 1 }
       - name: Build installer
         shell: pwsh
         working-directory: windows-installer
@@ -54,3 +79,8 @@ jobs:
         with:
           name: tanooki-auth-windows-setup
           path: dist/*.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tanooki-auth-windows-msix
+          path: dist/*.msix
+          if-no-files-found: error
