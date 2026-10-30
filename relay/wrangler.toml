@@ -1,0 +1,30 @@
+# Tanooki Auth relay: sync store + phone link mailbox. Sees only ciphertext and random IDs.
+# Protocol: PROTOCOL.md. Test: `node test.mjs <url>`.
+# Optional push secrets (set with `npx wrangler secret put NAME`, never in this file):
+#   APNS_KEY, APNS_KEY_ID, APNS_TEAM_ID   Apple push (.p8 key contents, its key ID, team ID)
+#   FCM_SERVICE_ACCOUNT                   Firebase service account JSON
+# Without them, /push returns 503 "push not configured" and everything else works.
+name = "tanooki-auth-relay"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+APNS_TOPIC = "com.tanookistudios.auth"
+
+[[durable_objects.bindings]]
+name = "SYNC"
+class_name = "SyncGroup"
+
+[[durable_objects.bindings]]
+name = "LINK"
+class_name = "LinkRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["SyncGroup", "LinkRoom"]
+
+# Per-IP cap on every request, checked before any Durable Object is touched.
+[[ratelimits]]
+name = "IP_LIMIT"
+namespace_id = "7301"
+simple = { limit = 300, period = 60 }
