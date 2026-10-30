@@ -5,11 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 
 import '../bridge/server.dart';
+import '../core/security.dart';
 import '../core/vault.dart';
+import '../main.dart' show createDecoyVault, deleteDecoyVault, isDecoyVault;
 import 'about_maddie.dart';
 import 'backup_ui.dart';
 import 'home.dart';
 import 'premium.dart';
+import 'security_ui.dart';
 import 'theme.dart';
 import 'trash.dart';
 
@@ -68,6 +71,218 @@ class _SettingsScreenState extends State<SettingsScreen> {
     widget.vault.settings['lock'] = on;
     await widget.vault.save();
     setState(() {});
+  }
+
+  Map<String, dynamic> get _s => widget.vault.settings;
+
+  void _tell(String msg) => ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(msg)));
+
+  Future<void> _passcode() async {
+    final v = widget.vault;
+    if (_s[passcodeKey] == null) {
+      final pin = await askNewPasscode(context,
+          title: 'Set an app passcode',
+          intro: 'Type this to open Tanooki Auth. It also works when Face ID or your fingerprint doesn\'t. If you forget it, the only way back in is a backup.');
+      if (pin == null) return;
+      _s[passcodeKey] = await hashPasscode(pin);
+      await v.save();
+      setState(() {});
+      _tell('App passcode on.');
+      return;
+    }
+    final choice = await showDialog<String>(
+      context: context,
+      builder: (c) => SimpleDialog(title: const Text('App passcode'), children: [
+        SimpleDialogOption(onPressed: () => Navigator.pop(c, 'change'), child: const Text('Change passcode')),
+        SimpleDialogOption(onPressed: () => Navigator.pop(c, 'off'), child: const Text('Turn passcode off')),
+      ]),
+    );
+    if (choice == null || !mounted || !await confirmCurrentPasscode(context, _s[passcodeKey]) || !mounted) return;
+    if (choice == 'change') {
+      final pin = await askNewPasscode(context, title: 'New app passcode', notThis: _s[decoyPasscodeKey]);
+      if (pin == null) return;
+      _s[passcodeKey] = await hashPasscode(pin);
+    } else {
+      // Panic wipe and the decoy passcode both depend on the passcode, so they go with it.
+      _s
+        ..remove(passcodeKey)
+        ..remove(panicWipeKey)
+        ..remove(failedPasscodesKey);
+      await _removeDecoy();
+    }
+    await v.save();
+    setState(() {});
+    _tell(choice == 'change' ? 'Passcode changed.' : 'App passcode off.');
+  }
+
+  Future<void> _removeDecoy() async {
+    if (_s.remove(decoyPasscodeKey) != null && !isDecoyVault(widget.vault)) await deleteDecoyVault();
+  }
+
+  Future<void> _decoy() async {
+    if (_s[decoyPasscodeKey] != null) {
+      final off = await showDialog<bool>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: const Text('Remove the decoy passcode?'),
+          content: const Text('The decoy accounts are erased. Your real accounts aren\'t touched.'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+            FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Remove')),
+          ],
+        ),
+      );
+      if (off != true || !mounted || !await confirmCurrentPasscode(context, _s[passcodeKey])) return;
+      await _removeDecoy();
+      await widget.vault.save();
+      setState(() {});
+      return;
+    }
+    final pin = await askNewPasscode(context,
+        title: 'Set a decoy passcode',
+        intro: 'If someone forces you to open Tanooki Auth, type this one instead. It opens a separate, empty set of accounts, and nothing on screen shows it isn\'t the real one. Add a couple of harmless accounts there so it looks used.\n\nYour real passcode keeps opening your real accounts.',
+        notThis: _s[passcodeKey]);
+    if (pin == null) return;
+    await createDecoyVault(widget.vault, await hashPasscode(pin));
+    setState(() {});
+    _tell('Decoy passcode set.');
+  }
+
+  Future<void> _panicWipe(bool on) async {
+    if (!on) {
+      _s.remove(panicWipeKey);
+      await widget.vault.save();
+      return setState(() {});
+    }
+    final blocker = panicWipeBlocker(_s, DateTime.now());
+    if (blocker != null) return _tell(blocker);
+    Future<bool> warn(String title, String body, String yes) async =>
+        await showDialog<bool>(
+          context: context,
+          builder: (c) => AlertDialog(
+            icon: Icon(Icons.warning_amber_rounded, color: Theme.of(c).colorScheme.error),
+            title: Text(title),
+            content: Text(body),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: Theme.of(c).colorScheme.error),
+                onPressed: () => Navigator.pop(c, true),
+                child: Text(yes),
+              ),
+            ],
+          ),
+        ) ==
+        true;
+    if (!await warn('Erase everything after $panicWipeAttempts wrong passcodes?',
+        'If anyone types the wrong app passcode $panicWipeAttempts times in a row, Tanooki Auth erases every account on this device. There is no undo and no way to stop it once it starts.',
+        'Continue')) {
+      return;
+    }
+    if (!mounted ||
+        !await warn('Are you sure?',
+            'A child playing with your phone, or you on a bad day, can trigger this. After an erase, the only way back is your backup file. Without it you could be locked out of every website that uses these codes.',
+            'Turn on panic wipe')) {
+      return;
+    }
+    _s[panicWipeKey] = true;
+    await widget.vault.save();
+    setState(() {});
+  }
+
+  Future<void> _blockScreenshots(bool on) async {
+    await applyScreenshotBlocking(on);
+    await _set(blockScreenshotsKey, on);
+  }
+
+  List<Widget> _securitySection() {
+    final hasPasscode = _s[passcodeKey] != null;
+    final desktop = Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+    return [
+      Card(
+        child: Column(children: [
+          SwitchListTile(
+            title: const Text('Lock the app'),
+            subtitle: Text('Ask for $_lockName when the app opens'),
+            value: _s['lock'] == true,
+            onChanged: _setLock,
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.pin_outlined),
+            title: const Text('App passcode'),
+            subtitle: Text(hasPasscode ? 'On. Tap to change or turn off.' : 'Off. Numbers you type to open the app, instead of or as well as $_lockName.'),
+            onTap: _passcode,
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.timer_outlined),
+            title: const Text('Lock again'),
+            subtitle: Text(isLockOn(_s)
+                ? '${lockAfterChoices[lockAfterSeconds(_s)]} in the background'
+                : 'Turn on the lock or a passcode first'),
+            trailing: DropdownButton<int>(
+              value: lockAfterSeconds(_s),
+              onChanged: (v) => v == null ? null : _set(lockAfterKey, v),
+              items: [for (final e in lockAfterChoices.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
+            ),
+          ),
+          if (hasPasscode) ...[
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.theater_comedy_outlined),
+              title: const Text('Decoy passcode'),
+              subtitle: Text(_s[decoyPasscodeKey] != null
+                  ? 'On. Opens a separate set of accounts. Tap to remove.'
+                  : 'A second passcode that opens a separate, empty set of accounts'),
+              onTap: _decoy,
+            ),
+            const Divider(),
+            SwitchListTile(
+              title: Text('Erase after $panicWipeAttempts wrong passcodes'),
+              subtitle: const Text('Panic wipe. Needs a backup made in the last 30 days.'),
+              value: _s[panicWipeKey] == true,
+              onChanged: _panicWipe,
+            ),
+          ],
+          const Divider(),
+          SwitchListTile(
+            title: const Text('Block screenshots'),
+            subtitle: Text(desktop
+                ? 'Hides this window from screenshots, screen recording and screen sharing'
+                : 'Keeps codes out of screenshots, screen recording and the app switcher'),
+            value: blockScreenshotsOn(_s),
+            onChanged: _blockScreenshots,
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.health_and_safety_outlined),
+            title: const Text('Security check-up'),
+            subtitle: const Text('Things worth fixing, and your recovery kit'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () async {
+              await Navigator.push(context, MaterialPageRoute(builder: (_) => CheckupScreen(vault: widget.vault)));
+              setState(() {});
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.report_gmailerrorred_outlined),
+            title: Text(premium.value ? 'Breach alerts' : 'Breach alerts (Premium)'),
+            subtitle: Text(_s[breachAlertsKey] == true
+                ? 'On. Checks the public breach list weekly.'
+                : 'Off. When on, this is the app\'s only internet use besides sync and purchases.'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () async {
+              await Navigator.push(context, MaterialPageRoute(builder: (_) => BreachScreen(vault: widget.vault)));
+              setState(() {});
+            },
+          ),
+        ]),
+      ),
+    ];
   }
 
   Future<void> _pickTheme(String id) async {
@@ -197,7 +412,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final b = activeBridge;
     final paired = b?.pairedOrigins ?? [];
     return [
-      const Padding(padding: EdgeInsets.fromLTRB(4, 20, 4, 8), child: CapsLabel('Browser extension')),
+      const Padding(padding: EdgeInsets.fromLTRB(4, 20, 4, 8), child: CapsLabel('Browser extension and launchers')),
       Card(
         child: Column(children: [
           ListTile(
@@ -211,8 +426,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const Divider(),
             ListTile(
               leading: const Icon(Icons.extension_outlined),
-              title: const Text('Paired browser'),
-              subtitle: Text('Extension ${origin.substring(origin.length - 8)}'),
+              title: Text(integrationOrigins.contains(origin) ? 'Paired: ${bridgeClientName(origin)}' : 'Paired browser'),
+              subtitle: integrationOrigins.contains(origin) ? null : Text('Extension ${origin.substring(origin.length - 8)}'),
               trailing: TextButton(
                 onPressed: () async {
                   await b!.unpair(origin);
@@ -242,18 +457,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             padding: EdgeInsets.fromLTRB(4, 0, 4, 8),
             child: CapsLabel('Security'),
           ),
-          Card(
-            child: Column(
-              children: [
-                SwitchListTile(
-                  title: const Text('Lock the app'),
-                  subtitle: Text('Ask for $_lockName when the app opens'),
-                  value: widget.vault.settings['lock'] == true,
-                  onChanged: _setLock,
-                ),
-              ],
-            ),
-          ),
+          ..._securitySection(),
           if (Platform.isMacOS || Platform.isWindows) ..._browserSection(),
           const Padding(
             padding: EdgeInsets.fromLTRB(4, 20, 4, 8),
@@ -290,6 +494,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     'Unencrypted setup links, for moving to another app',
                   ),
                   onTap: () => exportPlainFlow(context, widget.vault),
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.print_outlined),
+                  title: const Text('Print paper backup'),
+                  subtitle: const Text('A PDF of QR codes and recovery codes to keep somewhere locked'),
+                  onTap: () => paperBackupFlow(context, widget.vault),
                 ),
               ],
             ),
@@ -329,7 +540,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   aboutBoxChildren: [
                     SizedBox(height: 12),
                     Text(
-                      'No account, no server, no tracking. Your setup keys are stored encrypted on this device and never leave it.',
+                      'No account, no tracking. Your setup keys are stored encrypted on this device and never leave it. The app only goes online if you turn on breach alerts (to download the public breach list) or sync, or to buy Premium.',
                     ),
                   ],
                 ),

@@ -10,6 +10,8 @@ import '../core/account.dart';
 import '../core/backup.dart';
 import '../core/google_migration.dart';
 import '../core/otpauth_uri.dart';
+import '../core/paper_backup.dart';
+import '../core/security.dart';
 import '../core/vault.dart';
 import 'home.dart';
 
@@ -112,7 +114,10 @@ Future<void> exportBackupFlow(BuildContext context, Vault vault) async {
   if (!context.mounted) return;
   final saved = await deliverFile(context, 'Tanooki Auth backup ${_today()}.$backupExtension',
       Uint8List.fromList(utf8.encode(text)), 'application/octet-stream');
-  if (saved && context.mounted) _say(context, 'Backup of ${vault.live.length} accounts saved.');
+  if (!saved) return;
+  vault.settings[lastBackupKey] = DateTime.now().toUtc().toIso8601String();
+  await vault.save();
+  if (context.mounted) _say(context, 'Backup of ${vault.live.length} accounts saved.');
 }
 
 /// Picks a backup file and decrypts it. Returns null if the user cancels or it fails (with a message shown).
@@ -238,4 +243,35 @@ Future<void> exportPlainFlow(BuildContext context, Vault vault) async {
   if (ok != true || !context.mounted) return;
   final text = '${vault.live.map(toOtpauthUri).join('\n')}\n';
   await deliverFile(context, 'Tanooki Auth setup links ${_today()}.txt', Uint8List.fromList(utf8.encode(text)), 'text/plain');
+}
+
+/// A printable PDF of every account's QR code and recovery codes, behind a blunt warning.
+Future<void> paperBackupFlow(BuildContext context, Vault vault) async {
+  if (vault.live.isEmpty) {
+    _say(context, 'There are no accounts to print yet.');
+    return;
+  }
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (c) => AlertDialog(
+      icon: Icon(Icons.warning_amber_rounded, color: Theme.of(c).colorScheme.error),
+      title: const Text('Print a paper backup?'),
+      content: const Text(
+          'This makes a PDF with a QR code for every account, plus your unused recovery codes. Anyone who sees or photographs that paper can make your login codes, forever, without your phone or password.\n\n'
+          'Print it, then delete the PDF. Keep the paper somewhere locked, like a safe or with important documents. Don\'t email it, and don\'t save it to a shared folder.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: Theme.of(c).colorScheme.error),
+          onPressed: () => Navigator.pop(c, true),
+          child: const Text('I understand, make the PDF'),
+        ),
+      ],
+    ),
+  );
+  if (ok != true || !context.mounted) return;
+  final pdf = await busy(context, 'Making the PDF…', () => buildPaperBackup(vault.live));
+  if (!context.mounted) return;
+  final saved = await deliverFile(context, 'Tanooki Auth paper backup ${_today()}.pdf', pdf, 'application/pdf');
+  if (saved && context.mounted) _say(context, 'PDF ready. Print it, then delete the file.');
 }

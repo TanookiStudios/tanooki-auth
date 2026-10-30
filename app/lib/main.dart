@@ -7,12 +7,14 @@ import 'package:path_provider/path_provider.dart';
 
 import 'bridge/server.dart';
 import 'core/account.dart';
+import 'core/security.dart';
 import 'core/vault.dart';
 import 'ui/add.dart';
 import 'ui/backup_ui.dart';
 import 'ui/brand_icon.dart';
 import 'ui/home.dart';
 import 'ui/premium.dart';
+import 'ui/security_ui.dart';
 import 'ui/settings.dart';
 import 'ui/theme.dart';
 
@@ -22,11 +24,44 @@ bool get isDesktop => Platform.isMacOS || Platform.isWindows || Platform.isLinux
 /// (vault file and its key) uses a throwaway store and can never touch real accounts.
 const storageName = String.fromEnvironment('TA_STORAGE');
 
-Future<Vault> openVault() async {
+/// [second] is the decoy vault: its own file and its own key, so nothing in it can reach the real one.
+Future<Vault> openVault({bool second = false}) async {
   var dir = (await getApplicationSupportDirectory()).path;
   if (storageName.isNotEmpty) dir = '$dir/$storageName';
-  return Vault(File('$dir/vault.json'),
-      SecureKeyStore(storageName.isEmpty ? 'vault_key_v1' : 'vault_key_v1_$storageName'));
+  final key = storageName.isEmpty ? 'vault_key_v1' : 'vault_key_v1_$storageName';
+  return second ? Vault(File('$dir/vault-b.json'), SecureKeyStore('${key}_b')) : Vault(File('$dir/vault.json'), SecureKeyStore(key));
+}
+
+/// Starts an empty decoy vault that looks like the real one (same theme, layout, lock), then saves the decoy
+/// passcode's hash in the real vault, which is where the lock screen checks it.
+Future<void> createDecoyVault(Vault real, Map<String, Object> passcodeRecord) async {
+  if (isDecoyVault(real)) {
+    // Someone set a "decoy" from inside the decoy: just remember it there, so it looks like it worked.
+    real.settings[decoyPasscodeKey] = passcodeRecord;
+    return real.save();
+  }
+  final decoy = await openVault(second: true);
+  await decoy.resetToEmpty();
+  const lookAlike = ['theme', 'license', layoutKey, hideCodesKey, recentFirstKey, lockKey, lockAfterKey, blockScreenshotsKey];
+  for (final k in lookAlike) {
+    if (real.settings.containsKey(k)) decoy.settings[k] = real.settings[k];
+  }
+  decoy.settings[passcodeKey] = passcodeRecord; // so its Settings shows a passcode, like the real one
+  decoy.settings[kitShownKey] = true;
+  await decoy.save();
+  real.settings[decoyPasscodeKey] = passcodeRecord;
+  await real.save();
+}
+
+bool isDecoyVault(Vault v) => v.file.path.endsWith('vault-b.json');
+
+/// Erases the decoy vault. Its key is replaced too, so an old copy of the file can't be opened.
+Future<void> deleteDecoyVault() async {
+  final decoy = await openVault(second: true);
+  if (await decoy.file.exists()) {
+    await decoy.resetToEmpty();
+    await decoy.file.delete();
+  }
 }
 
 void main() {
@@ -115,7 +150,14 @@ class Gate extends StatefulWidget {
 }
 
 class _GateState extends State<Gate> implements BridgeHost {
+  /// The real vault: its settings hold the lock, passcode, decoy and panic-wipe choices.
+  Vault? _real;
+  /// What's on screen: the real vault, or the decoy one after the decoy passcode.
   Vault? _vault;
+  final _pin = TextEditingController();
+  final _pinFocus = FocusNode();
+  String? _pinError;
+  bool _checking = false;
   VaultException? _error;
   bool _locked = true;
   bool _covered = false;
@@ -123,7 +165,8 @@ class _GateState extends State<Gate> implements BridgeHost {
   late final AppLifecycleListener _lifecycle;
   final _auth = LocalAuthentication();
 
-  bool get _lockOn => _vault?.settings['lock'] == true;
+  bool get _lockOn => _real != null && isLockOn(_real!.settings);
+  bool get _biometricOn => _real?.settings[lockKey] == true;
   BuildContext? _pairDialog;
 
   @override
@@ -145,18 +188,26 @@ class _GateState extends State<Gate> implements BridgeHost {
       barrierDismissible: false,
       builder: (c) {
         _pairDialog = c;
+        final (title, body, warning) = switch (bridgeClientName(origin)) {
+          'Raycast' => ('Pair with Raycast', 'Type this code into Raycast:', 'Only do this if you just started pairing in Raycast yourself.'),
+          'Alfred' => ('Pair with Alfred', 'Type 2fa-pair and this code into Alfred:', 'Only do this if you just typed 2fa-pair in Alfred yourself.'),
+          _ => (
+              'Pair with your browser',
+              'Type this code into the Tanooki Auth browser extension:',
+              'Only do this if you just clicked "Pair" in the extension yourself.'
+            ),
+        };
         return AlertDialog(
-          title: const Text('Pair with your browser'),
+          title: Text(title),
           content: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Text('Type this code into the Tanooki Auth browser extension:'),
+            Text(body),
             const SizedBox(height: 16),
             SelectableText(
               '${code.substring(0, 3)} ${code.substring(3)}',
               style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w700, letterSpacing: 4),
             ),
             const SizedBox(height: 12),
-            const Text('Only do this if you just clicked "Pair" in the extension yourself.',
-                style: TextStyle(fontSize: 12)),
+            Text(warning, style: const TextStyle(fontSize: 12)),
           ]),
           actions: [
             TextButton(
@@ -216,6 +267,8 @@ class _GateState extends State<Gate> implements BridgeHost {
     activeBridge?.stop();
     activeBridge = null;
     _lifecycle.dispose();
+    _pin.dispose();
+    _pinFocus.dispose();
     super.dispose();
   }
 
@@ -229,18 +282,83 @@ class _GateState extends State<Gate> implements BridgeHost {
     }
     await loadPremiumAndTheme(vault);
     await loadBrandIcons();
+    await applyScreenshotBlocking(blockScreenshotsOn(vault.settings));
     setState(() {
+      _real = vault;
       _vault = vault;
       _error = null;
+      _locked = true;
     });
     await _askAboutLockOnFirstRun();
     await _startBridge();
-    if (_lockOn) {
+    if (!_lockOn) {
+      await _enter(vault);
+    } else if (_biometricOn) {
       await _unlock();
-    } else {
-      setState(() => _locked = false);
     }
   }
+
+  /// Unlocks into [v] (the real vault or the decoy). Only the real vault gets the first-run kit and breach check.
+  Future<void> _enter(Vault v) async {
+    if (v != _vault) await loadPremiumAndTheme(v);
+    if (!mounted) return;
+    setState(() {
+      _vault = v;
+      _locked = false;
+      _pin.clear();
+      _pinError = null;
+    });
+    if (v != _real) return;
+    if (v.settings[kitShownKey] != true) {
+      v.settings[kitShownKey] = true;
+      await v.save();
+      if (mounted) await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => RecoveryKitScreen(vault: v)));
+    }
+    if (mounted) await weeklyBreachCheck(context, v);
+  }
+
+  Future<void> _submitPasscode() async {
+    if (_checking || _real == null) return;
+    final pin = _pin.text;
+    if (pin.isEmpty) return;
+    setState(() {
+      _checking = true;
+      _pinError = null;
+    });
+    final result = await tryPasscode(_real!, pin, wipeDecoy: deleteDecoyVault);
+    if (!mounted) return;
+    setState(() => _checking = false);
+    switch (result) {
+      case Unlock.real:
+        await _enter(_real!);
+      case Unlock.decoy:
+        final decoy = await openVault(second: true);
+        try {
+          await decoy.load();
+        } on VaultException {
+          await decoy.resetToEmpty(); // the decoy has nothing worth keeping; never show an error that reveals it
+        }
+        await _enter(decoy);
+      case Unlock.wrong:
+        final left = panicWipeAttempts - failedPasscodes(_real!.settings);
+        setState(() {
+          _pin.clear();
+          _pinError = _real!.settings[panicWipeKey] == true && left <= 5
+              ? 'Wrong passcode. $left more wrong ${left == 1 ? 'try erases' : 'tries erase'} everything.'
+              : 'Wrong passcode.';
+        });
+        _pinFocus.requestFocus(); // ready to type again
+      case Unlock.wiped:
+        _pin.clear();
+        await _load();
+    }
+  }
+
+  String get _biometricName => Platform.isWindows
+      ? 'Windows Hello'
+      : Platform.isMacOS
+          ? 'Touch ID'
+          : 'Face ID or fingerprint';
 
   // Phones: ask once, default on. Desktop: off by default, toggle in Settings.
   Future<void> _askAboutLockOnFirstRun() async {
@@ -263,7 +381,7 @@ class _GateState extends State<Gate> implements BridgeHost {
           ) ??
           true;
     }
-    vault.settings['lock'] = lock;
+    vault.settings[lockKey] = lock;
     await vault.save();
   }
 
@@ -274,7 +392,7 @@ class _GateState extends State<Gate> implements BridgeHost {
     } catch (_) {
       ok = false;
     }
-    if (mounted) setState(() => _locked = !ok);
+    if (ok && _real != null) await _enter(_real!);
   }
 
   void _onLifecycle(AppLifecycleState state) {
@@ -284,9 +402,9 @@ class _GateState extends State<Gate> implements BridgeHost {
     } else if (state == AppLifecycleState.resumed) {
       final away = _backgroundedAt;
       _backgroundedAt = null;
-      if (_lockOn && !_locked && away != null && DateTime.now().difference(away) > const Duration(seconds: 30)) {
+      if (!_locked && away != null && _real != null && shouldRelock(_real!.settings, DateTime.now().difference(away))) {
         setState(() => _locked = true);
-        _unlock();
+        if (_biometricOn) _unlock();
       }
     }
   }
@@ -348,15 +466,38 @@ class _GateState extends State<Gate> implements BridgeHost {
     } else if (_vault == null) {
       body = const Scaffold(body: Center(child: CircularProgressIndicator()));
     } else if (_locked) {
+      final hasPasscode = _real!.settings[passcodeKey] != null;
       body = Scaffold(
         body: Center(
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(Icons.lock_outline, size: 48),
-            const SizedBox(height: 16),
-            const Text('Tanooki Auth is locked'),
-            const SizedBox(height: 16),
-            FilledButton(onPressed: _unlock, child: const Text('Unlock')),
-          ]),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              const Icon(Icons.lock_outline, size: 48),
+              const SizedBox(height: 16),
+              const Text('Tanooki Auth is locked'),
+              const SizedBox(height: 16),
+              if (hasPasscode) ...[
+                SizedBox(
+                  width: 260,
+                  child: PasscodeField(controller: _pin, focusNode: _pinFocus, label: 'Passcode', autofocus: !_biometricOn, onSubmitted: (_) => _submitPasscode()),
+                ),
+                if (_pinError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(_pinError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                  ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: _checking ? null : _submitPasscode,
+                  child: _checking
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Text('Unlock'),
+                ),
+                if (_biometricOn) TextButton(onPressed: _unlock, child: Text('Use $_biometricName')),
+              ] else
+                FilledButton(onPressed: _unlock, child: const Text('Unlock')),
+            ]),
+          ),
         ),
       );
     } else {

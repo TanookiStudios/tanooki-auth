@@ -40,6 +40,23 @@ bool constantTimeEquals(String a, String b) {
   return diff == 0;
 }
 
+/// Chrome/Edge/Brave (32 letters a–p), Firefox and Safari (a UUID) extension origins. Web pages can't send these.
+final extensionOrigin = RegExp(
+    r'^(chrome-extension://[a-p]{32}|(moz|safari-web)-extension://[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$',
+    caseSensitive: false);
+
+/// Raycast and Alfred send these fixed Origins. Exact match only.
+const integrationOrigins = {'tanooki-integration://raycast', 'tanooki-integration://alfred'};
+
+bool isAllowedOrigin(String origin) => integrationOrigins.contains(origin) || extensionOrigin.hasMatch(origin);
+
+/// What to call a paired client in the pairing dialog and Settings.
+String bridgeClientName(String origin) => switch (origin) {
+      'tanooki-integration://raycast' => 'Raycast',
+      'tanooki-integration://alfred' => 'Alfred',
+      _ => 'Browser extension',
+    };
+
 String _hostOf(String domain) => domain.toLowerCase().replaceFirst(RegExp(r'^www\.'), '');
 
 /// Loopback-only WebSocket server the Chrome extension talks to. Secrets never leave;
@@ -94,7 +111,7 @@ class BridgeServer {
   Future<void> _onRequest(HttpRequest req) async {
     final origin = req.headers.value('origin') ?? '';
     // Only a browser extension may talk to us; web pages send their own https:// origin.
-    if (!RegExp(r'^chrome-extension://[a-p]{32}$').hasMatch(origin)) {
+    if (!isAllowedOrigin(origin)) {
       req.response.statusCode = HttpStatus.forbidden;
       await req.response.close();
       return;
@@ -131,7 +148,7 @@ class BridgeServer {
     final token = msg['token'];
     final paired = token is String &&
         _pairings.any((p) => p['origin'] == origin && constantTimeEquals(p['token'] as String, token));
-    if (!paired) throw _BridgeError('notPaired', 'This browser isn\'t paired with Tanooki Auth.');
+    if (!paired) throw _BridgeError('notPaired', 'This app isn\'t paired with Tanooki Auth.');
 
     // Trashed accounts are invisible to the extension.
     final accounts = host.vault.live;

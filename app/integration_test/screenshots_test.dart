@@ -42,6 +42,7 @@ void main() {
       vault.accounts.add(parseOtpauthUri(demo[i])..domains.addAll([if (domains[i].isNotEmpty) domains[i]]));
     }
     vault.settings['lock'] = false;
+    vault.settings['kitShown'] = true;
     await vault.save();
 
     if (Platform.isAndroid) await binding.convertFlutterSurfaceToImage();

@@ -101,10 +101,54 @@ void main() {
   });
 
   test('web page origins and missing origin are refused', () async {
-    for (final origin in ['https://evil.example', 'null', 'chrome-extension://short']) {
+    for (final origin in [
+      'https://evil.example',
+      'null',
+      'chrome-extension://short',
+      'moz-extension://not-a-uuid',
+      'safari-web-extension://1234',
+      'moz-extension://8a7c3f2e-1b4d-4e9a-9c6b-2f1e0d3c4b5a.evil.example',
+      'tanooki-integration://evil',
+      'tanooki-integration://raycast.evil',
+      'Tanooki-Integration://raycast',
+      'tanooki-integration://raycast/',
+    ]) {
       await expectLater(Client.connect(port, origin: origin), throwsA(isA<WebSocketException>()), reason: origin);
     }
     await expectLater(WebSocket.connect('ws://127.0.0.1:$port'), throwsA(isA<WebSocketException>()));
+  });
+
+  test('Firefox and Safari extension origins can pair, case-insensitively', () async {
+    for (final origin in [
+      'moz-extension://8a7c3f2e-1b4d-4e9a-9c6b-2f1e0d3c4b5a',
+      'safari-web-extension://8A7C3F2E-1B4D-4E9A-9C6B-2F1E0D3C4B5A',
+    ]) {
+      final c = await Client.connect(port, origin: origin);
+      final token = await pair(c);
+      expect((await c.send({'type': 'accounts', 'token': token}))['accounts'], hasLength(1), reason: origin);
+    }
+  });
+
+  test('Raycast and Alfred can pair; one\'s token doesn\'t work for the other', () async {
+    final raycast = await Client.connect(port, origin: 'tanooki-integration://raycast');
+    final token = await pair(raycast);
+    expect((await raycast.send({'type': 'accounts', 'token': token}))['accounts'], hasLength(1));
+    final alfred = await Client.connect(port, origin: 'tanooki-integration://alfred');
+    expect((await alfred.send({'type': 'accounts', 'token': token}))['error'], 'notPaired');
+    final alfredToken = await pair(alfred);
+    expect((await alfred.send({'type': 'accounts', 'token': alfredToken}))['accounts'], hasLength(1));
+    expect(bridgeClientName('tanooki-integration://alfred'), 'Alfred');
+  });
+
+  test('refused origin gets 403, accepted origin without WebSocket gets 400', () async {
+    Future<int> status(String origin) async {
+      final req = await HttpClient().get('127.0.0.1', port, '/');
+      req.headers.set('Origin', origin);
+      return (await req.close()).statusCode;
+    }
+
+    expect(await status('tanooki-integration://evil'), 403);
+    expect(await status('tanooki-integration://raycast'), 400);
   });
 
   test('pairing, then accounts without secrets, then a correct code', () async {
