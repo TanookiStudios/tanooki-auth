@@ -41,7 +41,13 @@ ln -s /Applications "$STAGE/Applications"
 rm -f "$DMG"
 hdiutil create -volname "Tanooki Auth" -srcfolder "$STAGE" -format UDZO -ov "$DMG" >/dev/null
 codesign --force --timestamp --sign "$ID" "$DMG"
-xcrun notarytool submit "$DMG" --keychain-profile notarytool --wait
+# Notarize with the "notarytool" keychain profile if there is one, else the App Store Connect API key.
+if [ -f "$HOME/.tanooki-auth-signing/asc.env" ] && ! security find-generic-password -s "com.apple.gke.notary.tool" >/dev/null 2>&1; then
+  set -a; . "$HOME/.tanooki-auth-signing/asc.env"; set +a
+  xcrun notarytool submit "$DMG" --key "$ASC_KEY_PATH" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER_ID" --wait
+else
+  xcrun notarytool submit "$DMG" --keychain-profile notarytool --wait
+fi
 xcrun stapler staple "$DMG"
 spctl -a -t open --context context:primary-signature -v "$DMG"
 echo "Built $DMG"
