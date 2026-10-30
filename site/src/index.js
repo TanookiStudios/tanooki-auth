@@ -3,6 +3,10 @@
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    // Lets the Apple apps use security keys for auth.tanookistudios.com (webcredentials).
+    if (url.pathname === '/.well-known/apple-app-site-association') {
+      return Response.json({ webcredentials: { apps: ['NPT8NXJ7C8.com.tanookistudios.auth'] } });
+    }
     if (!url.pathname.startsWith('/download/')) return env.ASSETS.fetch(request);
     if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('Method not allowed', { status: 405 });
     const key = decodeURIComponent(url.pathname.slice('/download/'.length));

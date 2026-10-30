@@ -25,5 +25,7 @@
 		<string>$(AppIdentifierPrefix)com.tanookistudios.auth</string>
 		<string>$(AppIdentifierPrefix)com.tanookistudios.auth.shared</string>
 	</array>
+	<key>com.apple.developer.associated-domains</key>
+	<array><string>webcredentials:auth.tanookistudios.com</string></array>
 </dict>
 </plist>
