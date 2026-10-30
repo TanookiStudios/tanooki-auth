@@ -20,6 +20,7 @@ import 'security_ui.dart';
 import 'settings.dart';
 import 'share_ui.dart';
 import 'sync_ui.dart' show QrView;
+import 'team_ui.dart';
 import 'theme.dart';
 
 String groupCode(String code) => code.length == 6
@@ -719,6 +720,7 @@ class _HomeScreenState extends State<HomeScreen> {
           if (live.length <= 3) const SizedBox(height: 12),
           _tagChips(const EdgeInsets.fromLTRB(16, 0, 16, 8)),
           HomeNotices(vault: widget.vault, padding: const EdgeInsets.fromLTRB(16, 0, 16, 8), onChanged: () => setState(() {})),
+          TeamHomeSection(vault: widget.vault, padding: const EdgeInsets.fromLTRB(16, 0, 16, 8)),
           if (_selecting) _selectionBar(const EdgeInsets.fromLTRB(16, 0, 16, 8)),
           Expanded(child: list),
         ]),
@@ -756,6 +758,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             _tagChips(const EdgeInsets.fromLTRB(20, 12, 20, 0)),
             HomeNotices(vault: widget.vault, padding: const EdgeInsets.fromLTRB(20, 12, 20, 0), onChanged: () => setState(() {})),
+            TeamHomeSection(vault: widget.vault, padding: const EdgeInsets.fromLTRB(20, 12, 20, 0)),
             if (_selecting) _selectionBar(const EdgeInsets.fromLTRB(20, 12, 20, 0)),
             Expanded(child: list),
             Container(
