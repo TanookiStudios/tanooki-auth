@@ -8,6 +8,7 @@ import '../core/account.dart';
 import '../core/otpauth_uri.dart';
 import '../core/totp.dart';
 import '../core/vault.dart';
+import '../core/widget_share.dart' show showCopiedCodeActivity;
 import 'add.dart';
 import 'brand_icon.dart';
 import 'clipboard.dart';
@@ -31,6 +32,9 @@ const recentFirstKey = 'recentFirst', hideCodesKey = 'hideCodes', layoutKey = 'l
 /// Folder names folded away on the home list ('' is "No folder").
 const collapsedFoldersKey = 'collapsedFolders';
 
+/// An account id the home list should show (a tapped Spotlight result). The list searches for it.
+final openAccountRequest = ValueNotifier<String?>(null);
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.vault});
   final Vault vault;
@@ -53,6 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _tag;
   final _revealed = <String, DateTime>{}; // account id -> when its hidden code was tapped
   final _focus = FocusNode();
+  final _searchText = TextEditingController();
   bool _selecting = false;
   final _picked = <String>{}; // account ids ticked in select mode
 
@@ -103,11 +108,32 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _tick = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
+    openAccountRequest.addListener(_showRequested);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _showRequested());
+  }
+
+  /// Narrows the list to the account [openAccountRequest] names, by searching for its name.
+  void _showRequested() {
+    final id = openAccountRequest.value;
+    if (id == null) return;
+    openAccountRequest.value = null;
+    final a = _live.where((x) => x.id == id).firstOrNull;
+    if (a == null || !mounted) return; // deleted since Spotlight listed it, or the decoy vault is open
+    // Short lists (and phones with 3 or fewer accounts) have no search box: just select the card there.
+    final searchShown = _live.length > 3 || MediaQuery.sizeOf(context).width >= 700;
+    setState(() {
+      _searchText.text = _query = searchShown ? accountTitle(a) : '';
+      _tag = null;
+      _selecting = false;
+      _selected = _visible.indexOf(a).clamp(0, 1 << 30);
+    });
   }
 
   @override
   void dispose() {
     _tick.cancel();
+    openAccountRequest.removeListener(_showRequested);
+    _searchText.dispose();
     _focus.dispose();
     super.dispose();
   }
@@ -123,8 +149,10 @@ class _HomeScreenState extends State<HomeScreen> {
     ..showSnackBar(SnackBar(content: Text(msg), action: action));
 
   Future<void> _copy(Account a) async {
-    _revealed[a.id] = DateTime.now();
-    await copyCode(a.codeAt(DateTime.now()));
+    final now = DateTime.now();
+    _revealed[a.id] = now;
+    await copyCode(a.codeAt(now));
+    showCopiedCodeActivity(widget.vault, a, now);
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -483,6 +511,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _search() => TextField(
+        controller: _searchText,
         onChanged: (v) => setState(() {
           _query = v;
           _selected = 0;

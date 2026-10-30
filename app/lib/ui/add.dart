@@ -31,6 +31,35 @@ bool get canScanScreen => Platform.isMacOS || Platform.isWindows;
 List<String> folderNames(Iterable<Account> accounts) =>
     {for (final a in accounts) if (a.folder != null && a.folder!.isNotEmpty) a.folder!}.toList()..sort();
 
+/// The one confirmation before accounts from a browser are saved: the usual account dialog for one,
+/// a list of names for a Google Authenticator transfer with many.
+Future<bool> confirmAddAccounts(BuildContext context, List<Account> accounts) async {
+  if (accounts.length == 1) {
+    return showAccountDialog(context, accounts.single, title: 'Add from your browser?', confirm: 'Add');
+  }
+  String name(Account a) => a.issuer.isEmpty ? a.label : a.label.isEmpty ? a.issuer : '${a.issuer} (${a.label})';
+  return await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (c) => AlertDialog(
+          title: Text('Add ${accounts.length} accounts from your browser?'),
+          content: SizedBox(
+            width: 360,
+            child: ListView(shrinkWrap: true, children: [
+              const Text('From a Google Authenticator transfer code:'),
+              const SizedBox(height: 8),
+              for (final a in accounts) Padding(padding: const EdgeInsets.symmetric(vertical: 2), child: Text('• ${name(a)}')),
+            ]),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+            FilledButton(onPressed: () => Navigator.pop(c, true), child: Text('Add ${accounts.length}')),
+          ],
+        ),
+      ) ??
+      false;
+}
+
 /// Lets the user check and edit issuer, name, websites, folder and (under Advanced) how codes are made.
 /// Edits [a] in place when confirmed. [folders] are the existing folder names to pick from.
 Future<bool> showAccountDialog(BuildContext context, Account a,

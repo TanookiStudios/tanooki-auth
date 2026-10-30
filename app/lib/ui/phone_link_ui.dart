@@ -5,12 +5,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../bridge/server.dart' show addFromUri;
 import '../core/account.dart';
 import '../core/phone_link.dart';
 import '../core/sync/relay_client.dart';
 import '../core/sync/sync_service.dart' show SyncService, thisDeviceName;
 import '../core/vault.dart';
-import 'add.dart' show ScanScreen, hasCamera;
+import 'add.dart' show ScanScreen, hasCamera, confirmAddAccounts;
 import 'home.dart' show accountTitle;
 import 'premium.dart';
 import 'theme.dart';
@@ -52,6 +53,7 @@ class LinkService {
 
   Vault? _vault;
   Future<Account?> Function(FillRequest)? _ask;
+  Future<bool> Function(List<Account>)? _confirmAdd;
   final _links = <BrowserLink>[];
   final _queue = <FillRequest>[];
   bool _asking = false;
@@ -59,10 +61,11 @@ class LinkService {
   List<BrowserLink> linksOf(Vault v) =>
       [for (final m in (v.settings[phoneLinksKey] as List?) ?? const []) BrowserLink((m as Map).cast<String, dynamic>())];
 
-  void attach(Vault v, Future<Account?> Function(FillRequest) ask) {
+  void attach(Vault v, Future<Account?> Function(FillRequest) ask, [Future<bool> Function(List<Account>)? confirmAdd]) {
     detach();
     _vault = v;
     _ask = ask;
+    _confirmAdd = confirmAdd ?? _confirmAdd;
     _links.addAll(linksOf(v));
     for (final l in _links) {
       _connect(l);
@@ -116,6 +119,11 @@ class LinkService {
     _asking = true;
     final r = _queue.removeAt(0);
     try {
+      if (r.addUri != null) {
+        final v = _vault, confirm = _confirmAdd;
+        await r.link.answerAdd(r, v == null || confirm == null ? {'accepted': false, 'reason': 'declined'} : await addFromUri(v, r.addUri, confirm));
+        return;
+      }
       final account = await _ask!(r);
       await r.link.answer(r, account);
     } catch (_) {
@@ -381,6 +389,10 @@ void startSyncAndLink(BuildContext context, Vault v, Future<void> Function() bri
   LinkService.instance.attach(v, (r) async {
     await bringToFront();
     return context.mounted ? askToApprove(context, v, r) : null;
+  }, (accounts) async {
+    // The browser's right-click "Add to Tanooki Auth": always ask here before saving.
+    await bringToFront();
+    return context.mounted && await confirmAddAccounts(context, accounts);
   });
 }
 

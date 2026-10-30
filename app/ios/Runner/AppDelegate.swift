@@ -1,3 +1,4 @@
+import ActivityKit
 import Flutter
 import UIKit
 import WatchConnectivity
@@ -46,6 +47,11 @@ final class Extras: NSObject, FlutterSceneLifeCycleDelegate, WCSessionDelegate {
         status == errSecSuccess
           ? result(nil)
           : result(FlutterError(code: "keychain\(status)", message: nil, details: nil))
+      case "startCodeActivity":
+        guard #available(iOS 16.2, *) else {
+          return result(FlutterError(code: "unsupported", message: "Needs iOS 16.2", details: nil))
+        }
+        CodeActivity.start(call.arguments as? [String: Any] ?? [:], result)
       case "takeAction":
         result(self.pendingAction)
         self.pendingAction = nil
@@ -80,6 +86,7 @@ final class Extras: NSObject, FlutterSceneLifeCycleDelegate, WCSessionDelegate {
       }
     }
     self.channel = channel
+    if #available(iOS 16.2, *) { CodeActivity.endExpired() } // left over from a run that was closed early
     registrar.addSceneDelegate(self)
     if WCSession.isSupported() {
       WCSession.default.delegate = self
@@ -138,6 +145,51 @@ final class Extras: NSObject, FlutterSceneLifeCycleDelegate, WCSessionDelegate {
 
   func sessionWatchStateDidChange(_ session: WCSession) {
     if let json = lastFavorites { DispatchQueue.main.async { self.sendToWatch(json) } }
+  }
+}
+
+/// The copied-code Live Activity (ios/Shared/CodeActivity.swift). Only one at a time; it ends when the
+/// code expires. The app keeps running in the background until then (a code lasts 30 s or so), and the
+/// activity is marked stale at that moment anyway in case iOS stops the app sooner.
+@available(iOS 16.2, *)
+enum CodeActivity {
+  static func start(_ args: [String: Any], _ result: @escaping FlutterResult) {
+    guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+      return result(FlutterError(code: "disabled", message: "Live Activities are off for Tanooki Auth", details: nil))
+    }
+    let expires = Date(timeIntervalSince1970: ((args["expires"] as? NSNumber)?.doubleValue ?? 0) / 1000)
+    let state = CodeActivityAttributes.ContentState(code: args["code"] as? String ?? "", expires: expires)
+    let attributes = CodeActivityAttributes(title: args["title"] as? String ?? "")
+    Task { @MainActor in
+      for old in Activity<CodeActivityAttributes>.activities {
+        await old.end(nil, dismissalPolicy: .immediate)
+      }
+      do {
+        let activity = try Activity.request(attributes: attributes, content: ActivityContent(state: state, staleDate: expires), pushType: nil)
+        endAt(expires, activity)
+        result(nil)
+      } catch {
+        result(FlutterError(code: "failed", message: error.localizedDescription, details: nil))
+      }
+    }
+  }
+
+  private static func endAt(_ expires: Date, _ activity: Activity<CodeActivityAttributes>) {
+    var task = UIBackgroundTaskIdentifier.invalid
+    task = UIApplication.shared.beginBackgroundTask { UIApplication.shared.endBackgroundTask(task) }
+    Task { @MainActor in
+      try? await Task.sleep(nanoseconds: UInt64(max(0, expires.timeIntervalSinceNow) * 1_000_000_000))
+      await activity.end(nil, dismissalPolicy: .immediate)
+      UIApplication.shared.endBackgroundTask(task)
+    }
+  }
+
+  static func endExpired() {
+    Task {
+      for a in Activity<CodeActivityAttributes>.activities where a.content.state.expires <= Date() {
+        await a.end(nil, dismissalPolicy: .immediate)
+      }
+    }
   }
 }
 

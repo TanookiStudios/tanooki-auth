@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 
 import '../core/account.dart';
+import '../core/google_migration.dart';
 import '../core/otpauth_uri.dart';
 import '../core/totp.dart';
 import '../core/vault.dart';
@@ -23,7 +24,8 @@ abstract class BridgeHost {
   bool get locked;
   void showPairingCode(String code, String origin);
   void hidePairingCode();
-  Future<bool> confirmAdd(Account account);
+  /// Always shown before a browser's add is saved: one account, or every account in a Google transfer code.
+  Future<bool> confirmAdd(List<Account> accounts);
   void vaultChanged();
 
   /// Brings the app forward on a screen: 'add' or 'settings'.
@@ -45,8 +47,8 @@ final extensionOrigin = RegExp(
     r'^(chrome-extension://[a-p]{32}|(moz|safari-web)-extension://[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$',
     caseSensitive: false);
 
-/// Raycast and Alfred send these fixed Origins. Exact match only.
-const integrationOrigins = {'tanooki-integration://raycast', 'tanooki-integration://alfred'};
+/// Raycast, Alfred and PowerToys send these fixed Origins. Exact match only.
+const integrationOrigins = {'tanooki-integration://raycast', 'tanooki-integration://alfred', 'tanooki-integration://powertoys'};
 
 bool isAllowedOrigin(String origin) => integrationOrigins.contains(origin) || extensionOrigin.hasMatch(origin);
 
@@ -54,6 +56,7 @@ bool isAllowedOrigin(String origin) => integrationOrigins.contains(origin) || ex
 String bridgeClientName(String origin) => switch (origin) {
       'tanooki-integration://raycast' => 'Raycast',
       'tanooki-integration://alfred' => 'Alfred',
+      'tanooki-integration://powertoys' => 'PowerToys',
       _ => 'Browser extension',
     };
 
@@ -131,9 +134,9 @@ class BridgeServer {
         id = msg['id'];
         reply = await _handle(msg, origin, codeTimes);
       } on _BridgeError catch (e) {
-        reply = {'error': e.code, 'message': e.message};
+        reply = {'type': 'error', 'error': e.code, 'message': e.message};
       } catch (_) {
-        reply = {'error': 'badRequest', 'message': 'Tanooki Auth didn\'t understand that request.'};
+        reply = {'type': 'error', 'error': 'badRequest', 'message': 'Tanooki Auth didn\'t understand that request.'};
       }
       ws.add(jsonEncode({'id': id, ...reply}));
     });
@@ -205,23 +208,9 @@ class BridgeServer {
         }
         return {'ok': true};
       case 'add':
-        final Account a;
-        try {
-          a = parseOtpauthUri(msg['uri'] as String);
-        } on FormatException catch (e) {
-          throw _BridgeError('badRequest', e.message);
-        }
-        final dupe = accounts.where((x) => x.secret == a.secret).firstOrNull;
-        if (dupe != null) return {'accepted': false, 'reason': 'duplicate'};
-        final d = _hostOf(msg['domain'] as String? ?? '');
-        if (d.isNotEmpty) a.domains.add(d);
-        if (!await host.confirmAdd(a)) return {'accepted': false, 'reason': 'declined'};
-        host.vault.accounts
-          ..removeWhere((x) => x.secret == a.secret) // an old copy in Trash
-          ..add(a);
-        await host.vault.save();
-        host.vaultChanged();
-        return {'accepted': true, 'accountId': a.id};
+        final reply = await addFromUri(host.vault, msg['uri'], host.confirmAdd, domain: _hostOf(msg['domain'] as String? ?? ''));
+        if (reply['type'] == 'added') host.vaultChanged();
+        return reply;
       default:
         throw _BridgeError('badRequest', 'Unknown request "$type".');
     }
@@ -260,6 +249,43 @@ class BridgeServer {
     await host.vault.save();
     return {'token': token};
   }
+}
+
+/// "Add to Tanooki Auth" from a browser (bridge or phone link). [uri] is an otpauth:// link or a Google
+/// Authenticator transfer (otpauth-migration://, many accounts). Accounts already in the list are skipped.
+/// Always asks the user once through [confirm] (issuer, name, Add / Cancel) and saves only on Add.
+/// Replies `type` 'added', 'declined' or 'error' (with `message`), plus `accepted`, `reason`
+/// ('declined', 'duplicate', 'badUri') and `accountIds`. The URI holds secrets: never logged or echoed.
+Future<Map<String, dynamic>> addFromUri(Vault vault, Object? uri, Future<bool> Function(List<Account>) confirm, {String domain = ''}) async {
+  List<Account> found;
+  try {
+    if (uri is! String) throw const FormatException('No otpauth:// link was sent.');
+    final migration = uri.trim().toLowerCase().startsWith('otpauth-migration://');
+    found = migration ? parseGoogleMigration(uri) : [parseOtpauthUri(uri)];
+    if (!migration && domain.isNotEmpty) found.single.domains.add(domain); // a transfer code isn't tied to the page
+  } on FormatException catch (e) {
+    return {'type': 'error', 'error': 'badRequest', 'accepted': false, 'reason': 'badUri', 'message': e.message};
+  }
+  final have = {for (final x in vault.live) x.secret};
+  final fresh = <Account>[];
+  for (final a in found) {
+    if (have.add(a.secret)) fresh.add(a); // also drops repeats inside one transfer code
+  }
+  if (fresh.isEmpty) {
+    return {
+      'type': 'error',
+      'accepted': false,
+      'reason': 'duplicate',
+      'message': found.length == 1 ? 'That account is already in Tanooki Auth.' : 'Those accounts are already in Tanooki Auth.',
+    };
+  }
+  if (!await confirm(fresh)) return {'type': 'declined', 'accepted': false, 'reason': 'declined'};
+  final secrets = {for (final a in fresh) a.secret};
+  vault.accounts
+    ..removeWhere((x) => secrets.contains(x.secret)) // old copies in Trash
+    ..addAll(fresh);
+  await vault.save();
+  return {'type': 'added', 'accepted': true, 'accountId': fresh.first.id, 'accountIds': [for (final a in fresh) a.id]};
 }
 
 class _BridgeError implements Exception {

@@ -34,8 +34,10 @@ class HarnessHost implements BridgeHost {
   @override
   void hidePairingCode() {}
   @override
-  Future<bool> confirmAdd(Account a) async {
-    stdout.writeln('CONFIRM ${a.issuer} ${a.domains.join(',')}');
+  Future<bool> confirmAdd(List<Account> accounts) async {
+    for (final a in accounts) {
+      stdout.writeln('CONFIRM ${a.issuer} ${a.domains.join(',')}');
+    }
     return true;
   }
 

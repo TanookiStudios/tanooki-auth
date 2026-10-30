@@ -28,13 +28,15 @@ const phoneLinksKey = 'phoneLinks';
   return (relay: q['relay']!, room: q['room']!, extPub: q['key']!, secret: q['secret']!);
 }
 
-/// A sign-in code request from the browser, decrypted.
+/// A request from the browser, decrypted: a sign-in code for [host], or (when [addUri] is set) its
+/// right-click "Add to Tanooki Auth" with an otpauth:// link.
 class FillRequest {
-  FillRequest(this.link, this.id, this.host, this.messageId);
+  FillRequest(this.link, this.id, this.host, this.messageId, {this.addUri});
   final BrowserLink link;
   final String id;
   final String host;
   final int messageId;
+  final String? addUri;
 }
 
 /// Accounts saved for [host] (same rule as the extension: the domain or a subdomain of it).
@@ -128,6 +130,8 @@ class BrowserLink {
     final msg = await _open(m);
     if (msg != null && msg['t'] == 'fill-request' && msg['host'] is String) {
       onRequest(FillRequest(this, msg['id'] as String, msg['host'] as String, id as int));
+    } else if (msg != null && msg['t'] == 'add-request' && msg['uri'] is String) {
+      onRequest(FillRequest(this, msg['id'] as String, '', id as int, addUri: msg['uri'] as String));
     }
   }
 
@@ -182,6 +186,18 @@ class BrowserLink {
         'issuer': account.issuer,
       });
     }
+    await relayFetch(relay, 'DELETE', '$roomPath/messages/${r.messageId}', token: token).catchError((_) => RelayResponse(0, {}));
+  }
+
+  /// Answers an `add-request` with `add-result` {re, accepted, reason} ([reply] comes from addFromUri).
+  Future<void> answerAdd(FillRequest r, Map<String, dynamic> reply) async {
+    await send({
+      't': 'add-result',
+      're': r.id,
+      'accepted': reply['accepted'] == true,
+      'reason': reply['reason'] ?? '',
+      if (reply['message'] != null) 'message': reply['message'],
+    });
     await relayFetch(relay, 'DELETE', '$roomPath/messages/${r.messageId}', token: token).catchError((_) => RelayResponse(0, {}));
   }
 

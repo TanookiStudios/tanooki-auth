@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tanooki_auth/bridge/server.dart';
 import 'package:tanooki_auth/core/account.dart';
+import 'package:tanooki_auth/core/google_migration.dart';
 import 'package:tanooki_auth/core/otpauth_uri.dart';
 import 'package:tanooki_auth/core/totp.dart';
 import 'package:tanooki_auth/core/vault.dart';
@@ -26,13 +27,15 @@ class FakeHost implements BridgeHost {
   String? shownCode;
   bool approve = true;
   Account? offered;
+  List<Account> offeredAll = [];
   @override
   void showPairingCode(String code, String origin) => shownCode = code;
   @override
   void hidePairingCode() => shownCode = null;
   @override
-  Future<bool> confirmAdd(Account a) async {
-    offered = a;
+  Future<bool> confirmAdd(List<Account> accounts) async {
+    offered = accounts.first;
+    offeredAll = accounts;
     return approve;
   }
 
@@ -233,6 +236,75 @@ void main() {
     expect(host.vault.accounts, hasLength(2));
 
     expect((await c.send({'type': 'add', 'token': token, 'uri': uri, 'domain': 'discord.com'}))['reason'], 'duplicate');
+  });
+
+  test('right-click add replies added / declined / error, always asks first, never echoes the link', () async {
+    final c = await Client.connect(port);
+    const uri = 'otpauth://totp/Slack:maddie?secret=KRUGKIDROVUWG2ZAMJZG653OEBTG66BAN52XE&issuer=Slack';
+    expect((await c.send({'type': 'add', 'token': 'nope', 'uri': uri}))['type'], 'error', reason: 'unpaired browsers get nothing');
+    expect(host.offered, isNull);
+    final token = await pair(c);
+
+    host.approve = false;
+    final no = await c.send({'type': 'add', 'token': token, 'uri': uri});
+    expect(no['type'], 'declined');
+    expect(host.offered!.issuer, 'Slack');
+    expect(host.offered!.label, 'maddie');
+    expect(host.vault.accounts, hasLength(1), reason: 'nothing saved without Add');
+
+    host.offered = null;
+    host.approve = true;
+    final yes = await c.send({'type': 'add', 'token': token, 'uri': uri});
+    expect(yes['type'], 'added');
+    expect(host.offered, isNotNull, reason: 'the confirmation is shown every time');
+    expect(host.vault.accounts.map((a) => a.issuer), contains('Slack'));
+
+    host.offered = null;
+    final dupe = await c.send({'type': 'add', 'token': token, 'uri': uri});
+    expect(dupe['type'], 'error');
+    expect(dupe['message'], contains('already'));
+
+    for (final bad in ['https://example.com', 'otpauth://totp/X?issuer=X', 42]) {
+      final r = await c.send({'type': 'add', 'token': token, 'uri': bad});
+      expect(r['type'], 'error');
+      expect(r['message'], isA<String>());
+    }
+    expect(host.offered, isNull, reason: 'bad links and duplicates never reach the confirmation');
+    final all = jsonEncode([no, yes, dupe]);
+    expect(all.contains('KRUGKIDROVUWG2ZAMJZG653OEBTG66BAN52XE'), isFalse, reason: 'the secret is never sent back');
+  });
+
+  test('PowerToys can pair; look-alike origins are refused', () async {
+    final c = await Client.connect(port, origin: 'tanooki-integration://powertoys');
+    final token = await pair(c);
+    expect((await c.send({'type': 'accounts', 'token': token}))['accounts'], hasLength(1));
+    expect(bridgeClientName('tanooki-integration://powertoys'), 'PowerToys');
+    for (final o in ['tanooki-integration://powertoys.evil', 'Tanooki-Integration://powertoys', 'tanooki-integration://powertoys/']) {
+      expect(isAllowedOrigin(o), isFalse, reason: o);
+    }
+  });
+
+  test('a Google Authenticator transfer code adds every new account after one confirmation', () async {
+    final c = await Client.connect(port);
+    final token = await pair(c);
+    final uri = buildGoogleMigration([
+      Account(id: 'a', issuer: 'GitHub', label: 'me', secret: 'JBSWY3DPEHPK3PXP'), // already there
+      Account(id: 'b', issuer: 'Dropbox', label: 'me', secret: 'GEZDGNBVGY3TQOJQ'),
+      Account(id: 'c', issuer: 'Reddit', label: 'me', secret: 'MFRGGZDFMZTWQ2LK'),
+    ]).single;
+
+    host.approve = false;
+    expect((await c.send({'type': 'add', 'token': token, 'uri': uri}))['reason'], 'declined');
+    expect(host.vault.accounts, hasLength(1));
+    expect(host.offeredAll.map((a) => a.issuer), ['Dropbox', 'Reddit'], reason: 'one confirmation, duplicates left out');
+
+    host.approve = true;
+    final r = await c.send({'type': 'add', 'token': token, 'uri': uri, 'domain': 'example.com'});
+    expect(r['accepted'], isTrue);
+    expect(r['accountIds'], hasLength(2));
+    expect(host.vault.accounts.map((a) => a.issuer), ['GitHub', 'Dropbox', 'Reddit']);
+    expect(host.vault.accounts.last.domains, isEmpty, reason: 'a transfer code isn\'t tied to the page');
+    expect((await c.send({'type': 'add', 'token': token, 'uri': uri}))['reason'], 'duplicate');
   });
 
   test('setDomain appends once', () async {

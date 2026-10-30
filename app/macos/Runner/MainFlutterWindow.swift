@@ -5,6 +5,7 @@ import ScreenCaptureKit
 class MainFlutterWindow: NSWindow {
   private var channel: FlutterMethodChannel?
   private var statusItem: NSStatusItem?
+  private let pasteOnce = PasteOnce()
 
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
@@ -27,6 +28,13 @@ class MainFlutterWindow: NSWindow {
         case "setSecure":
           // Keeps the window out of screenshots and screen sharing.
           self?.sharingType = (call.arguments as? Bool ?? false) ? .none : .readOnly
+          result(nil)
+        case "copyOnce":
+          // "Clear after one paste": see PasteOnce.swift.
+          self?.pasteOnce.copy(call.arguments as? String ?? "")
+          result(nil)
+        case "clearOnce":
+          self?.pasteOnce.clear()
           result(nil)
         case "captureScreen":
           MainFlutterWindow.captureScreens(result)

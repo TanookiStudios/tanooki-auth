@@ -5,6 +5,7 @@ import WidgetKit
 struct TanookiWidgets: WidgetBundle {
   var body: some Widget {
     FavoritesWidget()
+    CodeActivityWidget()
     if #available(iOS 18.0, *) {
       ScanControl()
     }

@@ -1,8 +1,9 @@
 import SwiftUI
 import WatchConnectivity
+import WidgetKit
 
 /// Apple Watch app: favorites' codes, worked out on the watch. The list arrives from the iPhone app over
-/// WatchConnectivity and is kept in the watch's own keychain.
+/// WatchConnectivity and is kept in the watch's keychain, shared with the complication (TanookiWatchWidgets).
 @main
 struct TanookiWatchApp: App {
   @StateObject private var link = PhoneLink()
@@ -15,7 +16,7 @@ struct TanookiWatchApp: App {
 }
 
 final class PhoneLink: NSObject, ObservableObject, WCSessionDelegate {
-  @Published var favorites: [Favorite] = FavoriteStore.load(group: nil)
+  @Published var favorites: [Favorite] = FavoriteStore.load(group: FavoriteStore.sharedGroup)
 
   override init() {
     super.init()
@@ -28,8 +29,9 @@ final class PhoneLink: NSObject, ObservableObject, WCSessionDelegate {
 
   private func store(_ context: [String: Any]) {
     guard let json = context["favorites"] as? Data else { return }
-    FavoriteStore.save(json, group: nil)
-    let list = FavoriteStore.load(group: nil)
+    FavoriteStore.save(json, group: FavoriteStore.sharedGroup)
+    let list = FavoriteStore.load(group: FavoriteStore.sharedGroup)
+    WidgetCenter.shared.reloadAllTimelines() // the watch face complication
     DispatchQueue.main.async {
       self.favorites = list
       #if DEBUG

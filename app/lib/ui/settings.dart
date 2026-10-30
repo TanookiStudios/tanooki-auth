@@ -8,6 +8,7 @@ import 'package:local_auth/local_auth.dart';
 import '../bridge/server.dart';
 import '../core/account.dart';
 import '../core/security.dart';
+import '../core/spotlight.dart';
 import '../core/vault.dart';
 import '../core/widget_share.dart';
 import '../main.dart' show createDecoyVault, deleteDecoyVault, isDecoyVault;
@@ -15,6 +16,7 @@ import 'about_maddie.dart';
 import 'app_icon.dart';
 import 'auto_backup_ui.dart';
 import 'backup_ui.dart';
+import 'clipboard.dart';
 import 'export_ui.dart';
 import 'home.dart';
 import 'premium.dart';
@@ -536,6 +538,111 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ];
   }
 
+  /// Premium switches: opens the Premium screen first when it isn't unlocked yet.
+  Future<void> _setPremium(String key, Object value) async {
+    if (!premium.value) {
+      await Navigator.push(context, MaterialPageRoute(builder: (_) => PremiumScreen(vault: widget.vault)));
+      if (!premium.value || !mounted) return setState(() {});
+    }
+    await _set(key, value);
+  }
+
+  Future<void> _pickComplication() async {
+    final s = widget.vault.settings;
+    final favorites = [for (final a in widget.vault.live) if (a.favorite && a.timeBased && !a.travelHidden) a];
+    final pick = await showDialog<String>(
+      context: context,
+      builder: (c) => SimpleDialog(title: const Text('Watch face favorite'), children: [
+        if (favorites.isEmpty)
+          const Padding(
+            padding: EdgeInsets.fromLTRB(24, 8, 24, 16),
+            child: Text('Star an account on the main list first. Only favorites can go on the watch face.'),
+          ),
+        for (final a in favorites)
+          ListTile(
+            leading: Icon(s[complicationKey] == a.id ? Icons.radio_button_checked : Icons.radio_button_off),
+            title: Text(accountTitle(a)),
+            subtitle: a.issuer.isNotEmpty && a.label.isNotEmpty ? Text(a.label) : null,
+            onTap: () => Navigator.pop(c, a.id),
+          ),
+        ListTile(
+          leading: Icon(s[complicationKey] == null ? Icons.radio_button_checked : Icons.radio_button_off),
+          title: const Text('None'),
+          onTap: () => Navigator.pop(c, ''),
+        ),
+      ]),
+    );
+    if (pick == null) return;
+    if (pick.isEmpty) {
+      setState(() => s.remove(complicationKey));
+      await widget.vault.save();
+    } else {
+      await _setPremium(complicationKey, pick);
+    }
+  }
+
+  List<Widget> _copyingSection() {
+    final s = widget.vault.settings;
+    final chosen = widget.vault.live.where((a) => a.id == s[complicationKey]).firstOrNull;
+    return [
+      const Padding(padding: EdgeInsets.fromLTRB(4, 0, 4, 8), child: CapsLabel('Copying and shortcuts')),
+      Card(
+        child: Column(children: [
+          SwitchListTile(
+            title: const Text('Copy on open'),
+            subtitle: const Text(
+                'Opening or unlocking the app copies the code of the account you used last. Accounts that ask before showing their code are skipped.'),
+            value: s[copyOnOpenKey] == true,
+            onChanged: (on) => _set(copyOnOpenKey, on),
+          ),
+          if (Platform.isMacOS) ...[
+            const Divider(),
+            SwitchListTile(
+              title: const Text('Clear after one paste'),
+              subtitle: const Text(
+                  'The copied code works for one paste, then the clipboard empties. Clipboard history apps can count as that one paste. On Windows, codes clear after 30 seconds instead.'),
+              value: s[pasteOnceKey] == true,
+              onChanged: (on) {
+                pasteOnce = on;
+                _set(pasteOnceKey, on);
+              },
+            ),
+          ],
+          if (Platform.isIOS || Platform.isMacOS) ...[
+            const Divider(),
+            SwitchListTile(
+              title: const Text('Show accounts in Spotlight'),
+              subtitle: const Text('Search for an account\'s name from anywhere and jump straight to it. Only names are shared, never codes.'),
+              value: s[spotlightKey] != false,
+              onChanged: (on) => _set(spotlightKey, on),
+            ),
+          ],
+          if (Platform.isIOS) ...[
+            const Divider(),
+            SwitchListTile(
+              title: Text(premium.value ? 'Code on Lock Screen after copying' : 'Code on Lock Screen after copying (Premium)'),
+              subtitle: const Text(
+                  'After you copy a code, it shows on your Lock Screen and Dynamic Island with a countdown until it expires.'),
+              value: premium.value && s[liveActivityKey] == true,
+              onChanged: (on) => _setPremium(liveActivityKey, on),
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.watch_outlined),
+              title: Text(premium.value ? 'Watch face favorite' : 'Watch face favorite (Premium)'),
+              subtitle: Text(chosen == null
+                  ? 'Pick one favorite whose code shows on your Apple Watch face. Needs "Show codes on widgets and watch" on.'
+                  : '${accountTitle(chosen)}. Add the Tanooki Auth complication to your watch face to see it.'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: _pickComplication,
+            ),
+          ],
+        ]),
+      ),
+      const SizedBox(height: 20),
+    ];
+  }
+
   List<Widget> _browserSection() {
     final b = activeBridge;
     final paired = b?.pairedOrigins ?? [];
@@ -581,6 +688,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           ..._premiumAndAppearance(),
           ..._listSection(),
+          ..._copyingSection(),
           ...syncAndLinkSection(context, widget.vault, () => setState(() {})),
           const Padding(
             padding: EdgeInsets.fromLTRB(4, 0, 4, 8),

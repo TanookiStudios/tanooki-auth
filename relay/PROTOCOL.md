@@ -232,6 +232,8 @@ Receivers **must** drop a message whose `ts` is more than 120 s old or 30 s in t
 | `fill-request` | ext → phone | `host` (page host, e.g. `github.com`), optional `accountHint` |
 | `code` | phone → ext | `re` (the request `id`), `code` (digits), optional `expiresIn` (seconds left in the period); the app also sends `domain` (the account's saved domain that matched `host`) and `issuer`, and the extension fills only when the page is on `domain` |
 | `deny` | phone → ext | `re` |
+| `add-request` | ext → phone | `uri`: an `otpauth://` link or a Google Authenticator `otpauth-migration://` transfer, from the extension's right-click "Add to Tanooki Auth". The phone always asks the user once before saving. |
+| `add-result` | phone → ext | `re` (the `add-request` `id`), `accepted` (bool), `reason` (`declined`, `duplicate`, `badUri`, or empty when accepted), optional `message` (plain words) |
 
 Flow: extension sends `fill-request` with `notify: true` → phone shows Approve / Deny for `host` → on Approve
 it sends `code`, on Deny `deny`. The extension ignores a `code` whose `re` it did not ask for. The phone should

@@ -9,12 +9,14 @@ import 'bridge/server.dart';
 import 'core/account.dart';
 import 'core/auto_backup.dart';
 import 'core/security.dart';
+import 'core/spotlight.dart';
 import 'core/vault.dart';
 import 'core/widget_share.dart';
 import 'ui/add.dart';
 import 'ui/app_icon.dart';
 import 'ui/backup_ui.dart';
 import 'ui/brand_icon.dart';
+import 'ui/clipboard.dart';
 import 'ui/home.dart';
 import 'ui/phone_link_ui.dart' show resumeSyncAndLink, startSyncAndLink, stopSyncAndLink;
 import 'ui/premium.dart';
@@ -75,10 +77,13 @@ void main() {
   Vault.onSaved = (v) {
     if (!isDecoyVault(v)) {
       publishSharedFavorites(v);
+      // Test and screenshot stores never reach the real Spotlight index.
+      if (storageName.isEmpty) publishSpotlight(v);
       autoBackup.vaultChanged(v);
     }
   };
   autoBackup.isPremium = () => premium.value;
+  widgetPremium = () => premium.value;
   runApp(const TanookiAuthApp());
 }
 
@@ -206,6 +211,11 @@ class _GateState extends State<Gate> implements BridgeHost {
         final (title, body, warning) = switch (bridgeClientName(origin)) {
           'Raycast' => ('Pair with Raycast', 'Type this code into Raycast:', 'Only do this if you just started pairing in Raycast yourself.'),
           'Alfred' => ('Pair with Alfred', 'Type 2fa-pair and this code into Alfred:', 'Only do this if you just typed 2fa-pair in Alfred yourself.'),
+          'PowerToys' => (
+              'Pair with PowerToys',
+              'Type this code into PowerToys Command Palette:',
+              'Only do this if you just started pairing in PowerToys yourself.'
+            ),
           _ => (
               'Pair with your browser',
               'Type this code into the Tanooki Auth browser extension:',
@@ -246,10 +256,10 @@ class _GateState extends State<Gate> implements BridgeHost {
   }
 
   @override
-  Future<bool> confirmAdd(Account account) async {
+  Future<bool> confirmAdd(List<Account> accounts) async {
     await bringToFront();
     if (!mounted) return false;
-    return showAccountDialog(context, account, title: 'Add from your browser?', confirm: 'Add');
+    return confirmAddAccounts(context, accounts);
   }
 
   @override
@@ -276,6 +286,12 @@ class _GateState extends State<Gate> implements BridgeHost {
     _lifecycle = AppLifecycleListener(onStateChange: _onLifecycle);
     listenForPlatformActions(() async {
       _pendingAction = await takePendingAction() ?? _pendingAction;
+      await _runPendingAction();
+    });
+    listenForSpotlight(() async {
+      final id = await takeSpotlightOpen();
+      if (id == null) return;
+      _pendingAction = 'account:$id';
       await _runPendingAction();
     });
     _window.setMethodCallHandler((call) async {
@@ -306,7 +322,10 @@ class _GateState extends State<Gate> implements BridgeHost {
       return;
     }
     await publishSharedFavorites(vault);
+    if (storageName.isEmpty) await publishSpotlight(vault);
     _pendingAction = await takePendingAction() ?? _pendingAction;
+    final spotlightId = await takeSpotlightOpen();
+    if (spotlightId != null) _pendingAction = 'account:$spotlightId';
     await loadPremiumAndTheme(vault);
     await restoreDockIcon(vault, premium: premium.value);
     await loadBrandIcons();
@@ -337,6 +356,8 @@ class _GateState extends State<Gate> implements BridgeHost {
       _pinError = null;
     });
     if (mounted) startSyncAndLink(context, v, bringToFront);
+    pasteOnce = v.settings[pasteOnceKey] == true;
+    if (_pendingAction == null) await _copyOnOpen(v);
     if (v != _real) return _runPendingAction();
     if (v.settings[kitShownKey] != true) {
       v.settings[kitShownKey] = true;
@@ -348,12 +369,33 @@ class _GateState extends State<Gate> implements BridgeHost {
     await _runPendingAction();
   }
 
+  /// "Copy on open": copies the most recently used account's code, with the usual message and 30 s clear.
+  Future<void> _copyOnOpen(Vault v) async {
+    final a = copyOnOpenPick(v);
+    if (a == null || !mounted) return;
+    final now = DateTime.now();
+    await copyCode(a.codeAt(now));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text('Copied ${accountTitle(a)} code. The clipboard clears in 30 seconds.'),
+        duration: const Duration(seconds: 2),
+      ));
+    await showCopiedCodeActivity(v, a, now);
+  }
+
   Future<void> _runPendingAction() async {
     final action = _pendingAction;
     if (action == null || !mounted || _locked || _vault == null) return; // runs after unlock instead
     _pendingAction = null;
     final nav = Navigator.of(context);
     nav.popUntil((r) => r.isFirst);
+    if (action.startsWith('account:')) {
+      // A Spotlight result: the home list shows that account.
+      openAccountRequest.value = action.substring('account:'.length);
+      return;
+    }
     await nav.push(MaterialPageRoute<void>(
       builder: (_) => action == 'pick'
           ? QuickPickScreen(vault: _vault!)
@@ -454,6 +496,8 @@ class _GateState extends State<Gate> implements BridgeHost {
         setState(() => _locked = true);
         stopSyncAndLink();
         if (_biometricOn) _unlock();
+      } else if (!_locked && away != null && _pendingAction == null && _vault != null) {
+        _copyOnOpen(_vault!); // opened again from the background without needing to unlock
       }
     }
   }

@@ -8,41 +8,6 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>Tanooki Auth</string>
-	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
-	<key>CFBundleName</key>
-	<string>tanooki_auth</string>
-	<key>CFBundlePackageType</key>
-	<string>APPL</string>
-	<key>CFBundleShortVersionString</key>
-	<string>$(FLUTTER_BUILD_NAME)</string>
-	<key>CFBundleSignature</key>
-	<string>????</string>
-	<key>CFBundleVersion</key>
-	<string>$(FLUTTER_BUILD_NUMBER)</string>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	<key>NSCameraUsageDescription</key>
-	<string>Tanooki Auth uses the camera to scan two-factor setup QR codes.</string>
-	<key>NSFaceIDUsageDescription</key>
-	<string>Tanooki Auth uses Face ID to keep your codes private.</string>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleURLName</key>
-			<string>com.tanookistudios.auth</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>tanookiauth</string>
-			</array>
-		</dict>
-	</array>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -58,28 +23,45 @@
 			</array>
 		</dict>
 	</array>
-	<key>LSSupportsOpeningDocumentsInPlace</key>
-	<false/>
-	<key>UTExportedTypeDeclarations</key>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>tanooki_auth</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
-			<key>UTTypeConformsTo</key>
+			<key>CFBundleURLName</key>
+			<string>com.tanookistudios.auth</string>
+			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>public.data</string>
+				<string>tanookiauth</string>
 			</array>
-			<key>UTTypeDescription</key>
-			<string>Tanooki Auth shared account</string>
-			<key>UTTypeIdentifier</key>
-			<string>com.tanookistudios.auth.share</string>
-			<key>UTTypeTagSpecification</key>
-			<dict>
-				<key>public.filename-extension</key>
-				<array>
-					<string>tanookishare</string>
-				</array>
-			</dict>
 		</dict>
 	</array>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>Tanooki Auth uses the camera to scan two-factor setup QR codes.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Tanooki Auth uses Face ID to keep your codes private.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>TAKeychainGroup</key>
 	<string>$(AppIdentifierPrefix)com.tanookistudios.auth.shared</string>
 	<key>UIApplicationSceneManifest</key>
@@ -121,6 +103,26 @@
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Tanooki Auth shared account</string>
+			<key>UTTypeIdentifier</key>
+			<string>com.tanookistudios.auth.share</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>tanookishare</string>
+				</array>
+			</dict>
+		</dict>
 	</array>
 </dict>
 </plist>
