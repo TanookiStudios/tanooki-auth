@@ -65,4 +65,29 @@ void main() {
           a.toJson()..remove('id')..remove('createdAt')..remove('updatedAt'));
     }
   });
+
+  group('Steam Guard', () {
+    test('steam://SECRET becomes a Steam account', () {
+      final a = parseOtpauthUri('steam://mfrggzdfmztwq2lk');
+      expect([a.type, a.issuer, a.secret, a.digits], [OtpType.steam, 'Steam', 'MFRGGZDFMZTWQ2LK', 5]);
+      expect(a.codeAt(DateTime.now()), matches(RegExp('^[$steamAlphabet]{5}\$')));
+    });
+
+    test('otpauth with encoder=steam or issuer Steam is Steam; other issuers are not', () {
+      expect(parseOtpauthUri('otpauth://totp/Steam:gamer?secret=MFRGGZDFMZTWQ2LK&issuer=Steam').type, OtpType.steam);
+      expect(parseOtpauthUri('otpauth://totp/Steam:gamer?secret=MFRGGZDFMZTWQ2LK').type, OtpType.steam);
+      expect(parseOtpauthUri('otpauth://totp/x?secret=MFRGGZDFMZTWQ2LK&encoder=steam&digits=5').type, OtpType.steam);
+      expect(parseOtpauthUri('otpauth://totp/Steamboat:x?secret=MFRGGZDFMZTWQ2LK').type, OtpType.totp);
+    });
+
+    test('a Steam account survives being written as a link and read back', () {
+      final a = parseOtpauthUri('steam://MFRGGZDFMZTWQ2LK')..label = 'gamer';
+      final uri = toOtpauthUri(a);
+      expect(uri, contains('encoder=steam'));
+      final b = parseOtpauthUri(uri);
+      expect([b.type, b.issuer, b.label, b.secret, b.digits], [OtpType.steam, 'Steam', 'gamer', a.secret, 5]);
+      final now = DateTime.utc(2026, 10, 30, 12);
+      expect(b.codeAt(now), a.codeAt(now));
+    });
+  });
 }

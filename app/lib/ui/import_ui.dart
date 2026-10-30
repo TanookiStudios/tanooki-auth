@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../core/importers.dart';
 import '../core/vault.dart';
 import 'backup_ui.dart';
+import 'brand_icon.dart';
 
 const _deleteNote = 'When you\'re done, delete the export file: anyone who gets it can make your codes.';
 
@@ -35,6 +36,11 @@ const _apps = <(ImportSource?, String, String)>[
     ImportSource.onePassword,
     '1Password',
     'In the 1Password app for Mac or Windows:\n\n1. Click File, then Export, then pick your account.\n2. Choose "CSV" as the format and save.\n\nThen pick that file here. Only items with a one-time password come across; your passwords are ignored.',
+  ),
+  (
+    ImportSource.applePasswords,
+    'Apple Passwords',
+    'You need a Mac for this; iPhone can\'t save the file.\n\nOn a Mac with macOS Sequoia or newer:\n1. Open the Passwords app.\n2. In the menu bar, click File, then "Export All Passwords…".\n3. Click "Export Passwords", type your Mac password if asked, and save the file.\n\nOn an older Mac: open Safari, then Safari > Settings > Passwords, click the ⋯ button, and choose "Export All Passwords…".\n\nThen pick that file here. Only items with a verification code come across; your passwords are ignored.',
   ),
   (
     null,
@@ -101,7 +107,7 @@ Future<void> importFileFlow(BuildContext context, Vault vault, ImportSource sour
   while (result == null) {
     if (!context.mounted) return;
     try {
-      result = await busy(context, 'Reading $name export…', () => parseImport(source, text, password: password));
+      result = await busy(context, 'Reading $name export…', () => parseImport(source, text, password: password, brandName: brandTitle));
     } on ImportException catch (e) {
       if (!context.mounted) return;
       if (!e.needsPassword) {

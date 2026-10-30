@@ -2,7 +2,8 @@ import 'dart:convert';
 
 import 'totp.dart';
 
-enum OtpType { totp, hotp }
+/// steam: Steam Guard's 5-character codes (time-based, own alphabet).
+enum OtpType { totp, hotp, steam }
 
 class Account {
   Account({
@@ -26,6 +27,11 @@ class Account {
     this.iconDomain,
     this.deletedAt,
     DateTime? updatedAt,
+    this.folder,
+    this.color,
+    this.emoji,
+    this.requireAuth = false,
+    this.travelHidden = false,
   })  : domains = domains ?? [],
         tags = tags ?? [],
         recoveryCodes = recoveryCodes ?? [],
@@ -33,13 +39,13 @@ class Account {
         updatedAt = updatedAt ?? createdAt ?? DateTime.now().toUtc();
 
   final String id;
-  final OtpType type;
+  OtpType type;
   String issuer;
   String label;
   final String secret; // base32
-  final OtpAlgorithm algorithm;
-  final int digits;
-  final int period;
+  OtpAlgorithm algorithm;
+  int digits;
+  int period;
   int counter;
   final List<String> domains;
   final DateTime createdAt;
@@ -55,15 +61,27 @@ class Account {
   DateTime? deletedAt;
   /// Last change to anything that syncs. Stamped by [Vault.save]; sync keeps whichever copy is newest.
   DateTime updatedAt;
+  /// The one folder this account sits in on the home list, or null.
+  String? folder;
+  /// Stored for later phases (per-account color/emoji, ask before revealing, travel mode); no UI yet.
+  int? color;
+  String? emoji;
+  bool requireAuth;
+  bool travelHidden;
 
   bool get trashed => deletedAt != null;
 
+  /// Codes that change with the clock (TOTP and Steam), as opposed to counter-based HOTP.
+  bool get timeBased => type != OtpType.hotp;
+
   String codeAt(DateTime now) {
     final key = base32Decode(secret);
-    return type == OtpType.hotp
-        ? hotp(key, counter, digits: digits, algorithm: algorithm)
-        : totp(key, now.millisecondsSinceEpoch ~/ 1000,
-            period: period, digits: digits, algorithm: algorithm);
+    final unix = now.millisecondsSinceEpoch ~/ 1000;
+    return switch (type) {
+      OtpType.hotp => hotp(key, counter, digits: digits, algorithm: algorithm),
+      OtpType.steam => steamCode(key, unix, period: period),
+      OtpType.totp => totp(key, unix, period: period, digits: digits, algorithm: algorithm),
+    };
   }
 
   Map<String, dynamic> toJson() => {
@@ -87,6 +105,11 @@ class Account {
         'iconDomain': iconDomain,
         'deletedAt': deletedAt?.toIso8601String(),
         'updatedAt': updatedAt.toIso8601String(),
+        'folder': folder,
+        'color': color,
+        'emoji': emoji,
+        'requireAuth': requireAuth,
+        'travelHidden': travelHidden,
       };
 
   /// Everything a sync merge compares: the JSON minus per-device details (list position, last used)
@@ -120,6 +143,12 @@ class Account {
         iconDomain: j['iconDomain'] as String?,
         deletedAt: _date(j['deletedAt']),
         updatedAt: _date(j['updatedAt']) ?? DateTime.parse(j['createdAt'] as String),
+        // Added in Phase A (2026-10-30).
+        folder: j['folder'] as String?,
+        color: (j['color'] as num?)?.toInt(),
+        emoji: j['emoji'] as String?,
+        requireAuth: j['requireAuth'] as bool? ?? false,
+        travelHidden: j['travelHidden'] as bool? ?? false,
       );
 }
 
@@ -144,8 +173,17 @@ class RecoveryCode {
       ];
 }
 
-/// Home list order: favorites first, then (if [recentFirst]) most recently used, else the user's order.
-List<Account> homeOrder(Iterable<Account> accounts, {bool recentFirst = false}) {
+/// Ways to sort the home list (settings key [sortKey]). Custom is the user's own drag order.
+const sortKey = 'sort';
+const sortChoices = {'custom': 'Custom (drag to arrange)', 'recent': 'Recently used', 'name': 'A to Z'};
+
+/// The chosen sort, falling back to the old "Recently used first" switch from before the sort setting.
+String sortOf(Map<String, dynamic> settings) =>
+    sortChoices.containsKey(settings[sortKey]) ? settings[sortKey] as String : (settings['recentFirst'] == true ? 'recent' : 'custom');
+
+/// Home list order: favorites first, then by [sort]: 'recent' (most recently used), 'name' (A to Z), or the user's order.
+List<Account> homeOrder(Iterable<Account> accounts, {String sort = 'custom'}) {
+  final recentFirst = sort == 'recent';
   final list = accounts.where((a) => !a.trashed).toList();
   final pos = {for (var i = 0; i < list.length; i++) list[i]: i};
   int recent(Account a, Account b) {
@@ -159,7 +197,12 @@ List<Account> homeOrder(Iterable<Account> accounts, {bool recentFirst = false}) 
   return list
     ..sort((a, b) {
       if (a.favorite != b.favorite) return a.favorite ? -1 : 1;
-      final r = recent(a, b);
+      final r = sort == 'name' ? _byName(a, b) : recent(a, b);
       return r != 0 ? r : pos[a]!.compareTo(pos[b]!);
     });
+}
+
+int _byName(Account a, Account b) {
+  String key(Account x) => '${x.issuer.isNotEmpty ? x.issuer : x.label}\u0000${x.label}'.toLowerCase();
+  return key(a).compareTo(key(b));
 }

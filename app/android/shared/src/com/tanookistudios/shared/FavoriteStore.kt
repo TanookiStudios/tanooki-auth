@@ -19,11 +19,15 @@ data class Favorite(
     val algorithm: String,
     val digits: Int,
     val period: Int,
+    /** "totp" or "steam"; favorites saved before Steam support have none, so default to totp. */
+    val type: String = "totp",
 ) {
     val title: String get() = issuer.ifEmpty { label }
 
     fun code(unixSeconds: Long): String =
-        Totp.base32Decode(secret)?.let { Totp.totp(it, unixSeconds, period, digits, algorithm) } ?: "-".repeat(digits)
+        Totp.base32Decode(secret)?.let {
+            if (type == "steam") Totp.steam(it, unixSeconds, period) else Totp.totp(it, unixSeconds, period, digits, algorithm)
+        } ?: "-".repeat(digits)
 }
 
 /**
@@ -79,6 +83,7 @@ object FavoriteStore {
             Favorite(
                 o.getString("issuer"), o.getString("label"), o.getString("secret"),
                 o.getString("algorithm"), o.getInt("digits"), o.getInt("period"),
+                o.optString("type", "totp"),
             )
         }
     } catch (e: Exception) {

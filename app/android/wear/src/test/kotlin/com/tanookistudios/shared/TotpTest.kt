@@ -31,4 +31,16 @@ class TotpTest {
         assertEquals("287082", Totp.totp(Totp.base32Decode("GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ")!!, 59))
         assertEquals("287 082", Totp.grouped("287082"))
     }
+
+    /** Steam Guard, same seed, checked against an independent Python implementation (hmac module). */
+    @Test
+    fun steamVectors() {
+        val key = seeds.getValue("sha1").toByteArray()
+        for ((t, want) in listOf(59L to "PV9M4", 1111111109L to "PY4YB", 1234567890L to "VHHQY", 2000000000L to "9N776",
+            // Together these use every letter of the Steam alphabet, so a wrong letter anywhere fails.
+            60L to "B26KJ", 90L to "5H85C", 120L to "6Y9J3", 150L to "MD224", 180L to "P2GRF", 210L to "C9PRW", 300L to "X5TCK",
+        )) {
+            assertEquals("steam t=$t", want, Totp.steam(key, t))
+        }
+    }
 }

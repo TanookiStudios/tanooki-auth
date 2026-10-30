@@ -5,7 +5,7 @@ export class BridgeError extends Error {
 
 export interface AccountWithCode {
   id: string;
-  type: "totp" | "hotp";
+  type: "totp" | "hotp" | "steam";
   issuer: string;
   label: string;
   domains: string[];

@@ -19,6 +19,7 @@ String newId() {
 
 /// Parses otpauth://totp/Issuer:label?secret=...&issuer=...&algorithm=...&digits=...&period=...
 /// Throws [FormatException] with a user-readable message.
+/// Also takes `steam://SECRET` (how Steam Desktop Authenticator and password managers write Steam Guard keys).
 Account parseOtpauthUri(String input) {
   final Uri uri;
   try {
@@ -26,8 +27,14 @@ Account parseOtpauthUri(String input) {
   } on FormatException {
     throw const FormatException('That is not an otpauth:// link.');
   }
+  if (uri.scheme == 'steam') {
+    final secret = input.trim().substring('steam://'.length).toUpperCase().replaceAll(RegExp(r'[\s=-]'), '');
+    if (secret.isEmpty) throw const FormatException('The link has no secret.');
+    base32Decode(secret);
+    return Account(id: newId(), type: OtpType.steam, issuer: 'Steam', secret: secret, digits: 5);
+  }
   if (uri.scheme != 'otpauth') throw const FormatException('That is not an otpauth:// link.');
-  final type = switch (uri.host.toLowerCase()) {
+  var type = switch (uri.host.toLowerCase()) {
     'totp' => OtpType.totp,
     'hotp' => OtpType.hotp,
     _ => throw FormatException('Unsupported code type "${uri.host}".'),
@@ -55,8 +62,12 @@ Account parseOtpauthUri(String input) {
     'SHA512' => OtpAlgorithm.sha512,
     final a => throw FormatException('Unsupported algorithm "$a".'),
   };
-  final digits = int.tryParse(q['digits'] ?? '6');
-  if (digits == null || digits < 6 || digits > 8) throw const FormatException('Digits must be 6, 7 or 8.');
+  final issuer = (q['issuer']?.trim().isNotEmpty ?? false) ? q['issuer']!.trim() : labelIssuer;
+  // Steam Guard: Aegis and others write encoder=steam; nobody else uses issuer "Steam" with plain codes.
+  if (type == OtpType.totp && (q['encoder']?.toLowerCase() == 'steam' || issuer.toLowerCase() == 'steam')) type = OtpType.steam;
+  final steam = type == OtpType.steam;
+  final digits = steam ? 5 : int.tryParse(q['digits'] ?? '6');
+  if (!steam && (digits == null || digits < 6 || digits > 8)) throw const FormatException('Digits must be 6, 7 or 8.');
   final period = int.tryParse(q['period'] ?? '30');
   if (period == null || period <= 0) throw const FormatException('Period must be a positive number.');
   final counter = int.tryParse(q['counter'] ?? '0');
@@ -65,11 +76,11 @@ Account parseOtpauthUri(String input) {
   return Account(
     id: newId(),
     type: type,
-    issuer: (q['issuer']?.trim().isNotEmpty ?? false) ? q['issuer']!.trim() : labelIssuer,
+    issuer: issuer,
     label: label,
     secret: secret.toUpperCase().replaceAll(RegExp(r'[\s=-]'), ''),
-    algorithm: algorithm,
-    digits: digits,
+    algorithm: steam ? OtpAlgorithm.sha1 : algorithm,
+    digits: digits!,
     period: period,
     counter: counter,
   );
@@ -82,8 +93,9 @@ String toOtpauthUri(Account a) {
     if (a.issuer.isNotEmpty) 'issuer': a.issuer,
     'algorithm': a.algorithm.name.toUpperCase(),
     'digits': '${a.digits}',
-    if (a.type == OtpType.totp) 'period': '${a.period}',
+    if (a.timeBased) 'period': '${a.period}',
     if (a.type == OtpType.hotp) 'counter': '${a.counter}',
+    if (a.type == OtpType.steam) 'encoder': 'steam',
   };
-  return Uri(scheme: 'otpauth', host: a.type.name, path: '/$name', queryParameters: params).toString();
+  return Uri(scheme: 'otpauth', host: a.type == OtpType.hotp ? 'hotp' : 'totp', path: '/$name', queryParameters: params).toString();
 }

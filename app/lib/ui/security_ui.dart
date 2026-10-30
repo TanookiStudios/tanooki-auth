@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:local_auth/local_auth.dart';
 
 import '../core/auto_backup.dart';
 import '../core/breaches.dart';
@@ -26,6 +27,39 @@ Future<void> applyScreenshotBlocking(bool on) async {
   } on MissingPluginException {
     // Linux / tests: nothing to do.
   }
+}
+
+// ---------- "is it you?" before showing a setup key ----------
+
+/// Tests replace this to skip the system Face ID / passcode prompt.
+@visibleForTesting
+Future<bool> Function(BuildContext context, Vault vault, String reason)? confirmItsYouOverride;
+
+/// Asks for the same proof the app's own lock uses before showing a setup key (QR code or export):
+/// Face ID / fingerprint / Touch ID / Windows Hello when the app lock is on, else the app passcode,
+/// else the device's own lock if it has one. With no lock of any kind there is nothing to ask, just as
+/// opening the app asks for nothing. True when it's OK to go ahead.
+Future<bool> confirmItsYou(BuildContext context, Vault vault, String reason) async {
+  final override = confirmItsYouOverride;
+  if (override != null) return override(context, vault, reason);
+  final auth = LocalAuthentication();
+  Future<bool> device() async {
+    try {
+      return await auth.authenticate(localizedReason: reason);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  if (vault.settings[lockKey] == true) return device();
+  if (vault.settings[passcodeKey] != null) return confirmCurrentPasscode(context, vault.settings[passcodeKey]);
+  bool supported;
+  try {
+    supported = await auth.isDeviceSupported();
+  } catch (_) {
+    supported = false;
+  }
+  return supported ? device() : true;
 }
 
 // ---------- passcode prompts ----------

@@ -110,3 +110,64 @@ Iterable<(int, Object)> _fields(Uint8List b) sync* {
     }
   }
 }
+
+/// Why Google Authenticator can't take [a], or null if it can. Google only knows 6 or 8 digits,
+/// 30-second codes, and plain time or counter codes.
+String? googleCantTake(Account a) {
+  if (a.type == OtpType.steam) return 'Steam codes';
+  if (a.digits != 6 && a.digits != 8) return '${a.digits}-digit codes';
+  if (a.type == OtpType.totp && a.period != 30) return 'codes that change every ${a.period} seconds';
+  return null;
+}
+
+/// Writes Google Authenticator "Transfer accounts" QR links, [perCode] accounts each (Google's own app
+/// puts about 10 in one code so phone cameras can still read it). The reverse of [parseGoogleMigration].
+/// Accounts [googleCantTake] are left out; callers must tell the user which.
+List<String> buildGoogleMigration(List<Account> accounts, {int perCode = 10, int? batchId}) {
+  final ok = accounts.where((a) => googleCantTake(a) == null).toList();
+  final batches = [for (var i = 0; i < ok.length; i += perCode) ok.sublist(i, (i + perCode).clamp(0, ok.length))];
+  final id = batchId ?? DateTime.now().millisecondsSinceEpoch & 0x7fffffff;
+  return [
+    for (var b = 0; b < batches.length; b++)
+      'otpauth-migration://offline?data=${Uri.encodeQueryComponent(base64.encode(_payload(batches[b], batches.length, b, id)))}',
+  ];
+}
+
+Uint8List _payload(List<Account> accounts, int size, int index, int id) {
+  final out = BytesBuilder();
+  for (final a in accounts) {
+    final p = BytesBuilder();
+    _bytes(p, 1, base32Decode(a.secret));
+    _bytes(p, 2, utf8.encode(a.issuer.isEmpty ? a.label : '${a.issuer}:${a.label}'));
+    _bytes(p, 3, utf8.encode(a.issuer));
+    _varintField(p, 4, switch (a.algorithm) { OtpAlgorithm.sha1 => 1, OtpAlgorithm.sha256 => 2, OtpAlgorithm.sha512 => 3 });
+    _varintField(p, 5, a.digits == 8 ? 2 : 1);
+    _varintField(p, 6, a.type == OtpType.hotp ? 1 : 2);
+    if (a.type == OtpType.hotp) _varintField(p, 7, a.counter);
+    _bytes(out, 1, p.toBytes());
+  }
+  _varintField(out, 2, 1); // version
+  _varintField(out, 3, size);
+  _varintField(out, 4, index);
+  _varintField(out, 5, id);
+  return out.toBytes();
+}
+
+void _varint(BytesBuilder b, int v) {
+  while (v >= 0x80) {
+    b.addByte((v & 0x7f) | 0x80);
+    v >>= 7;
+  }
+  b.addByte(v);
+}
+
+void _varintField(BytesBuilder b, int field, int v) {
+  _varint(b, field << 3);
+  _varint(b, v);
+}
+
+void _bytes(BytesBuilder b, int field, List<int> data) {
+  _varint(b, (field << 3) | 2);
+  _varint(b, data.length);
+  b.add(data);
+}

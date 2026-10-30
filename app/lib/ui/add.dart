@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
@@ -16,59 +17,155 @@ import '../core/share.dart';
 import '../core/totp.dart';
 import '../core/vault.dart';
 import 'backup_ui.dart';
+import 'brand_icon.dart';
 import 'home.dart';
 import 'import_ui.dart';
 import 'share_ui.dart';
+import 'theme.dart';
 
 bool get hasCamera => Platform.isIOS || Platform.isAndroid || Platform.isMacOS;
 bool get isPhone => Platform.isIOS || Platform.isAndroid;
 bool get canScanScreen => Platform.isMacOS || Platform.isWindows;
 
-/// Lets the user check and edit issuer, name and websites. Edits [a] in place when confirmed.
+/// Every folder name in use, A to Z.
+List<String> folderNames(Iterable<Account> accounts) =>
+    {for (final a in accounts) if (a.folder != null && a.folder!.isNotEmpty) a.folder!}.toList()..sort();
+
+/// Lets the user check and edit issuer, name, websites, folder and (under Advanced) how codes are made.
+/// Edits [a] in place when confirmed. [folders] are the existing folder names to pick from.
 Future<bool> showAccountDialog(BuildContext context, Account a,
-    {required String title, required String confirm}) async {
+    {required String title, required String confirm, List<String> folders = const [], bool existing = false}) async {
   final issuer = TextEditingController(text: a.issuer);
   final label = TextEditingController(text: a.label);
   final domains = TextEditingController(text: a.domains.join(', '));
   final tags = TextEditingController(text: a.tags.join(', '));
   final notes = TextEditingController(text: a.notes);
+  final folder = TextEditingController(text: a.folder ?? '');
+  final counter = TextEditingController(text: '${a.counter}');
+  // Advanced settings are tried on a copy, so the live preview never touches the real account until Save.
+  var type = a.type, digits = a.digits, period = a.period, algorithm = a.algorithm;
+  var advanced = false;
+  Account draft() => Account(
+        id: a.id,
+        secret: a.secret,
+        type: type,
+        digits: type == OtpType.steam ? 5 : digits,
+        period: period,
+        algorithm: type == OtpType.steam ? OtpAlgorithm.sha1 : algorithm,
+        counter: int.tryParse(counter.text.trim()) ?? a.counter,
+      );
+  Widget choice<T>(String label, T value, Map<T, String> options, void Function(T) set) => Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: DropdownButtonFormField<T>(
+          initialValue: value,
+          isExpanded: true, // long choices wrap to the dialog's width instead of overflowing
+          decoration: InputDecoration(labelText: label, isDense: true),
+          items: [for (final e in options.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
+          onChanged: (v) => v == null ? null : set(v),
+        ),
+      );
+
   final ok = await showDialog<bool>(
     context: context,
-    builder: (c) => AlertDialog(
-      title: Text(title),
-      content: SingleChildScrollView(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text(groupCode(a.codeAt(DateTime.now())), style: Theme.of(c).textTheme.headlineMedium),
-          const SizedBox(height: 8),
-          TextField(controller: issuer, decoration: const InputDecoration(labelText: 'Service (e.g. GitHub)')),
-          TextField(controller: label, decoration: const InputDecoration(labelText: 'Account (e.g. your email)')),
-          TextField(
-            controller: domains,
-            decoration: const InputDecoration(
-              labelText: 'Website (optional)',
-              helperText: 'e.g. github.com. The browser extension only fills codes here.',
-              helperMaxLines: 2,
-            ),
+    builder: (c) => StatefulBuilder(
+      builder: (c, setState) => _Ticker(
+        child: AlertDialog(
+          title: Text(title),
+          content: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Text(groupCode(draft().codeAt(DateTime.now())),
+                  key: const Key('previewCode'), textAlign: TextAlign.center, style: Theme.of(c).textTheme.headlineMedium),
+              const SizedBox(height: 8),
+              TextField(controller: issuer, decoration: const InputDecoration(labelText: 'Service (e.g. GitHub)')),
+              TextField(controller: label, decoration: const InputDecoration(labelText: 'Account (e.g. your email)')),
+              TextField(
+                controller: domains,
+                decoration: const InputDecoration(
+                  labelText: 'Website (optional)',
+                  helperText: 'e.g. github.com. The browser extension only fills codes here.',
+                  helperMaxLines: 2,
+                ),
+              ),
+              TextField(
+                controller: tags,
+                decoration: const InputDecoration(
+                  labelText: 'Tags (optional)',
+                  helperText: 'e.g. work, games. Separate with commas.',
+                ),
+              ),
+              TextField(
+                key: const Key('folderField'),
+                controller: folder,
+                decoration: InputDecoration(
+                  labelText: 'Folder (optional)',
+                  helperText: 'e.g. Work. Leave empty for no folder.',
+                  suffixIcon: folders.isEmpty
+                      ? null
+                      : PopupMenuButton<String>(
+                          tooltip: 'Pick a folder',
+                          icon: const Icon(Icons.folder_open),
+                          onSelected: (f) => setState(() => folder.text = f),
+                          itemBuilder: (_) => [
+                            const PopupMenuItem(value: '', child: Text('No folder')),
+                            for (final f in folders) PopupMenuItem(value: f, child: Text(f)),
+                          ],
+                        ),
+                ),
+              ),
+              TextField(
+                controller: notes,
+                minLines: 1,
+                maxLines: 4,
+                decoration: const InputDecoration(labelText: 'Notes (optional)'),
+              ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: () => setState(() => advanced = !advanced),
+                  icon: Icon(advanced ? Icons.expand_less : Icons.expand_more),
+                  label: const Text('Advanced'),
+                ),
+              ),
+              if (advanced) ...[
+                Text(
+                  existing
+                      ? 'Only change these if the website told you to. Wrong settings make wrong codes, and the website will refuse them.'
+                      : 'Most websites use the normal settings. Only change these if the website told you to.',
+                  style: TextStyle(fontSize: 12, color: Palette.muted),
+                ),
+                choice<OtpType>('Type', type, const {
+                  OtpType.totp: 'Time-based (normal)',
+                  OtpType.hotp: 'Counter-based (new code when you ask)',
+                  OtpType.steam: 'Steam Guard',
+                }, (v) => setState(() => type = v)),
+                if (type != OtpType.steam) ...[
+                  choice<int>('Digits', digits, const {6: '6', 7: '7', 8: '8'}, (v) => setState(() => digits = v)),
+                  choice<OtpAlgorithm>('Algorithm', algorithm, const {
+                    OtpAlgorithm.sha1: 'SHA-1 (normal)',
+                    OtpAlgorithm.sha256: 'SHA-256',
+                    OtpAlgorithm.sha512: 'SHA-512',
+                  }, (v) => setState(() => algorithm = v)),
+                ],
+                if (type != OtpType.hotp)
+                  choice<int>('New code every', period, {30: '30 seconds', 60: '60 seconds', if (period != 30 && period != 60) period: '$period seconds'},
+                      (v) => setState(() => period = v)),
+                if (type == OtpType.hotp)
+                  TextField(
+                    controller: counter,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Counter', helperText: 'How many codes have been used so far'),
+                    onChanged: (_) => setState(() {}),
+                  ),
+              ],
+            ]),
           ),
-          TextField(
-            controller: tags,
-            decoration: const InputDecoration(
-              labelText: 'Tags (optional)',
-              helperText: 'e.g. work, games. Separate with commas.',
-            ),
-          ),
-          TextField(
-            controller: notes,
-            minLines: 1,
-            maxLines: 4,
-            decoration: const InputDecoration(labelText: 'Notes (optional)'),
-          ),
-        ]),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+            FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(confirm)),
+          ],
+        ),
       ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-        FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(confirm)),
-      ],
     ),
   );
   if (ok != true) return false;
@@ -81,7 +178,42 @@ Future<bool> showAccountDialog(BuildContext context, Account a,
     ..clear()
     ..addAll(tags.text.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).toSet());
   a.notes = notes.text.trim();
+  final f = folder.text.trim();
+  a.folder = f.isEmpty ? null : f;
+  final d = draft();
+  a
+    ..type = d.type
+    ..digits = d.digits
+    ..period = d.period
+    ..algorithm = d.algorithm
+    ..counter = d.counter < 0 ? a.counter : d.counter;
   return true;
+}
+
+/// Rebuilds [child] every second, so a code preview stays current.
+class _Ticker extends StatefulWidget {
+  const _Ticker({required this.child});
+  final Widget child;
+  @override
+  State<_Ticker> createState() => _TickerState();
+}
+
+class _TickerState extends State<_Ticker> {
+  late final Timer _t;
+  @override
+  void initState() {
+    super.initState();
+    _t = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _t.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 class AddScreen extends StatefulWidget {
@@ -143,7 +275,7 @@ class _AddScreenState extends State<AddScreen> {
       return;
     }
     if (!mounted) return;
-    if (!await showAccountDialog(context, a, title: 'Add this account?', confirm: 'Add')) return;
+    if (!await showAccountDialog(context, a, title: 'Add this account?', confirm: 'Add', folders: folderNames(widget.vault.live))) return;
     widget.vault.accounts
       ..removeWhere((x) => x.secret == a.secret) // an old copy in Trash
       ..add(a);
@@ -225,7 +357,7 @@ class _AddScreenState extends State<AddScreen> {
     }
     if (!mounted) return;
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    if (!text.startsWith('otpauth://') && !text.startsWith('otpauth-migration://') && !text.startsWith(sharePrefix)) {
+    if (!['otpauth://', 'otpauth-migration://', 'steam://', sharePrefix].any(text.startsWith)) {
       _say('Found a QR code on your screen, but it isn\'t a two-factor setup code.');
       return;
     }
@@ -275,7 +407,7 @@ class _AddScreenState extends State<AddScreen> {
 
   /// Many links at once: adds every good one, then lists each skipped line and why.
   Future<void> _pasteMany(String text) async {
-    final r = parseOtpauthLines(text);
+    final r = parseOtpauthLines(text, brandName: brandTitle);
     if (r.accounts.isNotEmpty &&
         !await confirmImport(context, 'Add ${r.accounts.length} accounts?', r.accounts,
             note: r.problems.isEmpty ? null : '${r.problems.length} line(s) can\'t be used; you\'ll see which after.')) {
@@ -365,7 +497,7 @@ class _AddScreenState extends State<AddScreen> {
         ListTile(
           leading: const Icon(Icons.move_down),
           title: const Text('Move from another app'),
-          subtitle: const Text('Aegis, 2FAS, Authy, Bitwarden, 1Password, Microsoft'),
+          subtitle: const Text('Aegis, 2FAS, Authy, Bitwarden, 1Password, Apple Passwords, Microsoft'),
           onTap: _fromOtherApp,
         ),
         ListTile(
@@ -380,7 +512,7 @@ class _AddScreenState extends State<AddScreen> {
 }
 
 class ScanScreen extends StatefulWidget {
-  const ScanScreen({super.key, this.prefixes = const ['otpauth://', 'otpauth-migration://', sharePrefix], this.title = 'Scan QR code', this.wrongCode = 'That QR code isn\'t a two-factor setup code.'});
+  const ScanScreen({super.key, this.prefixes = const ['otpauth://', 'otpauth-migration://', 'steam://', sharePrefix], this.title = 'Scan QR code', this.wrongCode = 'That QR code isn\'t a two-factor setup code.'});
   /// QR codes this scan accepts; anything else shows [wrongCode].
   final List<String> prefixes;
   final String title;

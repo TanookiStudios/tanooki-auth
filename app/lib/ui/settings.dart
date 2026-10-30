@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 
 import '../bridge/server.dart';
+import '../core/account.dart';
 import '../core/security.dart';
 import '../core/vault.dart';
 import '../core/widget_share.dart';
@@ -14,11 +15,13 @@ import 'about_maddie.dart';
 import 'app_icon.dart';
 import 'auto_backup_ui.dart';
 import 'backup_ui.dart';
+import 'export_ui.dart';
 import 'home.dart';
 import 'premium.dart';
 import 'security_ui.dart';
 import 'sync_ui.dart' show syncAndLinkSection;
 import 'theme.dart';
+import 'tidy_ui.dart';
 import 'trash.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -464,11 +467,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onChanged: (on) => _set(layoutKey, on ? 'compact' : 'roomy'),
           ),
           const Divider(),
-          SwitchListTile(
-            title: const Text('Recently used first'),
-            subtitle: const Text('Accounts you just copied a code from move to the top, under your favorites'),
-            value: s[recentFirstKey] == true,
-            onChanged: (on) => _set(recentFirstKey, on),
+          ListTile(
+            leading: const Icon(Icons.sort),
+            title: const Text('Sort accounts'),
+            subtitle: Text('${sortChoices[sortOf(s)]}. Favorites always come first.'),
+            onTap: () async {
+              final pick = await showDialog<String>(
+                context: context,
+                builder: (c) => SimpleDialog(title: const Text('Sort accounts'), children: [
+                  for (final e in sortChoices.entries)
+                    ListTile(
+                      leading: Icon(e.key == sortOf(s) ? Icons.radio_button_checked : Icons.radio_button_off),
+                      title: Text(e.value),
+                      subtitle: Text(switch (e.key) {
+                        'custom' => 'Your own order. Press and hold a card, then drag it.',
+                        'recent' => 'Accounts you just copied a code from move to the top',
+                        _ => 'By service name',
+                      }),
+                      onTap: () => Navigator.pop(c, e.key),
+                    ),
+                ]),
+              );
+              if (pick != null) await _set(sortKey, pick);
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.auto_fix_high),
+            title: const Text('Tidy account names'),
+            subtitle: const Text('Turns names like "google.com:you@gmail.com" into "Google". You see every change first.'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () async {
+              await Navigator.push(context, MaterialPageRoute(builder: (_) => TidyNamesScreen(vault: widget.vault)));
+              setState(() {});
+            },
           ),
           const Divider(),
           SwitchListTile(
@@ -587,12 +619,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const Divider(),
                 ListTile(
-                  leading: const Icon(Icons.text_snippet_outlined),
-                  title: const Text('Export as plain text'),
+                  leading: const Icon(Icons.output),
+                  title: const Text('Move to another app'),
                   subtitle: const Text(
-                    'Unencrypted setup links, for moving to another app',
+                    'Aegis, 2FAS, Google Authenticator, or plain setup links',
                   ),
-                  onTap: () => exportPlainFlow(context, widget.vault),
+                  onTap: () => exportToAppFlow(context, widget.vault),
                 ),
                 const Divider(),
                 ListTile(

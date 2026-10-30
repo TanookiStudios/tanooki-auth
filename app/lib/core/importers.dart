@@ -8,10 +8,11 @@ import 'account.dart';
 import 'google_migration.dart';
 import 'otpauth_uri.dart';
 import 'scrypt.dart';
+import 'tidy.dart';
 import 'totp.dart';
 
 /// Other authenticator apps and password managers we can read an export from.
-enum ImportSource { authy, aegis, twoFas, bitwarden, onePassword }
+enum ImportSource { authy, aegis, twoFas, bitwarden, onePassword, applePasswords }
 
 /// What came out of a file or a pasted list: the accounts, plus one plain reason per thing left out.
 class ImportResult {
@@ -30,14 +31,17 @@ class ImportException implements Exception {
 }
 
 /// Reads [text] exported from [source]. Password-protected Aegis and 2FAS files need [password].
-Future<ImportResult> parseImport(ImportSource source, String text, {String? password}) async {
-  text = text.trim().replaceFirst('﻿', '');
-  return switch (source) {
-    ImportSource.authy => _authy(text),
+/// Names are tidied ([tidyName]) on the way in; [brandName] looks up a website's proper name.
+Future<ImportResult> parseImport(ImportSource source, String text, {String? password, String? Function(String domain)? brandName}) async {
+  text = text.trim().replaceFirst('\uFEFF', '');
+  final r = await switch (source) {
+    ImportSource.authy => Future.value(_authy(text)),
     ImportSource.aegis => _aegis(_json(text, 'Aegis'), password),
     ImportSource.twoFas => _twoFas(_json(text, '2FAS'), password),
-    ImportSource.bitwarden || ImportSource.onePassword => _passwordManager(text, source),
+    ImportSource.bitwarden || ImportSource.onePassword || ImportSource.applePasswords => Future.value(_passwordManager(text, source)),
   };
+  tidyAll(r.accounts, brandName: brandName);
+  return r;
 }
 
 Object? _json(String text, String app) {
@@ -49,7 +53,7 @@ Object? _json(String text, String app) {
 }
 
 /// One otpauth:// (or Google Authenticator otpauth-migration://) link per line. Blank lines are ignored.
-ImportResult parseOtpauthLines(String text) {
+ImportResult parseOtpauthLines(String text, {String? Function(String domain)? brandName}) {
   final accounts = <Account>[], problems = <String>[];
   final lines = text.split(RegExp(r'\r?\n'));
   for (var i = 0; i < lines.length; i++) {
@@ -65,6 +69,7 @@ ImportResult parseOtpauthLines(String text) {
       problems.add('Line ${i + 1}: ${e.message}');
     }
   }
+  tidyAll(accounts, brandName: brandName);
   return ImportResult(accounts, problems);
 }
 
@@ -155,6 +160,10 @@ Future<ImportResult> _aegis(Object? root, String? password) async {
   }
   final entries = (db as Map)['entries'];
   if (entries is! List) throw ImportException('That file isn\'t an Aegis export.');
+  // Aegis groups become folders (an account sits in one folder, so the first group wins).
+  final groupNames = {
+    for (final g in ((db['groups'] as List?) ?? const []).whereType<Map>()) '${g['uuid']}': '${g['name'] ?? ''}'.trim(),
+  };
   final accounts = <Account>[], problems = <String>[];
   for (final e in entries.whereType<Map>()) {
     final name = '${e['name'] ?? ''}', issuer = '${e['issuer'] ?? ''}';
@@ -162,11 +171,11 @@ Future<ImportResult> _aegis(Object? root, String? password) async {
     final type = '${e['type']}'.toLowerCase();
     final info = e['info'] as Map? ?? const {};
     try {
-      if (type != 'totp' && type != 'hotp') {
-        throw FormatException('uses ${type == 'steam' ? 'Steam' : type} codes, which Tanooki Auth doesn\'t support');
+      if (type != 'totp' && type != 'hotp' && type != 'steam') {
+        throw FormatException('uses $type codes, which Tanooki Auth doesn\'t support');
       }
       final a = _make(
-        type: type == 'hotp' ? OtpType.hotp : OtpType.totp,
+        type: OtpType.values.byName(type),
         issuer: issuer,
         label: name,
         secret: '${info['secret'] ?? ''}',
@@ -176,7 +185,11 @@ Future<ImportResult> _aegis(Object? root, String? password) async {
         counter: (info['counter'] as num?)?.toInt() ?? 0,
       )
         ..favorite = e['favorite'] == true
-        ..notes = '${e['note'] ?? ''}'.trim();
+        ..notes = '${e['note'] ?? ''}'.trim()
+        ..folder = [for (final g in (e['groups'] as List?) ?? const []) groupNames['$g']]
+            .whereType<String>()
+            .where((n) => n.isNotEmpty)
+            .firstOrNull;
       accounts.add(a);
     } on FormatException catch (err) {
       problems.add('$what ${err.message}');
@@ -220,11 +233,11 @@ Future<ImportResult> _twoFas(Object? root, String? password) async {
     final what = '"${[issuer, label].where((x) => x.isNotEmpty).join(' ')}"';
     final type = '${otp['tokenType'] ?? 'TOTP'}'.toUpperCase();
     try {
-      if (type != 'TOTP' && type != 'HOTP') {
-        throw FormatException('uses ${type == 'STEAM' ? 'Steam' : type} codes, which Tanooki Auth doesn\'t support');
+      if (type != 'TOTP' && type != 'HOTP' && type != 'STEAM') {
+        throw FormatException('uses $type codes, which Tanooki Auth doesn\'t support');
       }
       accounts.add(_make(
-        type: type == 'HOTP' ? OtpType.hotp : OtpType.totp,
+        type: OtpType.values.byName(type.toLowerCase()),
         issuer: issuer,
         label: label,
         secret: '${s['secret'] ?? ''}',
@@ -244,9 +257,14 @@ Future<ImportResult> _twoFas(Object? root, String? password) async {
 // Bitwarden JSON: {"encrypted":false,"items":[{"name","login":{"username","totp","uris":[{"uri"}]}}]}
 // Bitwarden CSV:  folder,favorite,type,name,notes,fields,reprompt,login_uri,login_username,login_password,login_totp
 // 1Password CSV:  Title,Url,Username,Password,OTPAuth,Favorite,Archived,Tags,Notes
+// Apple Passwords CSV (Passwords app / Safari "Export All Passwords"): Title,URL,Username,Password,Notes,OTPAuth
 // Only rows with a one-time-code secret become accounts; ordinary logins are not "skipped", just not codes.
 ImportResult _passwordManager(String text, ImportSource source) {
-  final app = source == ImportSource.bitwarden ? 'Bitwarden' : '1Password';
+  final app = switch (source) {
+    ImportSource.bitwarden => 'Bitwarden',
+    ImportSource.applePasswords => 'Apple Passwords',
+    _ => '1Password',
+  };
   final rows = <({String name, String user, String totp, String url})>[];
   if (text.startsWith('{')) {
     final root = _json(text, app);
@@ -287,10 +305,11 @@ ImportResult _passwordManager(String text, ImportSource source) {
     if (totp.isEmpty) continue;
     final what = '"${r.name.isEmpty ? r.user : r.name}"';
     try {
-      if (totp.startsWith('steam://')) throw const FormatException('uses Steam codes, which Tanooki Auth doesn\'t support');
-      final a = totp.startsWith('otpauth://') ? parseOtpauthUri(totp) : _make(issuer: '', label: '', secret: totp);
-      // The vault item's own name and login are better labels than the link's.
-      if (r.name.trim().isNotEmpty) a.issuer = r.name.trim();
+      final a = totp.startsWith('otpauth://') || totp.startsWith('steam://')
+          ? parseOtpauthUri(totp)
+          : _make(issuer: '', label: '', secret: totp);
+      // The vault item's own name and login are better labels than the link's (tidyName cleans them up after).
+      if (r.name.trim().isNotEmpty && a.type != OtpType.steam) a.issuer = r.name.trim();
       if (a.label.isEmpty || a.label == a.issuer) a.label = r.user.trim();
       final domain = normalizeDomain(r.url.split(RegExp(r'[,\s]')).first);
       if (domain.contains('.')) a.domains.add(domain);
@@ -359,7 +378,8 @@ Account _make({
   } on FormatException {
     throw const FormatException('has a secret that isn\'t valid');
   }
-  if (digits < 6 || digits > 8) throw FormatException('uses $digits-digit codes, which Tanooki Auth doesn\'t support');
+  final steam = type == OtpType.steam;
+  if (!steam && (digits < 6 || digits > 8)) throw FormatException('uses $digits-digit codes, which Tanooki Auth doesn\'t support');
   if (period <= 0) throw const FormatException('has a broken time period');
   return Account(
     id: newId(),
@@ -367,14 +387,14 @@ Account _make({
     issuer: issuer.trim(),
     label: label.trim(),
     secret: clean,
-    algorithm: switch (algorithm.toUpperCase().replaceAll('-', '')) {
+    algorithm: steam ? OtpAlgorithm.sha1 : switch (algorithm.toUpperCase().replaceAll('-', '')) {
       'SHA1' => OtpAlgorithm.sha1,
       'SHA256' => OtpAlgorithm.sha256,
       'SHA512' => OtpAlgorithm.sha512,
       final a => throw FormatException('uses the $a algorithm, which Tanooki Auth doesn\'t support'),
     },
-    digits: digits,
-    period: period,
+    digits: steam ? 5 : digits,
+    period: steam ? 30 : period,
     counter: counter,
   );
 }

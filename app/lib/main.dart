@@ -47,7 +47,7 @@ Future<void> createDecoyVault(Vault real, Map<String, Object> passcodeRecord) as
   }
   final decoy = await openVault(second: true);
   await decoy.resetToEmpty();
-  const lookAlike = ['theme', 'license', layoutKey, hideCodesKey, recentFirstKey, lockKey, lockAfterKey, blockScreenshotsKey];
+  const lookAlike = ['theme', 'license', layoutKey, hideCodesKey, recentFirstKey, sortKey, lockKey, lockAfterKey, blockScreenshotsKey];
   for (final k in lookAlike) {
     if (real.settings.containsKey(k)) decoy.settings[k] = real.settings[k];
   }

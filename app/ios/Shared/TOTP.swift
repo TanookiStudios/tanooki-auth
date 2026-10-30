@@ -42,6 +42,25 @@ enum TOTP {
     hotp(key: key, counter: UInt64(max(0, date.timeIntervalSince1970)) / UInt64(period), digits: digits, algorithm: algorithm)
   }
 
+  /// Steam Guard's alphabet (mirrors steamAlphabet in app/lib/core/totp.dart).
+  static let steamAlphabet = Array("23456789BCDFGHJKMNPQRTVWXY")
+
+  /// Steam Guard code: HMAC-SHA1 TOTP, the 31-bit number written as 5 characters, lowest first (mod 26).
+  static func steam(key: Data, at date: Date, period: Int = 30) -> String {
+    let counter = UInt64(max(0, date.timeIntervalSince1970)) / UInt64(period)
+    let msg = withUnsafeBytes(of: counter.bigEndian) { Data($0) }
+    let mac = Array(HMAC<Insecure.SHA1>.authenticationCode(for: msg, using: SymmetricKey(data: key)))
+    let offset = Int(mac[mac.count - 1] & 0x0f)
+    var v = (Int(mac[offset] & 0x7f) << 24) | (Int(mac[offset + 1]) << 16)
+      | (Int(mac[offset + 2]) << 8) | Int(mac[offset + 3])
+    var out = ""
+    for _ in 0..<5 {
+      out.append(steamAlphabet[v % steamAlphabet.count])
+      v /= steamAlphabet.count
+    }
+    return out
+  }
+
   /// "123 456" / "1234 5678", like the app.
   static func grouped(_ code: String) -> String {
     let half = code.count == 6 ? 3 : code.count == 8 ? 4 : 0

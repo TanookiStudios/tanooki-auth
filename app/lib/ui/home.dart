@@ -5,14 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../core/account.dart';
+import '../core/otpauth_uri.dart';
 import '../core/totp.dart';
 import '../core/vault.dart';
 import 'add.dart';
 import 'brand_icon.dart';
 import 'clipboard.dart';
 import 'recovery_codes.dart';
+import 'security_ui.dart';
 import 'settings.dart';
 import 'share_ui.dart';
+import 'sync_ui.dart' show QrView;
 import 'theme.dart';
 
 String groupCode(String code) => code.length == 6
@@ -25,6 +28,8 @@ String accountTitle(Account a) => a.issuer.isNotEmpty ? a.issuer : a.label;
 
 /// Settings keys for the home list (stored in vault.settings).
 const recentFirstKey = 'recentFirst', hideCodesKey = 'hideCodes', layoutKey = 'layout';
+/// Folder names folded away on the home list ('' is "No folder").
+const collapsedFoldersKey = 'collapsedFolders';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.vault});
@@ -34,6 +39,13 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
+/// A folder's title row on the home list. [name] null is "No folder".
+class _Section {
+  const _Section(this.name, this.count);
+  final String? name;
+  final int count;
+}
+
 class _HomeScreenState extends State<HomeScreen> {
   late final Timer _tick;
   int _selected = 0;
@@ -41,9 +53,11 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _tag;
   final _revealed = <String, DateTime>{}; // account id -> when its hidden code was tapped
   final _focus = FocusNode();
+  bool _selecting = false;
+  final _picked = <String>{}; // account ids ticked in select mode
 
   Map<String, dynamic> get _settings => widget.vault.settings;
-  bool get _recentFirst => _settings[recentFirstKey] == true;
+  String get _sort => sortOf(_settings);
   bool get _hideCodes => _settings[hideCodesKey] == true;
   bool get _compact => _settings[layoutKey] == 'compact';
   double get _cardHeight => _compact ? 92 : 196; // roomy needs room for the "Next" line in the last 5 s
@@ -52,16 +66,38 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<String> get _allTags => {for (final a in _live) ...a.tags}.toList()..sort();
 
-  List<Account> get _visible {
+  bool get _hasFolders => _live.any((a) => a.folder != null);
+  Set<String> get _collapsed => {...((_settings[collapsedFoldersKey] as List?) ?? const []).cast<String>()};
+  bool get _filtering => _query.trim().isNotEmpty || _tag != null;
+
+  /// Everything matching the search and tag, in list order (folders included, collapsed or not).
+  List<Account> get _filtered {
     final q = _query.trim().toLowerCase();
-    return homeOrder(widget.vault.accounts, recentFirst: _recentFirst)
+    return homeOrder(widget.vault.accounts, sort: _sort)
         .where((a) => _tag == null || a.tags.contains(_tag))
-        .where((a) => q.isEmpty || [a.issuer, a.label, ...a.domains, ...a.tags].any((f) => f.toLowerCase().contains(q)))
+        .where((a) => q.isEmpty || [a.issuer, a.label, ...a.domains, ...a.tags, ?a.folder].any((f) => f.toLowerCase().contains(q)))
         .toList();
   }
 
+  /// The cards on screen, in screen order: grouped by folder when there are folders, minus collapsed ones.
+  List<Account> get _visible => _rows(_filtered).whereType<Account>().toList();
+
+  /// Folder title rows and cards, in screen order. Without folders: just the cards.
+  List<Object> _rows(List<Account> filtered) {
+    if (!_hasFolders) return filtered;
+    final collapsed = _collapsed;
+    final rows = <Object>[];
+    for (final f in [...folderNames(_live), null]) {
+      final inside = filtered.where((a) => a.folder == f).toList();
+      if (inside.isEmpty) continue; // e.g. a folder whose cards are all filtered out
+      rows.add(_Section(f, inside.length));
+      if (!collapsed.contains(f ?? '')) rows.addAll(inside);
+    }
+    return rows;
+  }
+
   // Dragging only makes sense when the list shows the user's own order, unfiltered.
-  bool get _canReorder => _query.isEmpty && _tag == null && !_recentFirst;
+  bool get _canReorder => !_filtering && _sort == 'custom' && !_selecting;
 
   @override
   void initState() {
@@ -81,6 +117,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final t = _revealed[a.id];
     return t == null || now.difference(t) > const Duration(seconds: 20);
   }
+
+  void _say(String msg, {SnackBarAction? action}) => ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(msg), action: action));
 
   Future<void> _copy(Account a) async {
     _revealed[a.id] = DateTime.now();
@@ -103,7 +143,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _edit(Account a) async {
-    final changed = await showAccountDialog(context, a, title: 'Edit account', confirm: 'Save');
+    final changed = await showAccountDialog(context, a,
+        title: 'Edit account', confirm: 'Save', folders: folderNames(_live), existing: true);
     if (changed) {
       await widget.vault.save();
       setState(() {});
@@ -121,15 +162,17 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {});
   }
 
+  Future<void> _showQr(Account a) async {
+    if (!await confirmItsYou(context, widget.vault, 'Show the QR code for ${accountTitle(a)}') || !mounted) return;
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => AccountQrScreen(account: a)));
+  }
+
   Future<void> _delete(Account a) async {
     a.deletedAt = DateTime.now().toUtc();
     await widget.vault.save();
     if (!mounted) return;
     setState(() => _selected = _selected.clamp(0, (_visible.length - 1).clamp(0, 1 << 30)));
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        content: Text('Moved ${accountTitle(a)} to Trash. You can restore it from Settings for 30 days.'),
+    _say('Moved ${accountTitle(a)} to Trash. You can restore it from Settings for 30 days.',
         action: SnackBarAction(
           label: 'Undo',
           onPressed: () async {
@@ -137,8 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
             await widget.vault.save();
             if (mounted) setState(() {});
           },
-        ),
-      ));
+        ));
   }
 
   Future<void> _nextHotp(Account a) async {
@@ -153,19 +195,44 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _selected = (_selected + delta).clamp(0, n - 1));
   }
 
-  /// Moves visible[from] to visible position [to] by reshuffling only the slots those accounts
-  /// hold in the vault, so trashed accounts keep their place.
-  Future<void> _reorder(List<Account> visible, int from, int to) async {
-    if (from == to || to < 0 || to >= visible.length) return;
+  /// Puts [order] (a reshuffle of the accounts on screen) into the vault by reusing only the slots those
+  /// accounts hold there, so trashed and hidden accounts keep their place.
+  Future<void> _applyOrder(List<Account> before, List<Account> order) async {
     final accounts = widget.vault.accounts;
-    final order = [...visible];
-    order.insert(to, order.removeAt(from));
-    final slots = [for (final a in visible) accounts.indexOf(a)]..sort();
+    final slots = [for (final a in before) accounts.indexOf(a)]..sort();
     setState(() {
       for (var k = 0; k < slots.length; k++) {
         accounts[slots[k]] = order[k];
       }
     });
+    await widget.vault.save();
+  }
+
+  /// Moves visible[from] to visible position [to].
+  Future<void> _reorder(List<Account> visible, int from, int to) async {
+    if (from == to || to < 0 || to >= visible.length) return;
+    final order = [...visible];
+    order.insert(to, order.removeAt(from));
+    await _applyOrder(visible, order);
+  }
+
+  /// Drag in the folder view: a card dropped under a folder's title moves into that folder.
+  Future<void> _reorderRows(List<Object> rows, int from, int to) async {
+    if (from == to || rows[from] is! Account) return;
+    final before = rows.whereType<Account>().toList();
+    final moved = rows.removeAt(from) as Account;
+    rows.insert(to, moved);
+    final header = rows.sublist(0, to).whereType<_Section>().lastOrNull ?? rows.whereType<_Section>().first;
+    moved.folder = header.name;
+    await _applyOrder(before, rows.whereType<Account>().toList());
+  }
+
+  Future<void> _toggleFolder(String? name) async {
+    final c = _collapsed;
+    final key = name ?? '';
+    c.contains(key) ? c.remove(key) : c.add(key);
+    _settings[collapsedFoldersKey] = c.toList()..sort();
+    setState(() {});
     await widget.vault.save();
   }
 
@@ -176,9 +243,186 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  // ---------- select many ----------
+
+  void _startSelecting() => setState(() {
+        _selecting = true;
+        _picked.clear();
+      });
+
+  void _stopSelecting() => setState(() {
+        _selecting = false;
+        _picked.clear();
+      });
+
+  void _togglePick(Account a) => setState(() => _picked.contains(a.id) ? _picked.remove(a.id) : _picked.add(a.id));
+
+  List<Account> get _pickedAccounts => _live.where((a) => _picked.contains(a.id)).toList();
+
+  Future<void> _bulkDone(String msg, {SnackBarAction? action}) async {
+    await widget.vault.save();
+    if (!mounted) return;
+    _stopSelecting();
+    _say(msg, action: action);
+  }
+
+  String _count(int n) => n == 1 ? '1 account' : '$n accounts';
+
+  Future<void> _bulkTag() async {
+    final picked = _pickedAccounts;
+    if (picked.isEmpty) return;
+    final field = TextEditingController();
+    final tag = await showDialog<String>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('Add a tag to ${_count(picked.length)}'),
+        content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          TextField(
+            controller: field,
+            autofocus: true,
+            decoration: const InputDecoration(labelText: 'Tag (e.g. work)'),
+            onSubmitted: (v) => Navigator.pop(c, v.trim()),
+          ),
+          if (_allTags.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Wrap(spacing: 8, runSpacing: 4, children: [
+              for (final t in _allTags) ActionChip(label: Text(t), onPressed: () => Navigator.pop(c, t)),
+            ]),
+          ],
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(c, field.text.trim()), child: const Text('Add tag')),
+        ],
+      ),
+    );
+    if (tag == null || tag.isEmpty) return;
+    for (final a in picked) {
+      if (!a.tags.contains(tag)) a.tags.add(tag);
+    }
+    await _bulkDone('Tagged ${_count(picked.length)} "$tag".');
+  }
+
+  Future<void> _bulkFolder() async {
+    final picked = _pickedAccounts;
+    if (picked.isEmpty) return;
+    final field = TextEditingController();
+    // Returns the folder name, '' for "No folder", or null when canceled.
+    final folder = await showDialog<String>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('Move ${_count(picked.length)} to a folder'),
+        content: SingleChildScrollView(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            for (final f in folderNames(_live))
+              ListTile(leading: const Icon(Icons.folder_outlined), title: Text(f), onTap: () => Navigator.pop(c, f)),
+            ListTile(leading: const Icon(Icons.folder_off_outlined), title: const Text('No folder'), onTap: () => Navigator.pop(c, '')),
+            TextField(
+              controller: field,
+              decoration: const InputDecoration(labelText: 'Or a new folder (e.g. Work)'),
+              onSubmitted: (v) => v.trim().isEmpty ? null : Navigator.pop(c, v.trim()),
+            ),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () => field.text.trim().isEmpty ? null : Navigator.pop(c, field.text.trim()),
+            child: const Text('Move to new folder'),
+          ),
+        ],
+      ),
+    );
+    if (folder == null) return;
+    for (final a in picked) {
+      a.folder = folder.isEmpty ? null : folder;
+    }
+    await _bulkDone(folder.isEmpty ? 'Took ${_count(picked.length)} out of their folders.' : 'Moved ${_count(picked.length)} to $folder.');
+  }
+
+  Future<void> _bulkFavorite() async {
+    final picked = _pickedAccounts;
+    if (picked.isEmpty) return;
+    final on = !picked.every((a) => a.favorite);
+    for (final a in picked) {
+      a.favorite = on;
+    }
+    await _bulkDone(on ? 'Added ${_count(picked.length)} to favorites.' : 'Removed ${_count(picked.length)} from favorites.');
+  }
+
+  Future<void> _bulkTrash() async {
+    final picked = _pickedAccounts;
+    if (picked.isEmpty) return;
+    final now = DateTime.now().toUtc();
+    for (final a in picked) {
+      a.deletedAt = now;
+    }
+    _selected = 0;
+    await _bulkDone('Moved ${_count(picked.length)} to Trash. You can restore them from Settings for 30 days.',
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () async {
+            for (final a in picked) {
+              a.deletedAt = null;
+            }
+            await widget.vault.save();
+            if (mounted) setState(() {});
+          },
+        ));
+  }
+
+  Widget _selectionBar(EdgeInsets padding) {
+    final picked = _pickedAccounts;
+    final none = picked.isEmpty;
+    final allFav = !none && picked.every((a) => a.favorite);
+    final all = _visible;
+    return Padding(
+      padding: padding,
+      child: Material(
+        color: Palette.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: Palette.line)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          child: Row(children: [
+            IconButton(tooltip: 'Done selecting', icon: const Icon(Icons.close), onPressed: _stopSelecting),
+            Expanded(
+              child: Text(none ? 'Tap accounts to select' : '${picked.length} selected',
+                  maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600)),
+            ),
+            IconButton(
+              tooltip: picked.length == all.length ? 'Select none' : 'Select all',
+              icon: Icon(picked.length == all.length && !none ? Icons.deselect : Icons.select_all),
+              onPressed: () => setState(() {
+                if (picked.length == all.length) {
+                  _picked.clear();
+                } else {
+                  _picked.addAll(all.map((a) => a.id));
+                }
+              }),
+            ),
+            // Disabled-looking buttons still say why when pressed.
+            for (final (icon, tip, run) in [
+              (Icons.sell_outlined, 'Add a tag', _bulkTag),
+              (Icons.drive_file_move_outlined, 'Move to folder', _bulkFolder),
+              (allFav ? Icons.star_rounded : Icons.star_outline_rounded, allFav ? 'Remove from favorites' : 'Add to favorites', _bulkFavorite),
+              (Icons.delete_outline, 'Move to Trash', _bulkTrash),
+            ])
+              IconButton(
+                tooltip: tip,
+                icon: Icon(icon, color: none ? Palette.muted : null),
+                onPressed: none ? () => _say('Select some accounts first: tap them in the list.') : run,
+              ),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  // ---------- list ----------
+
   Widget _card(List<Account> visible, int i, DateTime now, int unix) {
     final a = visible[i];
-    final left = a.type == OtpType.totp ? secondsLeft(unix, period: a.period) : null;
+    final left = a.timeBased ? secondsLeft(unix, period: a.period) : null;
     return SizedBox(
       key: ValueKey(a.id),
       height: _cardHeight,
@@ -189,8 +433,10 @@ class _HomeScreenState extends State<HomeScreen> {
         left: left,
         hidden: _isHidden(a, now),
         compact: _compact,
-        selected: i == _selected && visible.length > 1,
+        selected: !_selecting && i == _selected && visible.length > 1,
+        picked: _selecting ? _picked.contains(a.id) : null,
         onTap: () {
+          if (_selecting) return _togglePick(a);
           setState(() => _selected = i);
           _copy(a);
         },
@@ -200,7 +446,38 @@ class _HomeScreenState extends State<HomeScreen> {
         onFavorite: () => _toggleFavorite(a),
         onRecoveryCodes: () => _recoveryCodes(a),
         onShare: () => shareAccountFlow(context, widget.vault, a),
+        onShowQr: () => _showQr(a),
         onMove: _canReorder ? (_, d) => _reorder(visible, i, i + d) : null,
+      ),
+    );
+  }
+
+  Widget _sectionHeader(_Section s) {
+    final open = !_collapsed.contains(s.name ?? '');
+    final name = s.name ?? 'No folder';
+    return Semantics(
+      button: true,
+      expanded: open,
+      label: '$name, ${_count(s.count)}, ${open ? 'tap to fold away' : 'tap to show'}',
+      excludeSemantics: true,
+      child: InkWell(
+        key: ValueKey('folder-${s.name ?? ''}'),
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => _toggleFolder(s.name),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          child: Row(children: [
+            Icon(open ? Icons.expand_more : Icons.chevron_right, color: Palette.muted),
+            const SizedBox(width: 4),
+            Icon(s.name == null ? Icons.folder_off_outlined : Icons.folder_outlined, size: 20, color: Palette.muted),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+            ),
+            const SizedBox(width: 8),
+            CountBadge(s.count),
+          ]),
+        ),
       ),
     );
   }
@@ -239,6 +516,91 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _list(bool wide, DateTime now, int unix) {
+    final live = _live;
+    final rows = _rows(_filtered);
+    final visible = rows.whereType<Account>().toList();
+    final gap = _compact ? 8.0 : 12.0;
+    if (live.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text('No accounts yet.\nAdd one to scan a setup QR code.',
+              textAlign: TextAlign.center, style: TextStyle(color: Palette.muted)),
+        ),
+      );
+    }
+    if (rows.isEmpty) {
+      return Center(
+          child: Text(_query.isEmpty ? 'No accounts with this tag.' : 'No accounts match your search.',
+              style: TextStyle(color: Palette.muted)));
+    }
+    if (wide) {
+      // Cards need ~320 pt; narrower columns would squash the code and countdown.
+      return LayoutBuilder(builder: (_, box) {
+        SliverGridDelegate grid() => SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: ((box.maxWidth - 40) / 334).floor().clamp(1, 6),
+              mainAxisExtent: _cardHeight,
+              crossAxisSpacing: 14,
+              mainAxisSpacing: gap + 2,
+            );
+        final slivers = <Widget>[];
+        var run = <Account>[];
+        void flush() {
+          if (run.isEmpty) return;
+          final cards = run;
+          slivers.add(SliverGrid.builder(
+            gridDelegate: grid(),
+            itemCount: cards.length,
+            itemBuilder: (_, k) => _card(visible, visible.indexOf(cards[k]), now, unix),
+          ));
+          run = [];
+        }
+
+        for (final r in rows) {
+          if (r is _Section) {
+            flush();
+            slivers.add(SliverToBoxAdapter(
+                child: Padding(padding: EdgeInsets.only(top: slivers.isEmpty ? 0 : 12, bottom: 6), child: _sectionHeader(r))));
+          } else {
+            run.add(r as Account);
+          }
+        }
+        flush();
+        return CustomScrollView(slivers: [SliverPadding(padding: const EdgeInsets.all(20), sliver: SliverMainAxisGroup(slivers: slivers))]);
+      });
+    }
+    Widget row(int i) {
+      final r = rows[i];
+      if (r is _Section) return Padding(key: ValueKey('section-${r.name ?? ''}'), padding: EdgeInsets.only(bottom: gap / 2), child: _sectionHeader(r));
+      final a = r as Account;
+      final card = _card(visible, visible.indexOf(a), now, unix);
+      return Padding(key: ValueKey('row-${a.id}'), padding: EdgeInsets.only(bottom: gap), child: card);
+    }
+
+    const pad = EdgeInsets.fromLTRB(16, 4, 16, 96);
+    if (!_canReorder) return ListView.builder(padding: pad, itemCount: rows.length, itemBuilder: (_, i) => row(i));
+    if (!_hasFolders) {
+      return ReorderableListView.builder(
+        padding: pad,
+        itemCount: rows.length,
+        onReorderItem: (from, to) => _reorder(visible, from, to),
+        itemBuilder: (_, i) => row(i),
+      );
+    }
+    // With folders, only cards can be picked up (press and hold); the folder titles stay put.
+    return ReorderableListView.builder(
+      padding: pad,
+      itemCount: rows.length,
+      buildDefaultDragHandles: false,
+      onReorderItem: (from, to) => _reorderRows([...rows], from, to),
+      itemBuilder: (_, i) {
+        final w = row(i);
+        return rows[i] is Account ? ReorderableDelayedDragStartListener(key: w.key, index: i, child: w) : w;
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
@@ -246,94 +608,55 @@ class _HomeScreenState extends State<HomeScreen> {
     // Sidebar layout from 700 pt, so an upright iPad mini (744 pt) gets it too.
     final wide = MediaQuery.sizeOf(context).width >= 700;
     final live = _live;
-    final visible = _visible;
-    final gap = _compact ? 8.0 : 12.0;
 
-    Widget list;
-    if (live.isEmpty) {
-      list = Center(
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Text('No accounts yet.\nAdd one to scan a setup QR code.',
-              textAlign: TextAlign.center, style: TextStyle(color: Palette.muted)),
-        ),
-      );
-    } else if (visible.isEmpty) {
-      list = Center(
-          child: Text(_query.isEmpty ? 'No accounts with this tag.' : 'No accounts match your search.',
-              style: TextStyle(color: Palette.muted)));
-    } else if (wide) {
-      // Cards need ~320 pt; narrower columns would squash the code and countdown.
-      list = LayoutBuilder(
-        builder: (_, box) => GridView.builder(
-          padding: const EdgeInsets.all(20),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: ((box.maxWidth - 40) / 334).floor().clamp(1, 6),
-            mainAxisExtent: _cardHeight,
-            crossAxisSpacing: 14,
-            mainAxisSpacing: gap + 2,
-          ),
-          itemCount: visible.length,
-          itemBuilder: (_, i) => _card(visible, i, now, unix),
-        ),
-      );
-    } else if (!_canReorder) {
-      list = ListView.separated(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
-        itemCount: visible.length,
-        separatorBuilder: (_, _) => SizedBox(height: gap),
-        itemBuilder: (_, i) => _card(visible, i, now, unix),
-      );
-    } else {
-      list = ReorderableListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
-        itemCount: visible.length,
-        onReorderItem: (from, to) => _reorder(visible, from, to),
-        itemBuilder: (_, i) => Padding(
-          key: ValueKey('row-${visible[i].id}'),
-          padding: EdgeInsets.only(bottom: gap),
-          child: _card(visible, i, now, unix),
-        ),
-      );
-    }
-
-    list = CallbackShortcuts(
+    Widget list = CallbackShortcuts(
       bindings: {
         const SingleActivator(LogicalKeyboardKey.arrowDown): () => _move(1),
         const SingleActivator(LogicalKeyboardKey.arrowUp): () => _move(-1),
         const SingleActivator(LogicalKeyboardKey.arrowRight): () => _move(1),
         const SingleActivator(LogicalKeyboardKey.arrowLeft): () => _move(-1),
         const SingleActivator(LogicalKeyboardKey.enter): () {
-          if (_visible.isNotEmpty) _copy(_visible[_selected.clamp(0, _visible.length - 1)]);
+          if (_visible.isNotEmpty && !_selecting) _copy(_visible[_selected.clamp(0, _visible.length - 1)]);
         },
         const SingleActivator(LogicalKeyboardKey.numpadEnter): () {
-          if (_visible.isNotEmpty) _copy(_visible[_selected.clamp(0, _visible.length - 1)]);
+          if (_visible.isNotEmpty && !_selecting) _copy(_visible[_selected.clamp(0, _visible.length - 1)]);
+        },
+        const SingleActivator(LogicalKeyboardKey.escape): () {
+          if (_selecting) _stopSelecting();
         },
       },
-      child: Focus(focusNode: _focus, autofocus: true, child: list),
+      child: Focus(focusNode: _focus, autofocus: true, child: _list(wide, now, unix)),
     );
+
+    final selectButton = live.isEmpty || _selecting
+        ? null
+        : IconButton(tooltip: 'Select accounts', icon: const Icon(Icons.checklist), onPressed: _startSelecting);
 
     if (!wide) {
       return Scaffold(
         appBar: AppBar(
           title: Row(children: [
-            const Text('Tanooki Auth'),
+            const Flexible(child: Text('Tanooki Auth', maxLines: 1, overflow: TextOverflow.ellipsis)),
             const SizedBox(width: 10),
             CountBadge(live.length),
           ]),
           actions: [
+            ?selectButton,
             IconButton(tooltip: 'Settings', icon: const Icon(Icons.settings_outlined), onPressed: _openSettings),
           ],
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: _add,
-          icon: const Icon(Icons.add),
-          label: const Text('Add account'),
-        ),
+        floatingActionButton: _selecting
+            ? null
+            : FloatingActionButton.extended(
+                onPressed: _add,
+                icon: const Icon(Icons.add),
+                label: const Text('Add account'),
+              ),
         body: Column(children: [
           if (live.length > 3) Padding(padding: const EdgeInsets.fromLTRB(16, 12, 16, 8), child: _search()),
           if (live.length <= 3) const SizedBox(height: 12),
           _tagChips(const EdgeInsets.fromLTRB(16, 0, 16, 8)),
+          if (_selecting) _selectionBar(const EdgeInsets.fromLTRB(16, 0, 16, 8)),
           Expanded(child: list),
         ]),
       );
@@ -361,10 +684,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(width: 20),
                 Expanded(child: _search()),
                 const SizedBox(width: 12),
+                if (selectButton != null) ...[
+                  OutlinedButton.icon(onPressed: _startSelecting, icon: const Icon(Icons.checklist, size: 18), label: const Text('Select')),
+                  const SizedBox(width: 8),
+                ],
                 FilledButton.icon(onPressed: _add, icon: const Icon(Icons.add, size: 18), label: const Text('Add')),
               ]),
             ),
             _tagChips(const EdgeInsets.fromLTRB(20, 12, 20, 0)),
+            if (_selecting) _selectionBar(const EdgeInsets.fromLTRB(20, 12, 20, 0)),
             Expanded(child: list),
             Container(
               padding: const EdgeInsets.symmetric(vertical: 8),
@@ -381,6 +709,74 @@ class _HomeScreenState extends State<HomeScreen> {
           ]),
         ),
       ]),
+    );
+  }
+}
+
+/// One account's setup QR code, for adding it to another app or device. Closes itself after 30 seconds,
+/// or as soon as the app goes to the background.
+class AccountQrScreen extends StatefulWidget {
+  const AccountQrScreen({super.key, required this.account});
+  final Account account;
+  static const showFor = 30;
+
+  @override
+  State<AccountQrScreen> createState() => _AccountQrScreenState();
+}
+
+class _AccountQrScreenState extends State<AccountQrScreen> {
+  late final Timer _tick;
+  late final AppLifecycleListener _life;
+  int _left = AccountQrScreen.showFor;
+
+  void _close() {
+    if (mounted && ModalRoute.of(context)?.isCurrent == true) Navigator.pop(context);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _tick = Timer.periodic(const Duration(seconds: 1), (_) {
+      setState(() => _left--);
+      if (_left <= 0) _close();
+    });
+    _life = AppLifecycleListener(onHide: _close);
+  }
+
+  @override
+  void dispose() {
+    _tick.cancel();
+    _life.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final a = widget.account;
+    return Scaffold(
+      appBar: AppBar(title: Text('QR code for ${accountTitle(a)}')),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            QrView(toOtpauthUri(a), size: 240),
+            const SizedBox(height: 16),
+            Text(accountTitle(a), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            if (a.issuer.isNotEmpty && a.label.isNotEmpty) Text(a.label, style: TextStyle(color: Palette.muted)),
+            const SizedBox(height: 16),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Text(
+                'Scan this with another authenticator app to add the same account there. Anyone who sees or photographs it can make your codes, so keep it private.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Palette.muted, height: 1.4),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text('Hides in $_left seconds', key: const Key('qrCountdown'), style: TextStyle(color: Palette.red, fontWeight: FontWeight.w600)),
+          ]),
+        ),
+      ),
     );
   }
 }
@@ -407,7 +803,12 @@ class Sidebar extends StatelessWidget {
                 child: Row(children: [
                   Icon(icon, size: 20, color: active ? Palette.text : Palette.muted),
                   const SizedBox(width: 12),
-                  Text(label, style: TextStyle(fontWeight: FontWeight.w600, color: active ? Palette.text : Palette.muted)),
+                  Flexible(
+                    child: Text(label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontWeight: FontWeight.w600, color: active ? Palette.text : Palette.muted)),
+                  ),
                 ]),
               ),
             ),
@@ -423,10 +824,16 @@ class Sidebar extends StatelessWidget {
           child: Row(children: [
             Icon(Icons.shield_rounded, size: 38, color: Palette.accent),
             SizedBox(width: 12),
-            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('TANOOKI', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, letterSpacing: 3)),
-              Text('AUTH', style: TextStyle(fontSize: 11, letterSpacing: 5, color: Palette.muted)),
-            ]),
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('TANOOKI', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, letterSpacing: 3)),
+                  Text('AUTH', style: TextStyle(fontSize: 11, letterSpacing: 5, color: Palette.muted)),
+                ]),
+              ),
+            ),
           ]),
         ),
         item(Icons.key_rounded, 'Accounts', () {}, active: true),
@@ -461,6 +868,8 @@ class AccountCard extends StatelessWidget {
     this.compact = false,
     this.onMove,
     this.onShare,
+    this.onShowQr,
+    this.picked,
   });
 
   final Account account;
@@ -471,12 +880,17 @@ class AccountCard extends StatelessWidget {
   final bool selected, hidden, compact;
   final VoidCallback onTap, onEdit, onDelete, onNext, onFavorite, onRecoveryCodes;
   final Future<void> Function(Account, int)? onMove;
-  final VoidCallback? onShare;
+  final VoidCallback? onShare, onShowQr;
+  /// Select mode: whether this card is ticked. Null when not selecting (shows the menu instead).
+  final bool? picked;
 
   bool get _urgent => left != null && left! <= 5;
 
   Widget _menu() {
     final a = account;
+    if (picked != null) {
+      return Checkbox(value: picked, onChanged: (_) => onTap(), semanticLabel: 'Select ${accountTitle(a)}');
+    }
     final left = a.recoveryCodes.where((r) => !r.used).length;
     return PopupMenuButton<String>(
       tooltip: 'More',
@@ -487,6 +901,7 @@ class AccountCard extends StatelessWidget {
         'favorite' => onFavorite(),
         'recovery' => onRecoveryCodes(),
         'share' => onShare?.call(),
+        'qr' => onShowQr?.call(),
         'delete' => onDelete(),
         'earlier' => onMove?.call(a, -1),
         _ => onMove?.call(a, 1),
@@ -499,6 +914,7 @@ class AccountCard extends StatelessWidget {
           child: Text(a.recoveryCodes.isEmpty ? 'Recovery codes' : 'Recovery codes ($left left)'),
         ),
         if (onShare != null) const PopupMenuItem(value: 'share', child: Text('Share securely')),
+        if (onShowQr != null) const PopupMenuItem(value: 'qr', child: Text('Show QR code')),
         if (onMove != null) const PopupMenuItem(value: 'earlier', child: Text('Move earlier')),
         if (onMove != null) const PopupMenuItem(value: 'later', child: Text('Move later')),
         const PopupMenuItem(value: 'delete', child: Text('Delete')),
@@ -528,7 +944,7 @@ class AccountCard extends StatelessWidget {
           style: TextStyle(fontSize: 12, color: Palette.muted, fontFeatures: const [FontFeature.tabularFigures()]));
 
   Widget _timer() => left == null
-      ? TextButton.icon(onPressed: onNext, icon: const Icon(Icons.refresh, size: 18), label: const Text('Next'))
+      ? TextButton.icon(onPressed: onNext, icon: const Icon(Icons.refresh, size: 18), label: const Text('Next code'))
       : Row(mainAxisSize: MainAxisSize.min, children: [
           Text('${left}s', style: TextStyle(fontSize: 12, color: _urgent ? Palette.red : Palette.muted)),
           const SizedBox(width: 8),
@@ -553,9 +969,11 @@ class AccountCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final a = account;
     final next = _next();
-    final kind = a.type == OtpType.totp
-        ? 'TOTP · ${a.digits} digits · ${a.period}s'
-        : 'HOTP · ${a.digits} digits · #${a.counter}';
+    final kind = switch (a.type) {
+      OtpType.totp => 'TOTP · ${a.digits} digits · ${a.period}s',
+      OtpType.steam => 'Steam · 5 characters · ${a.period}s',
+      OtpType.hotp => 'HOTP · ${a.digits} digits · #${a.counter}',
+    };
     final Widget body;
     if (compact) {
       final sub = [if (a.issuer.isNotEmpty) a.label, ...a.tags].where((s) => s.isNotEmpty).join(' · ');
@@ -634,11 +1052,17 @@ class AccountCard extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(14, 6, 10, 8),
           child: Row(children: [
-            Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-              _code(26),
-              ?next,
-            ]),
-            const Spacer(),
+            // Shrinks the code rather than overflow next to a wide button (HOTP "Next code") or big text.
+            Expanded(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                  _code(26),
+                  ?next,
+                ]),
+              ),
+            ),
             _timer(),
           ]),
         ),

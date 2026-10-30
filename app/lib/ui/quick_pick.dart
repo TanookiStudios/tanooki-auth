@@ -58,7 +58,7 @@ class _QuickPickScreenState extends State<QuickPickScreen> {
 
   List<Account> get _matches {
     final q = _query.trim().toLowerCase();
-    return homeOrder(widget.vault.accounts, recentFirst: true)
+    return homeOrder(widget.vault.accounts, sort: 'recent')
         .where((a) => q.isEmpty || [a.issuer, a.label, ...a.domains, ...a.tags].any((f) => f.toLowerCase().contains(q)))
         .toList();
   }

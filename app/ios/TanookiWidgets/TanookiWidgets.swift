@@ -19,7 +19,7 @@ struct FavoritesEntry: TimelineEntry {
 struct FavoritesProvider: TimelineProvider {
   func placeholder(in context: Context) -> FavoritesEntry {
     FavoritesEntry(date: Date(), favorites: [
-      Favorite(issuer: "GitHub", label: "", secret: "JBSWY3DPEHPK3PXP", algorithm: "sha1", digits: 6, period: 30),
+      Favorite(issuer: "GitHub", label: "", secret: "JBSWY3DPEHPK3PXP", algorithm: "sha1", digits: 6, period: 30, type: nil),
     ])
   }
 

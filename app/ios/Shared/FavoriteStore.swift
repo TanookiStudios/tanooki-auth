@@ -9,11 +9,14 @@ struct Favorite: Codable, Hashable {
   let algorithm: String
   let digits: Int
   let period: Int
+  /// "totp" or "steam". Optional so favorites saved before Steam support still load.
+  let type: String?
 
   var title: String { issuer.isEmpty ? label : issuer }
 
   func code(at date: Date) -> String {
     guard let key = TOTP.base32Decode(secret) else { return "------" }
+    if type == "steam" { return TOTP.steam(key: key, at: date, period: period) }
     return TOTP.totp(key: key, at: date, period: period, digits: digits, algorithm: algorithm)
   }
 }

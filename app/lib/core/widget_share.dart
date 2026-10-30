@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-import 'account.dart';
 import 'vault.dart';
 
 /// Settings key: copy favorites' secrets to the home/lock screen widgets and the watch. Off by default.
@@ -19,8 +18,9 @@ List<Map<String, Object>> sharedFavorites(Vault v) => v.settings[shareCodesKey] 
     ? const []
     : [
         for (final a in v.live)
-          if (a.favorite && a.type == OtpType.totp)
+          if (a.favorite && a.timeBased)
             {
+              'type': a.type.name, // "steam" switches the widget to Steam Guard's letters
               'issuer': a.issuer,
               'label': a.label,
               'secret': a.secret,

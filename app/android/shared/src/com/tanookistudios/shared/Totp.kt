@@ -45,6 +45,26 @@ object Totp {
     fun totp(key: ByteArray, unixSeconds: Long, period: Int = 30, digits: Int = 6, algorithm: String = "sha1"): String =
         hotp(key, unixSeconds / period, digits, algorithm)
 
+    /** Steam Guard's alphabet (mirrors steamAlphabet in app/lib/core/totp.dart). */
+    const val STEAM_ALPHABET = "23456789BCDFGHJKMNPQRTVWXY"
+
+    /** Steam Guard code: HMAC-SHA1 TOTP, the 31-bit number written as 5 characters, lowest first (mod 26). */
+    fun steam(key: ByteArray, unixSeconds: Long, period: Int = 30): String {
+        val mac = Mac.getInstance("HmacSHA1").apply { init(SecretKeySpec(key, "HmacSHA1")) }
+            .doFinal(java.nio.ByteBuffer.allocate(8).putLong(unixSeconds / period).array())
+        val offset = mac[mac.size - 1].toInt() and 0x0f
+        var v = ((mac[offset].toInt() and 0x7f) shl 24) or
+            ((mac[offset + 1].toInt() and 0xff) shl 16) or
+            ((mac[offset + 2].toInt() and 0xff) shl 8) or
+            (mac[offset + 3].toInt() and 0xff)
+        val out = StringBuilder()
+        repeat(5) {
+            out.append(STEAM_ALPHABET[v % STEAM_ALPHABET.length])
+            v /= STEAM_ALPHABET.length
+        }
+        return out.toString()
+    }
+
     /** "123 456" / "1234 5678", like the app. */
     fun grouped(code: String): String = when (code.length) {
         6 -> code.substring(0, 3) + " " + code.substring(3)

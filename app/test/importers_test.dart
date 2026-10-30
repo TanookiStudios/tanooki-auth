@@ -19,13 +19,15 @@ void main() {
 
   group('Aegis', () {
     void checkEntries(ImportResult r) {
-      expect(r.accounts.map((a) => a.issuer), ['GitHub', 'Proton', 'Bank']);
+      expect(r.accounts.map((a) => a.issuer), ['GitHub', 'Proton', 'Bank', 'Steam']);
       final gh = r.accounts[0];
       expect([gh.label, gh.secret, gh.favorite, gh.notes], ['octo@example.com', 'JBSWY3DPEHPK3PXP', true, 'work laptop']);
       final proton = r.accounts[1];
       expect([proton.algorithm, proton.digits, proton.period], [OtpAlgorithm.sha256, 8, 60]);
       expect([r.accounts[2].type, r.accounts[2].counter], [OtpType.hotp, 7]);
-      expect(r.problems.single, contains('Steam'));
+      final steam = r.accounts[3];
+      expect([steam.type, steam.label, steam.secret, steam.digits], [OtpType.steam, 'gamer', 'MFRGGZDFMZTWQ2LK', 5]);
+      expect(r.problems, isEmpty);
     }
 
     test('plain export', () async => checkEntries(await parseImport(ImportSource.aegis, fixture('import_aegis_plain.json'))));
@@ -48,8 +50,9 @@ void main() {
   group('2FAS', () {
     void check(ImportResult r) {
       expect(r.accounts.map((a) => '${a.issuer}|${a.label}|${a.secret}'),
-          ['GitHub|octo@example.com|JBSWY3DPEHPK3PXP', 'Dropbox|demo@example.com|KRUGKIDROVUWG2ZA']);
-      expect(r.problems.single, contains('Steam'));
+          ['GitHub|octo@example.com|JBSWY3DPEHPK3PXP', 'Dropbox|demo@example.com|KRUGKIDROVUWG2ZA', 'Steam|gamer|MFRGGZDFMZTWQ2LK']);
+      expect(r.accounts[2].type, OtpType.steam);
+      expect(r.problems, isEmpty);
     }
 
     test('plain backup', () async => check(await parseImport(ImportSource.twoFas, fixture('import_2fas_plain.2fas'))));
@@ -84,9 +87,10 @@ void main() {
     test('JSON: codes in and logins without codes ignored', () async {
       final r = await parseImport(ImportSource.bitwarden, fixture('import_bitwarden.json'));
       expect(r.accounts.map((a) => '${a.issuer}|${a.label}|${a.domains}'),
-          ['GitHub|octo@example.com|[github.com]', 'AWS|root|[console.aws.amazon.com]']);
+          ['GitHub|octo@example.com|[github.com]', 'AWS|root|[console.aws.amazon.com]', 'Steam|gamer|[]']);
       expect(r.accounts[1].secret, 'ONSWG4TFOQYTEMZU');
-      expect(r.problems.single, '"Steam" uses Steam codes, which Tanooki Auth doesn\'t support');
+      expect([r.accounts[2].type, r.accounts[2].secret], [OtpType.steam, 'MFRGGZDFMZTWQ2LK']);
+      expect(r.problems, isEmpty);
     });
 
     test('encrypted JSON is refused with how to fix it', () async {
@@ -109,6 +113,24 @@ void main() {
     expect(r.problems, isEmpty);
     await expectLater(parseImport(ImportSource.onePassword, 'Title,Url\nx,y\n'),
         throwsA(isA<ImportException>().having((e) => e.message, 'message', contains('no one-time code column'))));
+  });
+
+  group('Apple Passwords CSV', () {
+    test('accounts with a code come in with tidy names; passwords without one are ignored', () async {
+      final r = await parseImport(ImportSource.applePasswords, fixture('import_apple_passwords.csv'));
+      expect(r.accounts.map((a) => '${a.issuer}|${a.label}|${a.domains}'),
+          ['GitHub|octo@example.com|[github.com]', 'Discord|tanooki|[discord.com]', 'Steam|gamer|[store.steampowered.com]']);
+      expect(r.accounts[2].type, OtpType.steam);
+      expect(r.problems, isEmpty);
+    });
+
+    test('the OTPAuth column is found whatever its capitals', () async {
+      final r = await parseImport(ImportSource.applePasswords,
+          'title,url,username,password,notes,otpauth\nGitHub,https://github.com,octo,pw,,otpauth://totp/x?secret=JBSWY3DPEHPK3PXP\n');
+      expect(r.accounts.single.secret, 'JBSWY3DPEHPK3PXP');
+      await expectLater(parseImport(ImportSource.applePasswords, 'Title,URL,Username,Password,Notes\nx,y,z,w,\n'),
+          throwsA(isA<ImportException>().having((e) => e.message, 'message', contains('Apple Passwords'))));
+    });
   });
 
   test('pasting many links: good ones in, bad ones reported by line', () {

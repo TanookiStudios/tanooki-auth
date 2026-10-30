@@ -155,7 +155,7 @@
               if (msg.re !== id) continue; // ignore answers to requests we didn't make
               api(st, 'DELETE', `/v1/link/rooms/${st.roomId}/messages/${relayId}`).catch(() => {});
               if (msg.t === 'deny') throw new LinkError('denied', 'You tapped Deny on your phone.');
-              if (msg.t === 'code' && /^\d{6,10}$/.test(msg.code)) {
+              if (msg.t === 'code' && /^[0-9A-Z]{5,10}$/.test(msg.code)) {
                 return { code: msg.code, domain: String(msg.domain || ''), issuer: String(msg.issuer || ''), expiresIn: msg.expiresIn };
               }
             }

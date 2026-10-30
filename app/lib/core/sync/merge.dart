@@ -53,7 +53,16 @@ List<SyncItem> localItems(List<Account> accounts, Map<String, int> tombstones) =
 /// Both devices keep the one with the smaller id and tombstone the other, so they agree without talking.
 bool mergeRemote(List<Account> accounts, Map<String, int> tombstones, SyncItem remote) {
   final local = localItem(accounts, tombstones, remote.id);
-  if (local != null && !supersedes(remote, local)) return false;
+  if (local != null && !supersedes(remote, local)) {
+    // HOTP: a code once shown is spent, so the highest counter wins whichever copy is newer. The new
+    // stamp makes this device push the raised counter on, so every device ends on the same one.
+    final mine = local.account, theirs = remote.account;
+    if (mine == null || theirs == null || theirs.counter <= mine.counter) return false;
+    mine
+      ..counter = theirs.counter
+      ..updatedAt = _laterOf(mine.updatedAt, theirs.updatedAt).add(const Duration(milliseconds: 1));
+    return true;
+  }
 
   if (remote.purged) {
     accounts.removeWhere((a) => a.id == remote.id);
@@ -82,7 +91,15 @@ bool mergeRemote(List<Account> accounts, Map<String, int> tombstones, SyncItem r
     // When this device last used the account is its own business; keep the later of the two.
     final mine = accounts[at].lastUsedAt;
     if (mine != null && (incoming.lastUsedAt == null || mine.isAfter(incoming.lastUsedAt!))) incoming.lastUsedAt = mine;
+    // Highest HOTP counter wins (see above); restamped so the other device learns the higher one.
+    if (accounts[at].counter > incoming.counter) {
+      incoming
+        ..counter = accounts[at].counter
+        ..updatedAt = incoming.updatedAt.add(const Duration(milliseconds: 1));
+    }
     accounts[at] = incoming;
   }
   return true;
 }
+
+DateTime _laterOf(DateTime a, DateTime b) => a.isAfter(b) ? a : b;

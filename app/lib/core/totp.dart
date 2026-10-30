@@ -67,3 +67,21 @@ String totp(List<int> key, int unixSeconds,
     hotp(key, unixSeconds ~/ period, digits: digits, algorithm: algorithm);
 
 int secondsLeft(int unixSeconds, {int period = 30}) => period - unixSeconds % period;
+
+/// Steam Guard's code alphabet: digits and letters that can't be confused with each other.
+const steamAlphabet = '23456789BCDFGHJKMNPQRTVWXY';
+
+/// Steam Guard code: HMAC-SHA1 TOTP (30 s), the 31-bit truncated number written as 5 characters,
+/// lowest first, by repeatedly taking it mod 26 into [steamAlphabet].
+String steamCode(List<int> key, int unixSeconds, {int period = 30}) {
+  final msg = ByteData(8)..setInt64(0, unixSeconds ~/ period);
+  final mac = Hmac(sha1, key).convert(msg.buffer.asUint8List()).bytes;
+  final offset = mac.last & 0x0f;
+  var v = ((mac[offset] & 0x7f) << 24) | (mac[offset + 1] << 16) | (mac[offset + 2] << 8) | mac[offset + 3];
+  final sb = StringBuffer();
+  for (var i = 0; i < 5; i++) {
+    sb.write(steamAlphabet[v % steamAlphabet.length]);
+    v ~/= steamAlphabet.length;
+  }
+  return sb.toString();
+}

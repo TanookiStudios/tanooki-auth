@@ -174,7 +174,7 @@ class BridgeServer {
           return {
             'codes': {
               for (final a in accounts)
-                if (ids.contains(a.id) && a.type == OtpType.totp)
+                if (ids.contains(a.id) && a.timeBased)
                   a.id: {'code': a.codeAt(now), 'secondsLeft': secondsLeft(now.millisecondsSinceEpoch ~/ 1000, period: a.period)},
             },
           };

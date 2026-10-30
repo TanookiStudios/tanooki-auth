@@ -48,7 +48,7 @@ async function filter(query) {
 async function copy(value) {
   let code = value;
   if (value.startsWith('hotp:')) code = (await bridge.code(value.slice(5))).code;
-  if (!/^\d{6,10}$/.test(code)) throw new Error('Nothing to copy.');
+  if (!/^[0-9A-Z]{5,10}$/.test(code)) throw new Error('Nothing to copy.');
   await new Promise((resolve, reject) => execFile('pbcopy', (e) => (e ? reject(e) : resolve())).stdin.end(code));
   return `Copied ${groupCode(code)}`;
 }

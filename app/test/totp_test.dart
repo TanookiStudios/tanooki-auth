@@ -61,4 +61,18 @@ void main() {
     expect(secondsLeft(0), 30);
     expect(secondsLeft(59), 1);
   });
+
+  // Checked against an independent Python implementation (hmac module), the same vectors as the
+  // Swift and Kotlin widget code. Together they use every letter of the Steam alphabet.
+  test('Steam Guard codes', () {
+    final key = utf8.encode('12345678901234567890');
+    const vectors = {
+      59: 'PV9M4', 1111111109: 'PY4YB', 1234567890: 'VHHQY', 2000000000: '9N776',
+      60: 'B26KJ', 90: '5H85C', 120: '6Y9J3', 150: 'MD224', 180: 'P2GRF', 210: 'C9PRW', 300: 'X5TCK',
+    };
+    for (final e in vectors.entries) {
+      expect(steamCode(key, e.key), e.value, reason: 't=${e.key}');
+    }
+    expect(vectors.values.join().split('').toSet(), steamAlphabet.split('').toSet());
+  });
 }

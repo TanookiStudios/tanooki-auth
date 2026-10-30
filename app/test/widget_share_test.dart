@@ -12,6 +12,7 @@ void main() {
       Account(id: '1', issuer: 'GitHub', label: 'me', secret: 'JBSWY3DPEHPK3PXP', favorite: true),
       Account(id: '2', issuer: 'Plain', secret: 'JBSWY3DPEHPK3PXP'),
       Account(id: '3', issuer: 'Counter', secret: 'JBSWY3DPEHPK3PXP', type: OtpType.hotp, favorite: true),
+      Account(id: '5', issuer: 'Steam', label: 'gamer', secret: 'MFRGGZDFMZTWQ2LK', type: OtpType.steam, digits: 5, favorite: true),
       Account(id: '4', issuer: 'Trashed', secret: 'JBSWY3DPEHPK3PXP', favorite: true, deletedAt: DateTime.now()),
     ]);
     return v;
@@ -24,8 +25,10 @@ void main() {
   test('only live time-based favorites are shared', () {
     final v = vault()..settings[shareCodesKey] = true;
     final shared = sharedFavorites(v);
-    expect(shared.map((f) => f['issuer']), ['GitHub']);
-    expect(shared.single, {
+    expect(shared.map((f) => f['issuer']), ['GitHub', 'Steam']);
+    expect(shared.last['type'], 'steam'); // the widget switches to Steam Guard's letters on this
+    expect(shared.first, {
+      'type': 'totp',
       'issuer': 'GitHub',
       'label': 'me',
       'secret': 'JBSWY3DPEHPK3PXP',

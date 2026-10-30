@@ -26,6 +26,9 @@ Map<String, BrandIcon> parseBrandIcons(String json) => {
         e.key: BrandIcon(e.value['t'] as String, Color(int.parse('FF${e.value['c']}', radix: 16)), e.value['p'] as String),
     };
 
+/// The proper name of the website at [domain] ("github.com" -> "GitHub"), for tidying names.
+String? brandTitle(String domain) => brandIcons[domain]?.title;
+
 /// The logo for [a]: its chosen icon website, then its websites (and their parent domains),
 /// then a name match on the service. Null means show a letter instead.
 BrandIcon? brandIconFor(Account a) {

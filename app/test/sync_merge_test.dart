@@ -49,6 +49,70 @@ Account acct(String id, String secret, {String issuer = 'GitHub', int at = 1000}
 
 void main() {
   group('merge rules', () {
+    Account hotpAcct(int counter, int at) => Account(
+          id: 'h',
+          type: OtpType.hotp,
+          issuer: 'Bank',
+          secret: 'NBSWY3DPO5XXE3DE',
+          counter: counter,
+          createdAt: DateTime.fromMillisecondsSinceEpoch(1000, isUtc: true),
+          updatedAt: DateTime.fromMillisecondsSinceEpoch(at, isUtc: true),
+        );
+
+    test('HOTP: an older copy with a higher counter still raises ours, and the change is stamped to travel', () {
+      final local = [hotpAcct(5, 3000)..issuer = 'Bank (renamed)'];
+      final tombs = <String, int>{};
+      expect(mergeRemote(local, tombs, SyncItem.account(hotpAcct(9, 2000))), isTrue);
+      expect(local.single.counter, 9);
+      expect(local.single.issuer, 'Bank (renamed)', reason: 'the newer edit still wins everything else');
+      expect(local.single.updatedAt.millisecondsSinceEpoch, 3001, reason: 'a new time makes this device push it on');
+      // Same counter again: nothing to do.
+      expect(mergeRemote(local, tombs, SyncItem.account(hotpAcct(9, 2000))), isFalse);
+    });
+
+    test('HOTP: a newer copy with a lower counter wins but keeps our higher counter', () {
+      final local = [hotpAcct(9, 2000)];
+      final tombs = <String, int>{};
+      expect(mergeRemote(local, tombs, SyncItem.account(hotpAcct(4, 3000)..issuer = 'Renamed')), isTrue);
+      expect([local.single.issuer, local.single.counter], ['Renamed', 9]);
+      expect(local.single.updatedAt.millisecondsSinceEpoch, 3001);
+    });
+
+    test('HOTP: two devices that each used codes end on the highest counter, whichever syncs first', () {
+      for (final aFirst in [true, false]) {
+        final a = [hotpAcct(7, 5000)], b = [hotpAcct(12, 4000)];
+        final ta = <String, int>{}, tb = <String, int>{};
+        if (aFirst) {
+          mergeRemote(b, tb, SyncItem.account(Account.fromJson(a.single.toJson())));
+          mergeRemote(a, ta, SyncItem.account(Account.fromJson(b.single.toJson())));
+        } else {
+          mergeRemote(a, ta, SyncItem.account(Account.fromJson(b.single.toJson())));
+          mergeRemote(b, tb, SyncItem.account(Account.fromJson(a.single.toJson())));
+        }
+        expect([a.single.counter, b.single.counter], [12, 12], reason: 'aFirst=$aFirst');
+        expect(a.single.syncContent, b.single.syncContent);
+      }
+    });
+
+    test('Phase A fields ride along in a merge', () {
+      final local = [acct('a', 'AAAA', at: 1000)];
+      final remote = Account.fromJson((acct('a', 'AAAA')
+            ..folder = 'Work'
+            ..color = 0xFF00FF00
+            ..emoji = '🎮'
+            ..requireAuth = true
+            ..travelHidden = true
+            ..updatedAt = DateTime.fromMillisecondsSinceEpoch(2000, isUtc: true))
+          .toJson());
+      expect(mergeRemote(local, {}, SyncItem.account(remote)), isTrue);
+      final a = local.single;
+      expect([a.folder, a.color, a.emoji, a.requireAuth, a.travelHidden], ['Work', 0xFF00FF00, '🎮', true, true]);
+      // An old peer's record (no new fields) still reads, with defaults.
+      final old = acct('b', 'BBBB').toJson()..removeWhere((k, _) => ['folder', 'color', 'emoji', 'requireAuth', 'travelHidden'].contains(k));
+      final item = SyncItem.fromJson(old);
+      expect([item.account!.folder, item.account!.requireAuth, item.account!.travelHidden], [null, false, false]);
+    });
+
     test('a newer remote edit replaces the local copy; an older one is ignored', () {
       final local = [acct('a', 'AAAA', at: 1000)];
       final tombs = <String, int>{};

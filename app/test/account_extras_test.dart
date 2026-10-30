@@ -40,9 +40,46 @@ void main() {
     expect(a.lastUsedAt, isNull);
     expect(a.iconDomain, isNull);
     expect(a.deletedAt, isNull);
+    expect([a.folder, a.color, a.emoji, a.requireAuth, a.travelHidden], [null, null, null, false, false]);
     expect(v.accounts[1].counter, 3);
     expect(v.settings['theme'], 'dark');
     expect(v.live, hasLength(2));
+  });
+
+  test('a vault from before Phase A (no folder, color, emoji, requireAuth, travelHidden) loads with defaults', () async {
+    await writeVault(File('test/fixtures/vault_before_phase_a.json').readAsStringSync());
+    final v = Vault(file, keys);
+    await v.load();
+    expect(v.accounts.map((a) => a.issuer), ['GitHub', 'Bank']);
+    for (final a in v.accounts) {
+      expect([a.folder, a.color, a.emoji, a.requireAuth, a.travelHidden], [null, null, null, false, false]);
+    }
+    final gh = v.accounts.first;
+    expect([gh.favorite, gh.tags, gh.notes, gh.domains], [true, ['work'], 'main', ['github.com']]);
+    expect(gh.updatedAt, DateTime.utc(2026, 10, 28, 9));
+    expect([v.accounts[1].type, v.accounts[1].counter], [OtpType.hotp, 12]);
+    // The old "Recently used first" switch still means the same thing under the new sort setting.
+    expect(sortOf(v.settings), 'recent');
+  });
+
+  test('Phase A fields survive a save and load, and an old vault saves them once set', () async {
+    await writeVault(File('test/fixtures/vault_before_phase_a.json').readAsStringSync());
+    final v = Vault(file, keys);
+    await v.load();
+    v.accounts.first
+      ..folder = 'Work'
+      ..color = 0xFF3366CC
+      ..emoji = '🐙'
+      ..requireAuth = true
+      ..travelHidden = true;
+    v.accounts.add(parseOtpauthUri('steam://MFRGGZDFMZTWQ2LK'));
+    await v.save();
+    final v2 = Vault(file, keys);
+    await v2.load();
+    final a = v2.accounts.first;
+    expect([a.folder, a.color, a.emoji, a.requireAuth, a.travelHidden], ['Work', 0xFF3366CC, '🐙', true, true]);
+    expect([v2.accounts[1].folder, v2.accounts[1].requireAuth], [null, false]);
+    expect([v2.accounts[2].type, v2.accounts[2].digits], [OtpType.steam, 5]);
   });
 
   test('new fields survive a save and load', () async {
@@ -113,7 +150,7 @@ void main() {
     ];
     String names(List<Account> l) => l.map((a) => a.issuer).join();
     expect(names(homeOrder(list)), 'CEABDG');
-    expect(names(homeOrder(list, recentFirst: true)), 'ECDBAG');
+    expect(names(homeOrder(list, sort: 'recent')), 'ECDBAG');
   });
 
   test('recovery codes: pasted lists split by line, comma or column; numbering dropped', () {

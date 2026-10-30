@@ -12,7 +12,9 @@ import '../core/google_migration.dart';
 import '../core/otpauth_uri.dart';
 import '../core/paper_backup.dart';
 import '../core/security.dart';
+import '../core/tidy.dart';
 import '../core/vault.dart';
+import 'brand_icon.dart';
 import 'home.dart';
 
 void _say(BuildContext context, String msg) => ScaffoldMessenger.of(context)
@@ -207,6 +209,7 @@ Future<void> importGoogleFlow(BuildContext context, Vault vault, String uri) asy
   final List<Account> incoming;
   try {
     incoming = parseGoogleMigration(uri);
+    tidyAll(incoming, brandName: brandTitle);
   } on FormatException catch (e) {
     _say(context, e.message);
     return;
@@ -223,13 +226,21 @@ Future<void> exportPlainFlow(BuildContext context, Vault vault) async {
     _say(context, 'There are no accounts to export yet.');
     return;
   }
+  if (!await confirmPlainExport(context) || !context.mounted) return;
+  final text = '${vault.live.map(toOtpauthUri).join('\n')}\n';
+  await deliverFile(context, 'Tanooki Auth setup links ${_today()}.txt', Uint8List.fromList(utf8.encode(text)), 'text/plain');
+}
+
+/// The loud warning before any export that isn't encrypted. True when the user says go ahead.
+Future<bool> confirmPlainExport(BuildContext context,
+    {String what = 'This saves every setup key as plain text, for moving to another authenticator app.'}) async {
   final ok = await showDialog<bool>(
     context: context,
     builder: (c) => AlertDialog(
       icon: Icon(Icons.warning_amber_rounded, color: Theme.of(c).colorScheme.error),
       title: const Text('Export unencrypted?'),
-      content: const Text(
-          'This saves every setup key as plain text, for moving to another authenticator app. Anyone who gets this file can make your login codes. Import it, then delete it straight away. For a normal backup, use "Export backup" instead.'),
+      content: Text(
+          '$what Anyone who gets this file can make your login codes. Import it, then delete it straight away. For a normal backup, use "Export backup" instead.'),
       actions: [
         TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
         FilledButton(
@@ -240,9 +251,7 @@ Future<void> exportPlainFlow(BuildContext context, Vault vault) async {
       ],
     ),
   );
-  if (ok != true || !context.mounted) return;
-  final text = '${vault.live.map(toOtpauthUri).join('\n')}\n';
-  await deliverFile(context, 'Tanooki Auth setup links ${_today()}.txt', Uint8List.fromList(utf8.encode(text)), 'text/plain');
+  return ok == true;
 }
 
 /// A printable PDF of every account's QR code and recovery codes, behind a blunt warning.

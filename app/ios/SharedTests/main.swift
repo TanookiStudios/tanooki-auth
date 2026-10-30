@@ -26,5 +26,13 @@ for (t, alg, want) in vectors {
 let b32 = TOTP.base32Decode("GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ")!
 let six = TOTP.totp(key: b32, at: Date(timeIntervalSince1970: 59))
 if six != "287082" { print("FAIL base32 6-digit: got \(six)"); failed += 1 }
-print(failed == 0 ? "Swift TOTP: all \(vectors.count + 1) RFC 6238 checks pass" : "Swift TOTP: \(failed) checks FAILED")
+// Steam Guard: same seed, checked against an independent Python implementation (hmac module).
+let steamVectors: [(Double, String)] = [(59, "PV9M4"), (1111111109, "PY4YB"), (1234567890, "VHHQY"), (2000000000, "9N776"),
+  // Together these use every letter of the Steam alphabet, so a wrong letter anywhere fails.
+  (60, "B26KJ"), (90, "5H85C"), (120, "6Y9J3"), (150, "MD224"), (180, "P2GRF"), (210, "C9PRW"), (300, "X5TCK")]
+for (t, want) in steamVectors {
+  let got = TOTP.steam(key: Data(seeds["sha1"]!.utf8), at: Date(timeIntervalSince1970: t))
+  if got != want { print("FAIL steam t=\(Int(t)): got \(got), want \(want)"); failed += 1 }
+}
+print(failed == 0 ? "Swift TOTP: all \(vectors.count + 1) RFC 6238 checks and \(steamVectors.count) Steam checks pass" : "Swift TOTP: \(failed) checks FAILED")
 exit(failed == 0 ? 0 : 1)
