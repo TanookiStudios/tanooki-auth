@@ -2,6 +2,7 @@
 using System;
 using System.Threading;
 using Microsoft.CommandPalette.Extensions;
+using Shmuelie.WinRTServer.CsWinRT;
 
 namespace TanookiAuthCommandPalette;
 
