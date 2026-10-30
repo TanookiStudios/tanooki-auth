@@ -8,6 +8,7 @@ import 'package:local_auth/local_auth.dart';
 import '../bridge/server.dart';
 import '../core/account.dart';
 import '../core/clock_check.dart';
+import '../core/guides.dart' show guidesIndexUrl;
 import '../core/sync/relay_client.dart' show RelayException;
 import '../core/security.dart';
 import '../core/spotlight.dart';
@@ -22,6 +23,7 @@ import 'clipboard.dart';
 import 'code_view.dart';
 import 'emergency_ui.dart';
 import 'export_ui.dart';
+import 'help.dart';
 import 'home.dart';
 import 'premium.dart';
 import 'team_ui.dart';
@@ -892,6 +894,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const Padding(
             padding: EdgeInsets.fromLTRB(4, 20, 4, 8),
+            child: CapsLabel('Help'),
+          ),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.menu_book_outlined),
+                  title: const Text('All 2FA guides'),
+                  subtitle: const Text('Step-by-step help turning on 2FA at popular sites, on our website'),
+                  trailing: const Icon(Icons.open_in_new, size: 18),
+                  onTap: () => openLink(context, guidesIndexUrl),
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.tour_outlined),
+                  title: const Text('Show the welcome tour'),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TourScreen(vault: widget.vault))),
+                ),
+                const Divider(),
+                ListTile(
+                  key: const Key('sendFeedback'),
+                  leading: const Icon(Icons.feedback_outlined),
+                  title: const Text('Send feedback'),
+                  subtitle: const Text('Tell Maddie about a bug or an idea. Never includes your accounts or codes.'),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeedbackScreen())),
+                ),
+              ],
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(4, 20, 4, 8),
             child: CapsLabel('About'),
           ),
           Card(
@@ -905,6 +938,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     context,
                     MaterialPageRoute(builder: (_) => const AboutMaddieScreen()),
                   ),
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.new_releases_outlined),
+                  title: const Text('What\'s new'),
+                  subtitle: const Text('Version $appVersion'),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WhatsNewScreen())),
                 ),
                 const Divider(),
                 ListTile(

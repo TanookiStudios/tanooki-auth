@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:tanooki_auth/ui/about_maddie.dart' show appVersion;
+import 'package:tanooki_auth/ui/help.dart' show tourShownKey, whatsNewSeenKey;
 import 'package:tanooki_auth/core/otpauth_uri.dart';
 import 'package:tanooki_auth/core/security.dart';
 import 'package:tanooki_auth/core/totp.dart';
@@ -53,7 +55,7 @@ void main() {
     final vault = await openVault();
     await vault.resetToEmpty();
     vault.accounts.add(parseOtpauthUri(uri));
-    vault.settings.addAll({lockKey: false, kitShownKey: true});
+    vault.settings.addAll({lockKey: false, kitShownKey: true, tourShownKey: true, whatsNewSeenKey: appVersion});
     await vault.save();
 
     await t.pumpWidget(const TanookiAuthApp(key: ValueKey('quickpick')));

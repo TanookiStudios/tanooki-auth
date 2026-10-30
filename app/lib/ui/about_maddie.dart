@@ -6,7 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'signature.dart';
 import 'theme.dart';
 
-const appVersion = '0.1.0';
+const appVersion = '0.3.0';
 const _supportUrl = 'https://tanookistudios.com/support';
 
 /// The note from Maddie with her signature, the page every one of her apps carries.

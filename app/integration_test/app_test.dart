@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:tanooki_auth/ui/about_maddie.dart' show appVersion;
+import 'package:tanooki_auth/ui/help.dart' show tourShownKey, whatsNewSeenKey;
 import 'package:tanooki_auth/core/auto_backup.dart';
 import 'package:tanooki_auth/core/backup.dart';
 import 'package:tanooki_auth/core/otpauth_uri.dart';
@@ -63,6 +65,9 @@ void main() {
     }
     await waitFor(t, find.text('Your recovery kit')); // shown once, on first run
     await t.tap(skipKit);
+    await settle(t);
+    await waitFor(t, find.text('Welcome to Tanooki Auth')); // first-run tour, also only once
+    await t.tap(find.byKey(const Key('tourSkip')));
     await settle(t);
     await waitFor(t, empty);
 
@@ -124,7 +129,7 @@ void main() {
     final real = await openVault();
     await real.resetToEmpty();
     real.accounts.add(parseOtpauthUri(uri));
-    real.settings.addAll({lockKey: false, kitShownKey: true, passcodeKey: await hashPasscode('482916')});
+    real.settings.addAll({lockKey: false, kitShownKey: true, tourShownKey: true, whatsNewSeenKey: appVersion, passcodeKey: await hashPasscode('482916')});
     await real.save();
     await createDecoyVault(real, await hashPasscode('730514'));
 
@@ -176,7 +181,7 @@ void main() {
     final vault = await openVault();
     await vault.resetToEmpty();
     vault.accounts.add(parseOtpauthUri(uri));
-    vault.settings.addAll({lockKey: false, kitShownKey: true});
+    vault.settings.addAll({lockKey: false, kitShownKey: true, tourShownKey: true, whatsNewSeenKey: appVersion});
     final dir = Directory('${(await getApplicationSupportDirectory()).path}/$storageName/auto-backup-folder');
     if (dir.existsSync()) dir.deleteSync(recursive: true);
     dir.createSync(recursive: true);

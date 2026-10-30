@@ -17,7 +17,9 @@ const privacyText =
     'No account, no tracking. Your setup keys are stored encrypted on this device. The app goes online only for: a clock check '
     '(it asks the Tanooki Auth server for the time, at most once an hour while codes are on screen and when you tap "Codes not '
     'working?"; nothing about you or your accounts is sent), breach alerts if you turn them on (downloads the public breach list), '
-    'sync, phone link and emergency access if you set them up (they carry only encrypted data the server can\'t read), and buying Premium.';
+    'sync, phone link and emergency access if you set them up (they carry only encrypted data the server can\'t read), buying Premium, '
+    'and feedback you choose to send (your message, your email if you type one, and the app version and device type if you leave that '
+    'ticked; never your accounts, codes or anything else in the app). 2FA guides open in your web browser.';
 
 // ---------------------------------------------------------------- monthly summary notification
 

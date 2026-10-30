@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:tanooki_auth/ui/about_maddie.dart' show appVersion;
+import 'package:tanooki_auth/ui/help.dart' show tourShownKey, whatsNewSeenKey;
 import 'package:tanooki_auth/core/otpauth_uri.dart';
 import 'package:tanooki_auth/main.dart';
 import 'package:tanooki_auth/ui/premium.dart';
@@ -43,6 +45,7 @@ void main() {
     }
     vault.settings['lock'] = false;
     vault.settings['kitShown'] = true;
+    vault.settings.addAll({tourShownKey: true, whatsNewSeenKey: appVersion});
     await vault.save();
 
     if (Platform.isAndroid) await binding.convertFlutterSurfaceToImage();

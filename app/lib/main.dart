@@ -23,6 +23,7 @@ import 'ui/backup_ui.dart';
 import 'ui/brand_icon.dart';
 import 'ui/clipboard.dart';
 import 'ui/code_view.dart' show countdownKey;
+import 'ui/help.dart' show showTourOrWhatsNew;
 import 'ui/home.dart';
 import 'ui/phone_link_ui.dart' show resumeSyncAndLink, startSyncAndLink, stopSyncAndLink;
 import 'ui/premium.dart';
@@ -370,7 +371,7 @@ class _GateState extends State<Gate> implements BridgeHost {
     }
   }
 
-  /// Unlocks into [v] (the real vault or the decoy). Only the real vault gets the first-run kit and breach check.
+  /// Unlocks into [v] (the real vault or the decoy). Only the real vault gets the first-run kit, the tour or What's new, and the breach check.
   Future<void> _enter(Vault v) async {
     if (v != _vault) {
       await loadPremiumAndTheme(v);
@@ -392,6 +393,7 @@ class _GateState extends State<Gate> implements BridgeHost {
       await v.save();
       if (mounted) await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => RecoveryKitScreen(vault: v)));
     }
+    if (mounted) await showTourOrWhatsNew(context, v);
     autoBackup.appOpened(v); // runs in the background; a failure shows in Settings and the check-up
     EmergencyService.instance.check(v); // a request notification can be missed, so ask on every unlock
     if (mounted) await weeklyBreachCheck(context, v);

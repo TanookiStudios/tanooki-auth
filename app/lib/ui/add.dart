@@ -10,6 +10,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../core/account.dart';
 import '../core/otpauth_uri.dart';
+import '../core/guides.dart';
 import '../core/importers.dart';
 import '../core/qr_image.dart';
 import '../core/screen_capture.dart';
@@ -19,6 +20,7 @@ import '../core/vault.dart';
 import 'backup_ui.dart';
 import 'brand_icon.dart';
 import 'code_view.dart';
+import 'help.dart';
 import 'home.dart';
 import 'import_ui.dart';
 import 'premium.dart';
@@ -156,6 +158,13 @@ Future<bool> showAccountDialog(BuildContext context, Account a,
                   helperText: 'e.g. github.com. The browser extension only fills codes here.',
                   helperMaxLines: 2,
                 ),
+              ),
+              ListenableBuilder(
+                listenable: Listenable.merge([issuer, domains]),
+                builder: (c, _) {
+                  final g = guideFor(issuer.text, domains.text.split(',').map(normalizeDomain));
+                  return g == null ? const SizedBox.shrink() : guideLink(c, g);
+                },
               ),
               TextField(
                 controller: tags,
