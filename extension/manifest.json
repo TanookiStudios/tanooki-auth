@@ -10,7 +10,12 @@
     "<all_urls>"
   ],
   "background": {
-    "service_worker": "sw.js"
+    "service_worker": "sw.js",
+    "scripts": [
+      "jsqr.js",
+      "lookalike.js",
+      "sw.js"
+    ]
   },
   "action": {
     "default_popup": "popup.html",
@@ -40,5 +45,19 @@
     "32": "icons/icon32.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "auth@tanookistudios.com",
+      "strict_min_version": "128.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    }
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
   }
 }

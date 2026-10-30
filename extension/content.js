@@ -14,8 +14,9 @@
   const log = (...a) => console.debug('[Tanooki Auth]', ...a);
   const handledFields = new WeakSet();
   const scannedImages = new WeakSet();
-  let filledOnce = false;
+  let filledOnce = false; // also set once a lookalike warning is up: this page never gets a code
   let lastAsk = 0;
+  let siteChecked = false;
 
   const visible = (el) => {
     if (el.disabled || el.readOnly || el.type === 'hidden') return false;
@@ -60,6 +61,21 @@
     toast(`Filled ${issuer ? issuer + ' ' : ''}code from Tanooki Auth`, () => target.forEach((el, i) => setValue(el, before[i])));
   }
 
+  // Top-of-page warning for a site imitating a saved one. Stays until dismissed.
+  function warnBanner(text) {
+    const box = document.createElement('div');
+    const root = box.attachShadow({ mode: 'closed' });
+    root.innerHTML = `<style>
+      div{position:fixed;left:0;right:0;top:0;z-index:2147483647;display:flex;gap:12px;align-items:center;justify-content:center;
+        background:#B3261E;color:#fff;padding:12px 16px;font:600 15px/1.35 system-ui,sans-serif;box-shadow:0 4px 18px rgba(0,0,0,.35)}
+      button{background:#fff;color:#B3261E;border:0;border-radius:6px;font:600 13px system-ui,sans-serif;padding:6px 10px;cursor:pointer}
+    </style><div role="alert"><span></span><button>Dismiss</button></div>`;
+    root.querySelector('span').textContent = `⚠ ${text}`;
+    root.querySelector('button').addEventListener('click', () => box.remove());
+    box.dataset.tanookiAuthWarning = '1';
+    document.documentElement.appendChild(box);
+  }
+
   function toast(text, undo) {
     const host = document.createElement('div');
     const root = host.attachShadow({ mode: 'closed' });
@@ -68,9 +84,10 @@
         background:#131316;color:#F2F2F5;border:1px solid #2A2A30;border-radius:8px;padding:10px 14px;
         font:13px/1.3 system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.4)}
       button{background:none;border:0;color:#2F80FF;font:600 13px system-ui,sans-serif;cursor:pointer;padding:0}
-    </style><div role="status"><span></span>${undo ? '<button>Undo</button>' : ''}</div>`;
+    </style><div role="status"><span></span><button>Undo</button></div>`; // static markup: Firefox's add-on review flags built HTML
     root.querySelector('span').textContent = text;
-    root.querySelector('button')?.addEventListener('click', () => { undo(); host.remove(); });
+    if (undo) root.querySelector('button').addEventListener('click', () => { undo(); host.remove(); });
+    else root.querySelector('button').remove();
     document.documentElement.appendChild(host);
     setTimeout(() => host.remove(), 6000);
   }
@@ -78,15 +95,25 @@
   async function tryFill() {
     if (filledOnce) return;
     const targets = findOtpTargets();
-    if (!targets.length) return;
-    log('code box found', targets[0].map((el) => el.name || el.id || el.autocomplete));
+    // A password box alone can't be filled, but it's where a fake site first asks for something.
+    const password = !targets.length && [...document.querySelectorAll('input[type=password]')].some(visible);
+    if (!targets.length && (!password || siteChecked)) return;
+    if (targets.length) log('code box found', targets[0].map((el) => el.name || el.id || el.autocomplete));
     // Busy pages change constantly; ask the app at most every 2 seconds.
     if (Date.now() - lastAsk < 2000) return;
     lastAsk = Date.now();
+    if (!targets.length) siteChecked = true; // one lookalike check per page for password-only pages
     let reply;
     try {
-      reply = await chrome.runtime.sendMessage({ type: 'fillPage', ancestorHosts });
+      reply = await chrome.runtime.sendMessage(targets.length ? { type: 'fillPage', ancestorHosts } : { type: 'checkSite' });
     } catch (e) { log('extension unreachable (reload the page)', e?.message); return; }
+    if (reply?.lookalike) {
+      log('lookalike of', reply.lookalike, '- not filling');
+      filledOnce = true;
+      warnBanner(reply.message);
+      return;
+    }
+    if (password) return;
     if (!reply || reply.error || !reply.code) { log('not filling:', reply?.error || `${reply?.count ?? 0} matching accounts`, reply?.message || ''); return; }
     const target = findOtpTargets()[0];
     if (!target) { log('code box disappeared before filling'); return; }

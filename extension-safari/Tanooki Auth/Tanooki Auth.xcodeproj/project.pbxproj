@@ -1,0 +1,967 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 110;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		4C6B523730942B0800469615 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C6B523630942B0800469615 /* AppDelegate.swift */; };
+		4C6B523930942B0800469615 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C6B523830942B0800469615 /* SceneDelegate.swift */; };
+		4C6B523C30942B0800469615 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B523A30942B0800469615 /* LaunchScreen.storyboard */; };
+		4C6B523F30942B0800469615 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B523D30942B0800469615 /* Main.storyboard */; };
+		4C6B524830942B0800469615 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C6B524730942B0800469615 /* AppDelegate.swift */; };
+		4C6B524B30942B0800469615 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B524930942B0800469615 /* Main.storyboard */; };
+		4C6B525230942B0900469615 /* Tanooki Auth Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 4C6B525130942B0900469615 /* Tanooki Auth Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		4C6B525C30942B0900469615 /* Tanooki Auth Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 4C6B525B30942B0900469615 /* Tanooki Auth Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		4C6B526130942B0900469615 /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B522630942B0700469615 /* Main.html */; };
+		4C6B526230942B0900469615 /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B522630942B0700469615 /* Main.html */; };
+		4C6B526330942B0900469615 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B522830942B0700469615 /* Icon.png */; };
+		4C6B526430942B0900469615 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B522830942B0700469615 /* Icon.png */; };
+		4C6B526530942B0900469615 /* Style.css in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B522930942B0700469615 /* Style.css */; };
+		4C6B526630942B0900469615 /* Style.css in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B522930942B0700469615 /* Style.css */; };
+		4C6B526730942B0900469615 /* Script.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B522A30942B0700469615 /* Script.js */; };
+		4C6B526830942B0900469615 /* Script.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B522A30942B0700469615 /* Script.js */; };
+		4C6B526930942B0900469615 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C6B522B30942B0700469615 /* ViewController.swift */; };
+		4C6B526A30942B0900469615 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C6B522B30942B0700469615 /* ViewController.swift */; };
+		4C6B526B30942B0900469615 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B522C30942B0800469615 /* Assets.xcassets */; };
+		4C6B526C30942B0900469615 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B522C30942B0800469615 /* Assets.xcassets */; };
+		4C6B526D30942B0900469615 /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C6B522E30942B0800469615 /* SafariWebExtensionHandler.swift */; };
+		4C6B526E30942B0900469615 /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C6B522E30942B0800469615 /* SafariWebExtensionHandler.swift */; };
+		4C6B528B30942B0900469615 /* jsqr.LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528030942B0900469615 /* jsqr.LICENSE */; };
+		4C6B528C30942B0900469615 /* popup.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528130942B0900469615 /* popup.js */; };
+		4C6B528E30942B0900469615 /* lookalike.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528330942B0900469615 /* lookalike.js */; };
+		4C6B528F30942B0900469615 /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528430942B0900469615 /* popup.html */; };
+		4C6B529030942B0900469615 /* jsqr.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528530942B0900469615 /* jsqr.js */; };
+		4C6B529230942B0900469615 /* icons in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528730942B0900469615 /* icons */; };
+		4C6B529330942B0900469615 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528830942B0900469615 /* manifest.json */; };
+		4C6B529430942B0900469615 /* content.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528930942B0900469615 /* content.js */; };
+		4C6B529530942B0900469615 /* sw.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528A30942B0900469615 /* sw.js */; };
+		4C6B529630942B0900469615 /* jsqr.LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528030942B0900469615 /* jsqr.LICENSE */; };
+		4C6B529730942B0900469615 /* popup.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528130942B0900469615 /* popup.js */; };
+		4C6B529930942B0900469615 /* lookalike.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528330942B0900469615 /* lookalike.js */; };
+		4C6B529A30942B0900469615 /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528430942B0900469615 /* popup.html */; };
+		4C6B529B30942B0900469615 /* jsqr.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528530942B0900469615 /* jsqr.js */; };
+		4C6B529D30942B0900469615 /* icons in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528730942B0900469615 /* icons */; };
+		4C6B529E30942B0900469615 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528830942B0900469615 /* manifest.json */; };
+		4C6B529F30942B0900469615 /* content.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528930942B0900469615 /* content.js */; };
+		4C6B52A030942B0900469615 /* sw.js in Resources */ = {isa = PBXBuildFile; fileRef = 4C6B528A30942B0900469615 /* sw.js */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		4C6B525330942B0900469615 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4C6B522030942B0700469615 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4C6B525030942B0900469615;
+			remoteInfo = "Tanooki Auth Extension (iOS)";
+		};
+		4C6B525D30942B0900469615 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4C6B522030942B0700469615 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4C6B525A30942B0900469615;
+			remoteInfo = "Tanooki Auth Extension (macOS)";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		4C6B527430942B0900469615 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolder = PlugIns;
+			files = (
+				4C6B525230942B0900469615 /* Tanooki Auth Extension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+		};
+		4C6B527B30942B0900469615 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolder = PlugIns;
+			files = (
+				4C6B525C30942B0900469615 /* Tanooki Auth Extension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		4C6B522730942B0700469615 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = Base.lproj/Main.html; sourceTree = "<group>"; };
+		4C6B522830942B0700469615 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
+		4C6B522930942B0700469615 /* Style.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = Style.css; sourceTree = "<group>"; };
+		4C6B522A30942B0700469615 /* Script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = Script.js; sourceTree = "<group>"; };
+		4C6B522B30942B0700469615 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		4C6B522C30942B0800469615 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		4C6B522E30942B0800469615 /* SafariWebExtensionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariWebExtensionHandler.swift; sourceTree = "<group>"; };
+		4C6B523330942B0800469615 /* Tanooki Auth.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tanooki Auth.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4C6B523630942B0800469615 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		4C6B523830942B0800469615 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		4C6B523B30942B0800469615 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		4C6B523E30942B0800469615 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		4C6B524030942B0800469615 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		4C6B524530942B0800469615 /* Tanooki Auth.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tanooki Auth.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4C6B524730942B0800469615 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		4C6B524A30942B0800469615 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		4C6B524C30942B0800469615 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		4C6B525130942B0900469615 /* Tanooki Auth Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Tanooki Auth Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4C6B525630942B0900469615 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		4C6B525B30942B0900469615 /* Tanooki Auth Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Tanooki Auth Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4C6B526030942B0900469615 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		4C6B528030942B0900469615 /* jsqr.LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; name = jsqr.LICENSE; path = ../../../extension/jsqr.LICENSE; sourceTree = "<group>"; };
+		4C6B528130942B0900469615 /* popup.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = popup.js; path = ../../../extension/popup.js; sourceTree = "<group>"; };
+		4C6B528330942B0900469615 /* lookalike.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = lookalike.js; path = ../../../extension/lookalike.js; sourceTree = "<group>"; };
+		4C6B528430942B0900469615 /* popup.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = popup.html; path = ../../../extension/popup.html; sourceTree = "<group>"; };
+		4C6B528530942B0900469615 /* jsqr.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = jsqr.js; path = ../../../extension/jsqr.js; sourceTree = "<group>"; };
+		4C6B528730942B0900469615 /* icons */ = {isa = PBXFileReference; lastKnownFileType = folder; name = icons; path = ../../../extension/icons; sourceTree = "<group>"; };
+		4C6B528830942B0900469615 /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = ../../../extension/manifest.json; sourceTree = "<group>"; };
+		4C6B528930942B0900469615 /* content.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = content.js; path = ../../../extension/content.js; sourceTree = "<group>"; };
+		4C6B528A30942B0900469615 /* sw.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = sw.js; path = ../../../extension/sw.js; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4C6B523030942B0800469615 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		4C6B524230942B0800469615 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		4C6B524E30942B0900469615 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		4C6B525830942B0900469615 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		4C6B521F30942B0700469615 = {
+			isa = PBXGroup;
+			children = (
+				4C6B522430942B0700469615 /* Shared (App) */,
+				4C6B522D30942B0800469615 /* Shared (Extension) */,
+				4C6B523530942B0800469615 /* iOS (App) */,
+				4C6B524630942B0800469615 /* macOS (App) */,
+				4C6B525530942B0900469615 /* iOS (Extension) */,
+				4C6B525F30942B0900469615 /* macOS (Extension) */,
+				4C6B523430942B0800469615 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		4C6B522430942B0700469615 /* Shared (App) */ = {
+			isa = PBXGroup;
+			children = (
+				4C6B522B30942B0700469615 /* ViewController.swift */,
+				4C6B522C30942B0800469615 /* Assets.xcassets */,
+				4C6B522530942B0700469615 /* Resources */,
+			);
+			path = "Shared (App)";
+			sourceTree = "<group>";
+		};
+		4C6B522530942B0700469615 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				4C6B522630942B0700469615 /* Main.html */,
+				4C6B522830942B0700469615 /* Icon.png */,
+				4C6B522930942B0700469615 /* Style.css */,
+				4C6B522A30942B0700469615 /* Script.js */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		4C6B522D30942B0800469615 /* Shared (Extension) */ = {
+			isa = PBXGroup;
+			children = (
+				4C6B527F30942B0900469615 /* Resources */,
+				4C6B522E30942B0800469615 /* SafariWebExtensionHandler.swift */,
+			);
+			path = "Shared (Extension)";
+			sourceTree = "<group>";
+		};
+		4C6B523430942B0800469615 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4C6B523330942B0800469615 /* Tanooki Auth.app */,
+				4C6B524530942B0800469615 /* Tanooki Auth.app */,
+				4C6B525130942B0900469615 /* Tanooki Auth Extension.appex */,
+				4C6B525B30942B0900469615 /* Tanooki Auth Extension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4C6B523530942B0800469615 /* iOS (App) */ = {
+			isa = PBXGroup;
+			children = (
+				4C6B523630942B0800469615 /* AppDelegate.swift */,
+				4C6B523830942B0800469615 /* SceneDelegate.swift */,
+				4C6B523A30942B0800469615 /* LaunchScreen.storyboard */,
+				4C6B523D30942B0800469615 /* Main.storyboard */,
+				4C6B524030942B0800469615 /* Info.plist */,
+			);
+			path = "iOS (App)";
+			sourceTree = "<group>";
+		};
+		4C6B524630942B0800469615 /* macOS (App) */ = {
+			isa = PBXGroup;
+			children = (
+				4C6B524730942B0800469615 /* AppDelegate.swift */,
+				4C6B524930942B0800469615 /* Main.storyboard */,
+				4C6B524C30942B0800469615 /* Info.plist */,
+			);
+			path = "macOS (App)";
+			sourceTree = "<group>";
+		};
+		4C6B525530942B0900469615 /* iOS (Extension) */ = {
+			isa = PBXGroup;
+			children = (
+				4C6B525630942B0900469615 /* Info.plist */,
+			);
+			path = "iOS (Extension)";
+			sourceTree = "<group>";
+		};
+		4C6B525F30942B0900469615 /* macOS (Extension) */ = {
+			isa = PBXGroup;
+			children = (
+				4C6B526030942B0900469615 /* Info.plist */,
+			);
+			path = "macOS (Extension)";
+			sourceTree = "<group>";
+		};
+		4C6B527F30942B0900469615 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				4C6B528030942B0900469615 /* jsqr.LICENSE */,
+				4C6B528130942B0900469615 /* popup.js */,
+				4C6B528330942B0900469615 /* lookalike.js */,
+				4C6B528430942B0900469615 /* popup.html */,
+				4C6B528530942B0900469615 /* jsqr.js */,
+				4C6B528730942B0900469615 /* icons */,
+				4C6B528830942B0900469615 /* manifest.json */,
+				4C6B528930942B0900469615 /* content.js */,
+				4C6B528A30942B0900469615 /* sw.js */,
+			);
+			name = Resources;
+			path = "Shared (Extension)";
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		4C6B523230942B0800469615 /* Tanooki Auth (iOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4C6B527530942B0900469615 /* Build configuration list for PBXNativeTarget "Tanooki Auth (iOS)" */;
+			buildPhases = (
+				4C6B522F30942B0800469615 /* Sources */,
+				4C6B523030942B0800469615 /* Frameworks */,
+				4C6B523130942B0800469615 /* Resources */,
+				4C6B527430942B0900469615 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4C6B525430942B0900469615 /* PBXTargetDependency */,
+			);
+			name = "Tanooki Auth (iOS)";
+			productName = "Tanooki Auth (iOS)";
+			productReference = 4C6B523330942B0800469615 /* Tanooki Auth.app */;
+			productType = "com.apple.product-type.application";
+		};
+		4C6B524430942B0800469615 /* Tanooki Auth (macOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4C6B527C30942B0900469615 /* Build configuration list for PBXNativeTarget "Tanooki Auth (macOS)" */;
+			buildPhases = (
+				4C6B524130942B0800469615 /* Sources */,
+				4C6B524230942B0800469615 /* Frameworks */,
+				4C6B524330942B0800469615 /* Resources */,
+				4C6B527B30942B0900469615 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4C6B525E30942B0900469615 /* PBXTargetDependency */,
+			);
+			name = "Tanooki Auth (macOS)";
+			productName = "Tanooki Auth (macOS)";
+			productReference = 4C6B524530942B0800469615 /* Tanooki Auth.app */;
+			productType = "com.apple.product-type.application";
+		};
+		4C6B525030942B0900469615 /* Tanooki Auth Extension (iOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4C6B527130942B0900469615 /* Build configuration list for PBXNativeTarget "Tanooki Auth Extension (iOS)" */;
+			buildPhases = (
+				4C6B524D30942B0900469615 /* Sources */,
+				4C6B524E30942B0900469615 /* Frameworks */,
+				4C6B524F30942B0900469615 /* Resources */,
+			);
+			buildRules = (
+			);
+			name = "Tanooki Auth Extension (iOS)";
+			productName = "Tanooki Auth Extension (iOS)";
+			productReference = 4C6B525130942B0900469615 /* Tanooki Auth Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		4C6B525A30942B0900469615 /* Tanooki Auth Extension (macOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4C6B527830942B0900469615 /* Build configuration list for PBXNativeTarget "Tanooki Auth Extension (macOS)" */;
+			buildPhases = (
+				4C6B525730942B0900469615 /* Sources */,
+				4C6B525830942B0900469615 /* Frameworks */,
+				4C6B525930942B0900469615 /* Resources */,
+			);
+			buildRules = (
+			);
+			name = "Tanooki Auth Extension (macOS)";
+			productName = "Tanooki Auth Extension (macOS)";
+			productReference = 4C6B525B30942B0900469615 /* Tanooki Auth Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		4C6B522030942B0700469615 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2710;
+				LastUpgradeCheck = 2710;
+				TargetAttributes = {
+					4C6B523230942B0800469615 = {
+						CreatedOnToolsVersion = 27.1;
+					};
+					4C6B524430942B0800469615 = {
+						CreatedOnToolsVersion = 27.1;
+					};
+					4C6B525030942B0900469615 = {
+						CreatedOnToolsVersion = 27.1;
+					};
+					4C6B525A30942B0900469615 = {
+						CreatedOnToolsVersion = 27.1;
+					};
+				};
+			};
+			buildConfigurationList = 4C6B522330942B0700469615 /* Build configuration list for PBXProject "Tanooki Auth" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 4C6B521F30942B0700469615;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 4C6B523430942B0800469615 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				4C6B523230942B0800469615 /* Tanooki Auth (iOS) */,
+				4C6B524430942B0800469615 /* Tanooki Auth (macOS) */,
+				4C6B525030942B0900469615 /* Tanooki Auth Extension (iOS) */,
+				4C6B525A30942B0900469615 /* Tanooki Auth Extension (macOS) */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		4C6B523130942B0800469615 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+				4C6B526330942B0900469615 /* Icon.png in Resources */,
+				4C6B523C30942B0800469615 /* LaunchScreen.storyboard in Resources */,
+				4C6B526130942B0900469615 /* Main.html in Resources */,
+				4C6B526730942B0900469615 /* Script.js in Resources */,
+				4C6B526B30942B0900469615 /* Assets.xcassets in Resources */,
+				4C6B523F30942B0800469615 /* Main.storyboard in Resources */,
+				4C6B526530942B0900469615 /* Style.css in Resources */,
+			);
+		};
+		4C6B524330942B0800469615 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+				4C6B526430942B0900469615 /* Icon.png in Resources */,
+				4C6B526630942B0900469615 /* Style.css in Resources */,
+				4C6B524B30942B0800469615 /* Main.storyboard in Resources */,
+				4C6B526830942B0900469615 /* Script.js in Resources */,
+				4C6B526C30942B0900469615 /* Assets.xcassets in Resources */,
+				4C6B526230942B0900469615 /* Main.html in Resources */,
+			);
+		};
+		4C6B524F30942B0900469615 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+				4C6B52A030942B0900469615 /* sw.js in Resources */,
+				4C6B529B30942B0900469615 /* jsqr.js in Resources */,
+				4C6B529D30942B0900469615 /* icons in Resources */,
+				4C6B529630942B0900469615 /* jsqr.LICENSE in Resources */,
+				4C6B529A30942B0900469615 /* popup.html in Resources */,
+				4C6B529F30942B0900469615 /* content.js in Resources */,
+				4C6B529E30942B0900469615 /* manifest.json in Resources */,
+				4C6B529730942B0900469615 /* popup.js in Resources */,
+				4C6B529930942B0900469615 /* lookalike.js in Resources */,
+			);
+		};
+		4C6B525930942B0900469615 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+				4C6B529530942B0900469615 /* sw.js in Resources */,
+				4C6B529030942B0900469615 /* jsqr.js in Resources */,
+				4C6B529230942B0900469615 /* icons in Resources */,
+				4C6B528B30942B0900469615 /* jsqr.LICENSE in Resources */,
+				4C6B528F30942B0900469615 /* popup.html in Resources */,
+				4C6B529430942B0900469615 /* content.js in Resources */,
+				4C6B529330942B0900469615 /* manifest.json in Resources */,
+				4C6B528C30942B0900469615 /* popup.js in Resources */,
+				4C6B528E30942B0900469615 /* lookalike.js in Resources */,
+			);
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4C6B522F30942B0800469615 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				4C6B526930942B0900469615 /* ViewController.swift in Sources */,
+				4C6B523730942B0800469615 /* AppDelegate.swift in Sources */,
+				4C6B523930942B0800469615 /* SceneDelegate.swift in Sources */,
+			);
+		};
+		4C6B524130942B0800469615 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				4C6B526A30942B0900469615 /* ViewController.swift in Sources */,
+				4C6B524830942B0800469615 /* AppDelegate.swift in Sources */,
+			);
+		};
+		4C6B524D30942B0900469615 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				4C6B526D30942B0900469615 /* SafariWebExtensionHandler.swift in Sources */,
+			);
+		};
+		4C6B525730942B0900469615 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				4C6B526E30942B0900469615 /* SafariWebExtensionHandler.swift in Sources */,
+			);
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		4C6B525430942B0900469615 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4C6B525030942B0900469615 /* Tanooki Auth Extension (iOS) */;
+			targetProxy = 4C6B525330942B0900469615 /* PBXContainerItemProxy */;
+		};
+		4C6B525E30942B0900469615 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4C6B525A30942B0900469615 /* Tanooki Auth Extension (macOS) */;
+			targetProxy = 4C6B525D30942B0900469615 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		4C6B522630942B0700469615 /* Main.html */ = {
+			isa = PBXVariantGroup;
+			children = (
+				4C6B522730942B0700469615 /* Base */,
+			);
+			name = Main.html;
+			sourceTree = "<group>";
+		};
+		4C6B523A30942B0800469615 /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				4C6B523B30942B0800469615 /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		4C6B523D30942B0800469615 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				4C6B523E30942B0800469615 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		4C6B524930942B0800469615 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				4C6B524A30942B0800469615 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		4C6B526F30942B0900469615 /* Debug configuration for PBXProject "Tanooki Auth" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		4C6B527030942B0900469615 /* Release configuration for PBXProject "Tanooki Auth" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		4C6B527230942B0900469615 /* Debug configuration for PBXNativeTarget "Tanooki Auth Extension (iOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Tanooki Auth Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tanookistudios.auth.safari.Extension;
+				PRODUCT_NAME = "Tanooki Auth Extension";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		4C6B527330942B0900469615 /* Release configuration for PBXNativeTarget "Tanooki Auth Extension (iOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Tanooki Auth Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tanookistudios.auth.safari.Extension;
+				PRODUCT_NAME = "Tanooki Auth Extension";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		4C6B527630942B0900469615 /* Debug configuration for PBXNativeTarget "Tanooki Auth (iOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (App)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Tanooki Auth";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tanookistudios.auth.safari;
+				PRODUCT_NAME = "Tanooki Auth";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		4C6B527730942B0900469615 /* Release configuration for PBXNativeTarget "Tanooki Auth (iOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (App)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Tanooki Auth";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tanookistudios.auth.safari;
+				PRODUCT_NAME = "Tanooki Auth";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		4C6B527930942B0900469615 /* Debug configuration for PBXNativeTarget "Tanooki Auth Extension (macOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Tanooki Auth Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tanookistudios.auth.safari.Extension;
+				PRODUCT_NAME = "Tanooki Auth Extension";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		4C6B527A30942B0900469615 /* Release configuration for PBXNativeTarget "Tanooki Auth Extension (macOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Tanooki Auth Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tanookistudios.auth.safari.Extension;
+				PRODUCT_NAME = "Tanooki Auth Extension";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		4C6B527D30942B0900469615 /* Debug configuration for PBXNativeTarget "Tanooki Auth (macOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS (App)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Tanooki Auth";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tanookistudios.auth.safari;
+				PRODUCT_NAME = "Tanooki Auth";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		4C6B527E30942B0900469615 /* Release configuration for PBXNativeTarget "Tanooki Auth (macOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS (App)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Tanooki Auth";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tanookistudios.auth.safari;
+				PRODUCT_NAME = "Tanooki Auth";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4C6B522330942B0700469615 /* Build configuration list for PBXProject "Tanooki Auth" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4C6B526F30942B0900469615 /* Debug configuration for PBXProject "Tanooki Auth" */,
+				4C6B527030942B0900469615 /* Release configuration for PBXProject "Tanooki Auth" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		4C6B527130942B0900469615 /* Build configuration list for PBXNativeTarget "Tanooki Auth Extension (iOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4C6B527230942B0900469615 /* Debug configuration for PBXNativeTarget "Tanooki Auth Extension (iOS)" */,
+				4C6B527330942B0900469615 /* Release configuration for PBXNativeTarget "Tanooki Auth Extension (iOS)" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		4C6B527530942B0900469615 /* Build configuration list for PBXNativeTarget "Tanooki Auth (iOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4C6B527630942B0900469615 /* Debug configuration for PBXNativeTarget "Tanooki Auth (iOS)" */,
+				4C6B527730942B0900469615 /* Release configuration for PBXNativeTarget "Tanooki Auth (iOS)" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		4C6B527830942B0900469615 /* Build configuration list for PBXNativeTarget "Tanooki Auth Extension (macOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4C6B527930942B0900469615 /* Debug configuration for PBXNativeTarget "Tanooki Auth Extension (macOS)" */,
+				4C6B527A30942B0900469615 /* Release configuration for PBXNativeTarget "Tanooki Auth Extension (macOS)" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		4C6B527C30942B0900469615 /* Build configuration list for PBXNativeTarget "Tanooki Auth (macOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4C6B527D30942B0900469615 /* Debug configuration for PBXNativeTarget "Tanooki Auth (macOS)" */,
+				4C6B527E30942B0900469615 /* Release configuration for PBXNativeTarget "Tanooki Auth (macOS)" */,
+			);
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 4C6B522030942B0700469615 /* Project object */;
+	validationLevel = 1;
+}

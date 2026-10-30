@@ -1,4 +1,5 @@
-importScripts('jsqr.js');
+// Chrome runs this as a service worker; Firefox and Safari load the same files as background scripts (see manifest).
+if (typeof importScripts === 'function') importScripts('jsqr.js', 'lookalike.js');
 
 // Talks to the Tanooki Auth desktop app over 127.0.0.1 only. Holds the pairing token;
 // never sees a secret, only the current code for one account at a time.
@@ -93,8 +94,13 @@ const hostMatches = (host, domain) => !!host && (host === domain || host.endsWit
 /** Accounts saved for [host], and only if every frame above it is on the same site too. */
 async function accountsFor(host, ancestorHosts = []) {
   const { accounts } = await call({ type: 'accounts' });
-  return accounts.filter((a) => a.domains.some((d) => hostMatches(host, d) && ancestorHosts.every((h) => hostMatches(h, d))));
+  const matches = accounts.filter((a) => a.domains.some((d) => hostMatches(host, d) && ancestorHosts.every((h) => hostMatches(h, d))));
+  return { matches, lookalike: matches.length ? null : lookalikeFor(host, accounts) };
 }
+
+// The saved domain this host pretends to be (gihtub.com, github.com.evil.io…), or null.
+const lookalikeFor = (host, accounts) => tanookiLookalike.lookalikeOf(host, accounts.flatMap((a) => a.domains));
+const lookalikeError = (d) => new AppError('lookalike', `This site looks like ${d} but isn't. Tanooki Auth won't fill codes here.`);
 
 async function setBadge(tabId, text) {
   if (tabId == null) return;
@@ -132,7 +138,11 @@ const handlers = {
   async listForTab({ tabUrl }) {
     const host = hostOf(tabUrl);
     const { accounts } = await call({ type: 'accounts' });
-    return { host, accounts, matching: accounts.filter((a) => a.domains.some((d) => hostMatches(host, d))).map((a) => a.id) };
+    const lookalike = host ? lookalikeFor(host, accounts) : null;
+    return {
+      host, accounts, warning: lookalike && lookalikeError(lookalike).message,
+      matching: accounts.filter((a) => a.domains.some((d) => hostMatches(host, d))).map((a) => a.id),
+    };
   },
 
   async code({ accountId }) {
@@ -171,17 +181,32 @@ const handlers = {
   // Content script found a code box: fill only when exactly one account is saved for this site.
   async fillPage({ ancestorHosts }, sender) {
     const host = hostOf(sender.url);
-    const matches = await accountsFor(host, (ancestorHosts || []).map((h) => h.replace(/^www\./, '')));
-    await setBadge(sender.tab?.id, matches.length > 1 ? String(matches.length) : '');
+    // Some browsers (older Firefox) have no location.ancestorOrigins, so also check the tab's own address.
+    const above = [...(ancestorHosts || []), hostOf(sender.tab?.url || sender.url)].map((h) => h.replace(/^www\./, ''));
+    const { matches, lookalike } = await accountsFor(host, above);
+    await setBadge(sender.tab?.id, lookalike ? '!' : matches.length > 1 ? String(matches.length) : '');
+    if (lookalike) return { count: 0, lookalike, message: lookalikeError(lookalike).message };
     if (matches.length !== 1) return { count: matches.length };
     const { code } = await call({ type: 'code', accountId: matches[0].id });
     return { code, account: matches[0] };
+  },
+
+  // Content script found a password box but no code box yet: only warn about lookalikes.
+  async checkSite(_msg, sender) {
+    const host = hostOf(sender.url);
+    const { accounts } = await call({ type: 'accounts' });
+    const lookalike = lookalikeFor(host, accounts);
+    if (lookalike) await setBadge(sender.tab?.id, '!');
+    return lookalike ? { lookalike, message: lookalikeError(lookalike).message } : {};
   },
 
   // Popup: the user picked an account for this tab. Optionally remember the site first.
   async fillTab({ accountId, tabId, tabUrl, remember }) {
     const host = hostOf(tabUrl);
     if (!host) throw new AppError('badPage', 'Codes can only be filled on websites.');
+    // "Use here" on a lookalike is exactly what a phishing page hopes for, so refuse it.
+    const lookalike = lookalikeFor(host, (await call({ type: 'accounts' })).accounts);
+    if (lookalike) throw lookalikeError(lookalike);
     if (remember) await call({ type: 'setDomain', accountId, domain: host });
     const { accounts } = await call({ type: 'accounts' });
     const a = accounts.find((x) => x.id === accountId);

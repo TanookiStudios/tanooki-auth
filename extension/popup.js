@@ -183,6 +183,7 @@ async function showAccounts() {
   const rest = accounts.filter((a) => !matching.includes(a.id));
   const parts = [];
 
+  if (r.warning) parts.push(el('p', { className: 'err', textContent: r.warning }));
   if (host) {
     parts.push(el('div', { className: 'caps', textContent: `For ${host}` }));
     parts.push(...(here.length
