@@ -3,6 +3,7 @@
 // deterministic and the payload only uses the session, so revisiting the link shows the same key.
 // Also here: App Store purchases (/iap/apple), invites, team licenses, feedback and /health.
 import { PRODUCTS, BUNDLE_ID, Refused, verifyTransaction } from './apple.js';
+import { growthRoute, countAffiliateSale } from './growth.js';
 
 const b64url = (bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const fromB64 = (s) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
@@ -91,14 +92,17 @@ const CORS = {
 const json = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', ...CORS } });
 const fail = (status, error, extra = {}) => json({ error, ...extra }, status);
 
-const PRIVACY = `<h1>Privacy policy</h1><p>Tanooki Auth, by Tanooki Studios. Last updated October 29, 2026.</p>
+const PRIVACY = `<h1>Privacy policy</h1><p>Tanooki Auth, by Tanooki Studios. Last updated November 2, 2026.</p>
 <p><b>The app collects nothing.</b> Your accounts and setup keys are encrypted and stored only on your own device. There is no account to create, no analytics, no ads, and no tracking. The app makes no internet connections except opening a web page when you tap a link, and the features below, which stay off unless you turn them on.</p>
 <p><b>The browser extension</b> reads the web pages you visit only to find code boxes and two-factor setup QR codes. It talks only to the Tanooki Auth app on your own computer (127.0.0.1), receives one current code at a time, and stores only a pairing token in your browser. Nothing is sent anywhere else.</p>
 <p><b>Backups</b> are files you create, encrypted with a passphrase only you know.</p>
 <p><b>Breach alerts</b> (off unless you turn them on) download the public list of known website breaches from Have I Been Pwned and check it on your device. Nothing about you or your accounts is sent.</p>
 <p><b>Sync and approving codes from your phone</b> (off unless you turn them on) are end-to-end encrypted on your devices before anything leaves them. Whether it goes through your own iCloud or the Tanooki relay, they only ever see scrambled data they cannot read. To ask your phone for approval, the relay keeps your phone's notification address (from Apple or Google) until you unlink it.</p>
-<p><b>Premium purchases</b> are handled by Stripe (or Apple / Google in their stores), who receive your payment details under their own privacy policies. This page receives your checkout ID only to show your license key and keeps no record of it, with one exception: if you bought through a friend's invite link, the checkout ID is kept next to that invite's count so it is only counted once. App Store purchases are checked from Apple's signed receipt, which is not stored.</p>
+<p><b>Premium purchases</b> are handled by Stripe (or Apple / Google in their stores), who receive your payment details under their own privacy policies. This page receives your checkout ID only to show your license key and keeps no record of it, with two exceptions: if you bought through a friend's invite link, the checkout ID is kept next to that invite's count so it is only counted once; and if you bought through a creator's affiliate link, the checkout ID, the amount paid and the date are kept so that creator can be paid their share. Neither includes your name, email or payment details. App Store purchases are checked from Apple's signed receipt, which is not stored.</p>
 <p><b>Feedback</b> you send from the app is stored with the time, your platform and app version, and contact details only if you type them in. It never includes your accounts or codes. Your internet address is not stored; a scrambled form of it is kept for up to two hours to limit how much one address can send.</p>
+<p><b>The newsletter</b> (only if you sign up on the website) stores your email address, whether you've confirmed it, and when. Emails are sent through Resend. Every email has a one-click unsubscribe link, and unsubscribing deletes your address. Unconfirmed signups are deleted after 7 days.</p>
+<p><b>The student discount</b> checks that your email address is from a school, then emails you a one-time link through Resend. Your address is not stored; a scrambled form of it is kept for a day to limit how many links one address can ask for.</p>
+<p>For signups and student links, your internet address is not stored; a scrambled form of it is kept for up to two hours to limit how many requests one address can make.</p>
 <p>Questions: tanookistudios.com/support</p>`;
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -162,6 +166,10 @@ async function thanks(url, env) {
   const ref = String(s.client_reference_id || '');
   if (ref.startsWith('ref_') && INVITE_CODE.test(ref.slice(4))) {
     try { await countReferral(env, ref.slice(4), session); } catch (e) { console.error('invite count failed', ref, e); } // the buyer still gets a key
+  }
+  // client_reference_id is one field shared by invites (ref_), affiliates (aff_), gifts (gift) and students (student).
+  if (ref.startsWith('aff_')) {
+    try { await countAffiliateSale(env, ref.slice(4), session, s); } catch (e) { console.error('affiliate count failed', ref, e); }
   }
 
   // shortcut: the $10 family plan is told apart by price (before tax), not by price ID; switch to the
@@ -325,6 +333,9 @@ export default {
 
     if (route === 'POST /feedback') return feedback(request, env);
     if (route === 'GET /feedback/list') return feedbackList(request, env);
+
+    const grown = await growthRoute(request, env, url);
+    if (grown) return grown;
 
     return page('Tanooki Auth', '<h1>Tanooki Auth Premium</h1><p>Nothing to see here.</p>', 404);
   },

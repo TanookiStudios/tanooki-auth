@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student discount | Tanooki Auth</title>
+<meta name="description" content="Students get Tanooki Auth Premium for 50% off. Enter your school email address and we send you a one-time discount link.">
+<link rel="canonical" href="https://auth.tanookistudios.com/students/">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/favicon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;650&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<link rel="stylesheet" href="/pages.css">
+<link rel="stylesheet" href="/newsletter/form.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="container">
+    <nav class="pill" aria-label="Main">
+      <a class="brand" href="/" aria-label="Tanooki Auth home"><img src="/icon.png" alt="" width="28" height="28">Tanooki Auth</a>
+      <ul>
+        <li><a href="/#promise">Privacy</a></li>
+        <li><a href="/#how">How it works</a></li>
+        <li><a href="/#themes">Premium</a></li>
+        <li><a href="/guides/">Guides</a></li>
+        <li><a href="https://tanookistudios.com/SupportMe">Donate</a></li>
+      </ul>
+      <a class="btn" href="/#download">Download</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="page">
+    <div class="container">
+      <h1>Students get Premium for half price</h1>
+      <p class="lead">Tanooki Auth is free. Premium (sync, themes and more) is a one-time $5, and students pay $2.50.</p>
+      <form class="mailform" data-endpoint="/student">
+        <label for="student-email">Your school email address</label>
+        <input id="student-email" type="email" name="email" autocomplete="email" required placeholder="you@university.edu">
+        <button class="btn btn--primary" type="submit">Send my discount link</button>
+        <output aria-live="polite"></output>
+      </form>
+      <noscript><p class="block">This form needs JavaScript turned on.</p></noscript>
+      <div class="block">
+        <h2>How it works</h2>
+        <p>Use the email address your school or university gave you, such as one ending in .edu, .ac.uk or .edu.au. We email you a link that takes you to checkout with the discount already applied. The link works once and lasts 7 days.</p>
+        <p>We don't keep your email address. If your school's address isn't recognized, get in touch through <a class="text" href="https://tanookistudios.com/support">tanookistudios.com/support</a> and we'll add it.</p>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="/newsletter/signup.js" defer></script>
+
+<footer class="foot">
+  <div class="container">
+    <p class="mast">Tanooki Auth</p>
+    <nav aria-label="Footer">
+      <ul>
+        <li><a href="/guides/">2FA guides</a></li>
+        <li><a href="/status/">Status</a></li>
+        <li><a href="/press/">Press kit</a></li>
+        <li><a href="https://tanooki-auth-premium.kirbymail.workers.dev/privacy">Privacy policy</a></li>
+        <li><a href="https://github.com/TanookiStudios/tanooki-auth">Source code</a></li>
+        <li><a href="https://tanookistudios.com">Tanooki Studios</a></li>
+        <li><a href="https://tanookistudios.com/SupportMe">Donate</a></li>
+      </ul>
+    </nav>
+    <small>© 2026 Maddie</small>
+  </div>
+</footer>
+</body>
+</html>

@@ -259,3 +259,5 @@ assert.equal(entries.filter((e) => e.contact === 'me@example.com').length, 4);
 assert.equal((await worker.fetch(new Request('https://x.dev/feedback/list'), { ...env, FEEDBACK_ADMIN: undefined })).status, 503);
 
 console.log('worker tests passed; sample key', key.slice(0, 24) + '…');
+
+await import('./test-growth.mjs'); // newsletter, student discount and affiliates (#40, #42, #43)
