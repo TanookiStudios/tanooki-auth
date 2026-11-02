@@ -5225,4 +5225,32 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get settingsSeasonalHelp =>
       '가을에는 으스스, 겨울에는 포근, 봄에는 봄 테마로 바뀌고, 여름에는 내가 고른 테마를 써요. 계절 앱 아이콘도 함께 바뀌어요.';
+
+  @override
+  String get helpNew040a => 'iPhone과 Android에서 자동 완성으로 코드를 입력하세요.';
+
+  @override
+  String get helpNew040b => 'QR 이미지를 앱으로 공유해 계정을 추가하세요. Mac에서는 창에 끌어다 놓으면 됩니다.';
+
+  @override
+  String get helpNew040c =>
+      '컴퓨터에서 화살표 키, Enter, 단축키 목록(⌘/ 또는 Ctrl+/), 메뉴 막대 카운트다운을 쓸 수 있어요.';
+
+  @override
+  String get helpNew040d => '쓰지 않는 계정을 찾고, 종이 백업을 두 부분으로 나눠 인쇄하세요.';
+
+  @override
+  String get helpNew040e => '새로운 상태 점검 화면.';
+
+  @override
+  String get helpNew040f => '잃어버린 기기를 다른 기기에서 지우고, 동기화 충돌을 해결하세요.';
+
+  @override
+  String get helpNew040g => '팀 역할, 팀 활동 기록, 이메일 초대, 비즈니스 요금제(곧 제공).';
+
+  @override
+  String get helpNew040h => '나만의 테마, 계절 테마, Apple Watch 스마트 스택 위젯.';
+
+  @override
+  String get helpNew040i => '언어 5개 추가: 포르투갈어, 이탈리아어, 한국어, 중국어, 네덜란드어.';
 }

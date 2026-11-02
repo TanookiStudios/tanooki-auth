@@ -8501,6 +8501,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Spooky in fall, Cozy in winter and Spring in spring; your own pick in summer. A seasonal app icon changes along with it.'**
   String get settingsSeasonalHelp;
+
+  /// No description provided for @helpNew040a.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill codes with AutoFill on iPhone and Android.'**
+  String get helpNew040a;
+
+  /// No description provided for @helpNew040b.
+  ///
+  /// In en, this message translates to:
+  /// **'Share a QR picture to the app to add an account. On a Mac, drop it on the window.'**
+  String get helpNew040b;
+
+  /// No description provided for @helpNew040c.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrow keys, Enter and a shortcuts list (⌘/ or Ctrl+/) on computers, plus a countdown in the menu bar.'**
+  String get helpNew040c;
+
+  /// No description provided for @helpNew040d.
+  ///
+  /// In en, this message translates to:
+  /// **'Find accounts you never use, and print a paper backup in two halves.'**
+  String get helpNew040d;
+
+  /// No description provided for @helpNew040e.
+  ///
+  /// In en, this message translates to:
+  /// **'A new Health check screen.'**
+  String get helpNew040e;
+
+  /// No description provided for @helpNew040f.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase a lost device from another one, and settle sync clashes.'**
+  String get helpNew040f;
+
+  /// No description provided for @helpNew040g.
+  ///
+  /// In en, this message translates to:
+  /// **'Team roles, a team activity log, email invites, and a Business plan (coming soon).'**
+  String get helpNew040g;
+
+  /// No description provided for @helpNew040h.
+  ///
+  /// In en, this message translates to:
+  /// **'Make your own theme, seasonal themes, and an Apple Watch Smart Stack widget.'**
+  String get helpNew040h;
+
+  /// No description provided for @helpNew040i.
+  ///
+  /// In en, this message translates to:
+  /// **'Five more languages: Portuguese, Italian, Korean, Chinese and Dutch.'**
+  String get helpNew040i;
 }
 
 class _AppLocalizationsDelegate

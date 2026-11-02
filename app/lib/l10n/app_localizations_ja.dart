@@ -5229,4 +5229,32 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get settingsSeasonalHelp =>
       '秋はスプーキー、冬はコージー、春はスプリング。夏は選んだテーマ。季節のアイコンを使っていれば、アイコンも変わります。';
+
+  @override
+  String get helpNew040a => 'iPhone と Android で自動入力によりコードを入力できます。';
+
+  @override
+  String get helpNew040b => 'QR 画像をアプリに共有してアカウントを追加。Mac ではウインドウにドロップできます。';
+
+  @override
+  String get helpNew040c =>
+      'パソコンで矢印キー、Enter、ショートカット一覧(⌘/ または Ctrl+/)、メニューバーにカウントダウン。';
+
+  @override
+  String get helpNew040d => '使っていないアカウントを見つけ、紙のバックアップを2つに分けて印刷できます。';
+
+  @override
+  String get helpNew040e => '新しい「ヘルスチェック」画面。';
+
+  @override
+  String get helpNew040f => 'なくしたデバイスを別のデバイスから消去し、同期の衝突を解決できます。';
+
+  @override
+  String get helpNew040g => 'チームの役割、チームのアクティビティ履歴、メール招待、ビジネスプラン(近日公開)。';
+
+  @override
+  String get helpNew040h => '自分だけのテーマ、季節のテーマ、Apple Watch のスマートスタック用ウィジェット。';
+
+  @override
+  String get helpNew040i => '5つの言語を追加:ポルトガル語、イタリア語、韓国語、中国語、オランダ語。';
 }

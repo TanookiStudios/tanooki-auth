@@ -1397,5 +1397,14 @@
   "themeEditorFull": "Você já tem 3 temas. Apague um para criar outro.",
   "settingsSeasonal": "Mudar com as estações",
   "settingsSeasonalPremium": "Mudar com as estações (Premium)",
-  "settingsSeasonalHelp": "Assustador no outono, Aconchegante no inverno e Primavera na primavera; sua escolha no verão. Um ícone sazonal do app muda junto."
+  "settingsSeasonalHelp": "Assustador no outono, Aconchegante no inverno e Primavera na primavera; sua escolha no verão. Um ícone sazonal do app muda junto.",
+  "helpNew040a": "Preencha códigos com o Preenchimento Automático no iPhone e no Android.",
+  "helpNew040b": "Compartilhe uma imagem de QR com o app para adicionar uma conta. No Mac, solte-a na janela.",
+  "helpNew040c": "Setas, Enter e uma lista de atalhos (⌘/ ou Ctrl+/) no computador, além de uma contagem regressiva na barra de menus.",
+  "helpNew040d": "Encontre contas que você nunca usa e imprima um backup em papel em duas metades.",
+  "helpNew040e": "Nova tela de Verificação de saúde.",
+  "helpNew040f": "Apague um aparelho perdido a partir de outro e resolva conflitos de sincronização.",
+  "helpNew040g": "Funções na equipe, registro de atividade da equipe, convites por e-mail e um plano Business (em breve).",
+  "helpNew040h": "Crie seu próprio tema, temas sazonais e um widget de Pilha Inteligente para o Apple Watch.",
+  "helpNew040i": "Mais cinco idiomas: português, italiano, coreano, chinês e holandês."
 }

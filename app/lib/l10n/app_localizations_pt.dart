@@ -5491,4 +5491,39 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get settingsSeasonalHelp =>
       'Assustador no outono, Aconchegante no inverno e Primavera na primavera; sua escolha no verão. Um ícone sazonal do app muda junto.';
+
+  @override
+  String get helpNew040a =>
+      'Preencha códigos com o Preenchimento Automático no iPhone e no Android.';
+
+  @override
+  String get helpNew040b =>
+      'Compartilhe uma imagem de QR com o app para adicionar uma conta. No Mac, solte-a na janela.';
+
+  @override
+  String get helpNew040c =>
+      'Setas, Enter e uma lista de atalhos (⌘/ ou Ctrl+/) no computador, além de uma contagem regressiva na barra de menus.';
+
+  @override
+  String get helpNew040d =>
+      'Encontre contas que você nunca usa e imprima um backup em papel em duas metades.';
+
+  @override
+  String get helpNew040e => 'Nova tela de Verificação de saúde.';
+
+  @override
+  String get helpNew040f =>
+      'Apague um aparelho perdido a partir de outro e resolva conflitos de sincronização.';
+
+  @override
+  String get helpNew040g =>
+      'Funções na equipe, registro de atividade da equipe, convites por e-mail e um plano Business (em breve).';
+
+  @override
+  String get helpNew040h =>
+      'Crie seu próprio tema, temas sazonais e um widget de Pilha Inteligente para o Apple Watch.';
+
+  @override
+  String get helpNew040i =>
+      'Mais cinco idiomas: português, italiano, coreano, chinês e holandês.';
 }

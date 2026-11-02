@@ -167,6 +167,7 @@ class _TourScreenState extends State<TourScreen> {
 
 /// The in-app changelog, newest first. The first entry's version must match [appVersion] (a test checks).
 List<({String version, List<String> items})> get changelog => [
+      (version: '0.4.0', items: [l10n.helpNew040a, l10n.helpNew040b, l10n.helpNew040c, l10n.helpNew040d, l10n.helpNew040e, l10n.helpNew040f, l10n.helpNew040g, l10n.helpNew040h, l10n.helpNew040i]),
       (version: '0.3.0', items: [l10n.helpNew030a, l10n.helpNew030b, l10n.helpNew030c, l10n.helpNew030d, l10n.helpNew030e, l10n.helpNew030f, l10n.helpNew030g, l10n.helpNew030h, l10n.helpNew030i, l10n.helpNew030j, l10n.helpNew030k, l10n.helpNew030l, l10n.helpNew030m, l10n.helpNew030n, l10n.helpNew030o, l10n.helpNew030p, l10n.helpNew030q, l10n.helpNew030r, l10n.helpNew030s]),
       (version: '0.2.0', items: [l10n.helpNew020a, l10n.helpNew020b, l10n.helpNew020c, l10n.helpNew020d]),
       (version: '0.1.0', items: [l10n.helpNew010a]),

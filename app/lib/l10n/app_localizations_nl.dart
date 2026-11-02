@@ -5488,4 +5488,39 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get settingsSeasonalHelp =>
       'Spookachtig in de herfst, Knus in de winter en Lente in de lente; je eigen keuze in de zomer. Een seizoensgebonden app-icoon wisselt mee.';
+
+  @override
+  String get helpNew040a =>
+      'Vul codes in met Automatisch invullen op iPhone en Android.';
+
+  @override
+  String get helpNew040b =>
+      'Deel een QR-afbeelding met de app om een account toe te voegen. Op een Mac sleep je hem naar het venster.';
+
+  @override
+  String get helpNew040c =>
+      'Pijltjestoetsen, Enter en een lijst met sneltoetsen (⌘/ of Ctrl+/) op computers, plus een aftelling in de menubalk.';
+
+  @override
+  String get helpNew040d =>
+      'Vind accounts die je nooit gebruikt en print een papieren back-up in twee helften.';
+
+  @override
+  String get helpNew040e => 'Een nieuw scherm Gezondheidscheck.';
+
+  @override
+  String get helpNew040f =>
+      'Wis een kwijtgeraakt apparaat vanaf een ander en los synchronisatieconflicten op.';
+
+  @override
+  String get helpNew040g =>
+      'Teamrollen, een activiteitenlog voor teams, uitnodigingen per e-mail en een Business-abonnement (binnenkort).';
+
+  @override
+  String get helpNew040h =>
+      'Maak je eigen thema, seizoensthema\'s en een Smart Stack-widget voor Apple Watch.';
+
+  @override
+  String get helpNew040i =>
+      'Vijf extra talen: Portugees, Italiaans, Koreaans, Chinees en Nederlands.';
 }

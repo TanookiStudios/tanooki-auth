@@ -5503,4 +5503,39 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get settingsSeasonalHelp =>
       'Spettrale in autunno, Accogliente in inverno e Primavera in primavera; la tua scelta in estate. Anche l\'icona stagionale dell\'app cambia di conseguenza.';
+
+  @override
+  String get helpNew040a =>
+      'Inserisci i codici con la compilazione automatica su iPhone e Android.';
+
+  @override
+  String get helpNew040b =>
+      'Condividi un\'immagine QR con l\'app per aggiungere un account. Su Mac, trascinala nella finestra.';
+
+  @override
+  String get helpNew040c =>
+      'Frecce, Invio e un elenco di scorciatoie (⌘/ o Ctrl+/) sul computer, più un conto alla rovescia nella barra dei menu.';
+
+  @override
+  String get helpNew040d =>
+      'Trova gli account che non usi mai e stampa un backup cartaceo in due metà.';
+
+  @override
+  String get helpNew040e => 'Nuova schermata Controllo stato.';
+
+  @override
+  String get helpNew040f =>
+      'Cancella un dispositivo perso da un altro e risolvi i conflitti di sincronizzazione.';
+
+  @override
+  String get helpNew040g =>
+      'Ruoli nel team, registro attività del team, inviti via email e un piano Business (in arrivo).';
+
+  @override
+  String get helpNew040h =>
+      'Crea il tuo tema, temi stagionali e un widget Smart Stack per Apple Watch.';
+
+  @override
+  String get helpNew040i =>
+      'Cinque lingue in più: portoghese, italiano, coreano, cinese e olandese.';
 }

@@ -1397,5 +1397,14 @@
   "themeEditorFull": "Du hast schon 3 Designs. Lösche eins, um ein neues zu erstellen.",
   "settingsSeasonal": "Mit den Jahreszeiten wechseln",
   "settingsSeasonalPremium": "Mit den Jahreszeiten wechseln (Premium)",
-  "settingsSeasonalHelp": "Gruselig im Herbst, Gemütlich im Winter, Frühling im Frühling; im Sommer deine Wahl. Ein saisonales App-Symbol wechselt mit."
+  "settingsSeasonalHelp": "Gruselig im Herbst, Gemütlich im Winter, Frühling im Frühling; im Sommer deine Wahl. Ein saisonales App-Symbol wechselt mit.",
+  "helpNew040a": "Codes mit Autofill auf iPhone und Android ausfüllen.",
+  "helpNew040b": "Ein QR-Bild an die App teilen, um ein Konto hinzuzufügen. Auf dem Mac einfach aufs Fenster ziehen.",
+  "helpNew040c": "Pfeiltasten, Eingabe und eine Kurzbefehl-Liste (⌘/ oder Strg+/) am Computer, dazu ein Countdown in der Menüleiste.",
+  "helpNew040d": "Nie genutzte Konten finden und eine Papiersicherung in zwei Hälften drucken.",
+  "helpNew040e": "Neuer Bildschirm „Gesundheitscheck“.",
+  "helpNew040f": "Ein verlorenes Gerät von einem anderen aus löschen und Sync-Konflikte klären.",
+  "helpNew040g": "Team-Rollen, Team-Aktivitätsprotokoll, Einladungen per E-Mail und ein Business-Tarif (bald verfügbar).",
+  "helpNew040h": "Eigenes Design erstellen, saisonale Designs und ein Smart-Stack-Widget für die Apple Watch.",
+  "helpNew040i": "Fünf weitere Sprachen: Portugiesisch, Italienisch, Koreanisch, Chinesisch und Niederländisch."
 }

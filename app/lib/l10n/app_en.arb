@@ -3380,5 +3380,14 @@
   "themeEditorFull": "You have 3 themes already. Delete one to make another.",
   "settingsSeasonal": "Change with the seasons",
   "settingsSeasonalPremium": "Change with the seasons (Premium)",
-  "settingsSeasonalHelp": "Spooky in fall, Cozy in winter and Spring in spring; your own pick in summer. A seasonal app icon changes along with it."
+  "settingsSeasonalHelp": "Spooky in fall, Cozy in winter and Spring in spring; your own pick in summer. A seasonal app icon changes along with it.",
+  "helpNew040a": "Fill codes with AutoFill on iPhone and Android.",
+  "helpNew040b": "Share a QR picture to the app to add an account. On a Mac, drop it on the window.",
+  "helpNew040c": "Arrow keys, Enter and a shortcuts list (⌘/ or Ctrl+/) on computers, plus a countdown in the menu bar.",
+  "helpNew040d": "Find accounts you never use, and print a paper backup in two halves.",
+  "helpNew040e": "A new Health check screen.",
+  "helpNew040f": "Erase a lost device from another one, and settle sync clashes.",
+  "helpNew040g": "Team roles, a team activity log, email invites, and a Business plan (coming soon).",
+  "helpNew040h": "Make your own theme, seasonal themes, and an Apple Watch Smart Stack widget.",
+  "helpNew040i": "Five more languages: Portuguese, Italian, Korean, Chinese and Dutch."
 }

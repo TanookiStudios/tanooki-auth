@@ -5120,4 +5120,31 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsSeasonalHelp => '秋季用万圣，冬季用暖冬，春季用春日；夏季用你自己选的。应季应用图标也会随之更换。';
+
+  @override
+  String get helpNew040a => '在 iPhone 和 Android 上用自动填充输入验证码。';
+
+  @override
+  String get helpNew040b => '把二维码图片分享到应用即可添加账户。在 Mac 上拖到窗口里就行。';
+
+  @override
+  String get helpNew040c => '电脑上可用方向键、回车和快捷键列表(⌘/ 或 Ctrl+/),菜单栏还会显示倒计时。';
+
+  @override
+  String get helpNew040d => '找出从不使用的账户,并把纸质备份分成两半打印。';
+
+  @override
+  String get helpNew040e => '新增“健康检查”页面。';
+
+  @override
+  String get helpNew040f => '从另一台设备抹掉丢失的设备,并处理同步冲突。';
+
+  @override
+  String get helpNew040g => '团队角色、团队活动记录、邮件邀请,以及商业版方案(即将推出)。';
+
+  @override
+  String get helpNew040h => '自定义主题、季节主题,以及 Apple Watch 智能叠放小组件。';
+
+  @override
+  String get helpNew040i => '新增五种语言:葡萄牙语、意大利语、韩语、中文和荷兰语。';
 }

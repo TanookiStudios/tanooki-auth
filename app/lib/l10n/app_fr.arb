@@ -1397,5 +1397,14 @@
   "themeEditorFull": "Vous avez déjà 3 thèmes. Supprimez-en un pour en créer un autre.",
   "settingsSeasonal": "Changer avec les saisons",
   "settingsSeasonalPremium": "Changer avec les saisons (Premium)",
-  "settingsSeasonalHelp": "Effrayant en automne, Douillet en hiver, Printemps au printemps ; en été, votre choix. Une icône de saison change aussi."
+  "settingsSeasonalHelp": "Effrayant en automne, Douillet en hiver, Printemps au printemps ; en été, votre choix. Une icône de saison change aussi.",
+  "helpNew040a": "Remplissez les codes avec le remplissage automatique sur iPhone et Android.",
+  "helpNew040b": "Partagez une image QR avec l’app pour ajouter un compte. Sur Mac, déposez-la sur la fenêtre.",
+  "helpNew040c": "Flèches, Entrée et une liste de raccourcis (⌘/ ou Ctrl+/) sur ordinateur, plus un compte à rebours dans la barre des menus.",
+  "helpNew040d": "Trouvez les comptes que vous n’utilisez jamais et imprimez une sauvegarde papier en deux moitiés.",
+  "helpNew040e": "Un nouvel écran Bilan de santé.",
+  "helpNew040f": "Effacez un appareil perdu depuis un autre et réglez les conflits de synchronisation.",
+  "helpNew040g": "Rôles d’équipe, journal d’activité, invitations par e-mail et une offre Business (bientôt).",
+  "helpNew040h": "Créez votre propre thème, des thèmes de saison et un widget Smart Stack pour Apple Watch.",
+  "helpNew040i": "Cinq langues de plus : portugais, italien, coréen, chinois et néerlandais."
 }
