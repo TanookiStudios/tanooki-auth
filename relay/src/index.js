@@ -4,6 +4,7 @@ import { LinkRoom } from './link.js';
 import { EmergencyGrant } from './emergency.js';
 import { Team, TeamLicense } from './team.js';
 import { CORS, ID, MAX_BODY, err, json } from './util.js';
+import { business } from './business.js';
 
 export { SyncGroup, LinkRoom, EmergencyGrant, Team, TeamLicense };
 
@@ -23,6 +24,7 @@ export default {
     if (p[0] === 'v1' && p[1] === 'link' && p[2] === 'rooms' && ID.test(p[3] || '')) return env.LINK.get(env.LINK.idFromName(p[3])).fetch(req);
     if (p[0] === 'v1' && p[1] === 'emergency' && ID.test(p[2] || '')) return env.EMERGENCY.get(env.EMERGENCY.idFromName(p[2])).fetch(req);
     if (p[0] === 'v1' && p[1] === 'team' && ID.test(p[2] || '')) return env.TEAM.get(env.TEAM.idFromName(p[2])).fetch(req);
+    if (p[0] === 'v1' && p[1] === 'business') return business(req, env, p.slice(2));
     return err(404, 'not found');
   },
 };

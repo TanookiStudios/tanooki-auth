@@ -3,7 +3,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
-import 'package:flutter/services.dart';
 
 import '../core/account.dart';
 import '../core/activity.dart';
@@ -17,6 +16,7 @@ import 'account_details.dart';
 import 'add.dart';
 import 'brand_icon.dart';
 import 'home_cards.dart';
+import 'keys.dart';
 import 'clipboard.dart';
 import 'code_view.dart';
 import 'recovery_codes.dart';
@@ -26,6 +26,7 @@ import 'share_ui.dart';
 import 'sync_ui.dart' show QrView;
 import 'team_ui.dart';
 import 'theme.dart';
+import 'tray_countdown.dart';
 import '../l10n/l10n.dart';
 
 String groupCode(String code) => codeGroups(code).join(' ');
@@ -63,6 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final _revealed = <String, DateTime>{}; // account id -> when its hidden code was tapped
   final _proved = <String, DateTime>{}; // account id -> when Face ID etc. let an "ask first" account show its code
   final _focus = FocusNode();
+  final _searchFocus = FocusNode();
   final _searchText = TextEditingController();
   bool _selecting = false;
   final _picked = <String>{}; // account ids ticked in select mode
@@ -117,7 +119,9 @@ class _HomeScreenState extends State<HomeScreen> {
     _tick = Timer.periodic(const Duration(seconds: 1), (_) {
       setState(() {});
       ClockCheck.instance.maybeRun(); // at most hourly, while codes are on screen
+      updateTrayCountdown(widget.vault, DateTime.now());
     });
+    updateTrayCountdown(widget.vault, DateTime.now());
     ClockCheck.instance.maybeRun();
     openAccountRequest.addListener(_showRequested);
     WidgetsBinding.instance.addPostFrameCallback((_) => _showRequested());
@@ -144,7 +148,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _tick.cancel();
     openAccountRequest.removeListener(_showRequested);
+    updateTrayCountdown(null, DateTime.now()); // locked: the menu bar shows just the icon
     _searchText.dispose();
+    _searchFocus.dispose();
     _focus.dispose();
     super.dispose();
   }
@@ -260,9 +266,61 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _move(int delta) {
-    final n = _visible.length;
-    if (n == 0) return;
-    setState(() => _selected = (_selected + delta).clamp(0, n - 1));
+    final visible = _visible;
+    if (visible.isEmpty) return;
+    setState(() => _selected = (_selected + delta).clamp(0, visible.length - 1));
+    final key = ValueKey(visible[_selected].id); // the key [_card] gives each card
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Element? card;
+      void find(Element e) {
+        if (card != null) return;
+        e.widget.key == key ? card = e : e.visitChildren(find);
+      }
+      (context as Element).visitChildren(find);
+      if (card != null) Scrollable.ensureVisible(card!, duration: const Duration(milliseconds: 120), alignment: 0.5);
+    });
+  }
+
+  bool get _searchShown => _live.length > 3 || MediaQuery.sizeOf(context).width >= 700;
+
+  /// Desktop keyboard (see [listKey]); only while the list or the search box has the keyboard, so a focused
+  /// button still works with Enter and Space.
+  KeyEventResult _onKey(FocusNode _, KeyEvent e) {
+    final inSearch = _searchFocus.hasFocus;
+    if (!inSearch && !_focus.hasFocus) return KeyEventResult.ignored;
+    return listKey(
+      e,
+      inSearch: inSearch,
+      onMove: _move,
+      onEnter: () {
+        final v = _visible;
+        if (v.isNotEmpty && !_selecting) _copy(v[_selected.clamp(0, v.length - 1)]);
+      },
+      onEscape: () {
+        if (_searchText.text.isNotEmpty || inSearch) {
+          _searchText.clear();
+          setState(() {
+            _query = '';
+            _selected = 0;
+          });
+          _focus.requestFocus();
+          return true;
+        }
+        if (!_selecting) return false;
+        _stopSelecting();
+        return true;
+      },
+      onType: _searchShown
+          ? (ch) {
+              typeInto(_searchText, _searchFocus, ch);
+              setState(() {
+                _query = _searchText.text;
+                _selected = 0;
+              });
+            }
+          : null,
+    );
   }
 
   /// Puts [order] (a reshuffle of the accounts on screen) into the vault by reusing only the slots those
@@ -558,6 +616,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _search() => TextField(
         controller: _searchText,
+        focusNode: _searchFocus,
         onChanged: (v) => setState(() {
           _query = v;
           _selected = 0;
@@ -686,33 +745,16 @@ class _HomeScreenState extends State<HomeScreen> {
     final split = width >= 900, wide = width >= 700 && !split;
     final live = _live;
 
-    Widget list = CallbackShortcuts(
-      bindings: {
-        const SingleActivator(LogicalKeyboardKey.arrowDown): () => _move(1),
-        const SingleActivator(LogicalKeyboardKey.arrowUp): () => _move(-1),
-        const SingleActivator(LogicalKeyboardKey.arrowRight): () => _move(1),
-        const SingleActivator(LogicalKeyboardKey.arrowLeft): () => _move(-1),
-        const SingleActivator(LogicalKeyboardKey.enter): () {
-          if (_visible.isNotEmpty && !_selecting) _copy(_visible[_selected.clamp(0, _visible.length - 1)]);
-        },
-        const SingleActivator(LogicalKeyboardKey.numpadEnter): () {
-          if (_visible.isNotEmpty && !_selecting) _copy(_visible[_selected.clamp(0, _visible.length - 1)]);
-        },
-        const SingleActivator(LogicalKeyboardKey.escape): () {
-          if (_selecting) _stopSelecting();
-        },
-      },
-      child: Focus(focusNode: _focus, autofocus: true, child: _list(wide, now, unix)),
-    );
+    Widget list = Focus(focusNode: _focus, autofocus: true, child: _list(wide, now, unix));
 
     final selectButton = live.isEmpty || _selecting
         ? null
         : IconButton(tooltip: l10n.homeSelectAccounts, icon: const Icon(Icons.checklist), onPressed: _startSelecting);
 
-    if (split) return _split(list, live, selectButton, now, unix);
+    if (split) return Focus(onKeyEvent: _onKey, child: _split(list, live, selectButton, now, unix));
 
     if (!wide) {
-      return Scaffold(
+      return Focus(onKeyEvent: _onKey, child: Scaffold(
         appBar: AppBar(
           title: Row(children: [
             const Flexible(child: Text('Tanooki Auth', maxLines: 1, overflow: TextOverflow.ellipsis)),
@@ -740,10 +782,10 @@ class _HomeScreenState extends State<HomeScreen> {
           if (_selecting) _selectionBar(const EdgeInsets.fromLTRB(16, 0, 16, 8)),
           Expanded(child: list),
         ]),
-      );
+      ));
     }
 
-    return Scaffold(
+    return Focus(onKeyEvent: _onKey, child: Scaffold(
       body: Row(children: [
         Sidebar(onAdd: _add, onSettings: _openSettings),
         const VerticalDivider(width: 1),
@@ -793,7 +835,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ]),
         ),
       ]),
-    );
+    ));
   }
 
   /// Wide layout (900 px and up): the list on the left, the selected account's details on the right.

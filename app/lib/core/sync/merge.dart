@@ -1,6 +1,9 @@
 // Sync merge: per account, last writer wins on the account's own updatedAt, with tombstones for accounts
 // removed for good. Pure Dart, no I/O, so every rule is unit tested (test/sync_merge_test.dart).
+import 'dart:convert';
+
 import '../account.dart';
+import '../vault.dart';
 
 /// One decrypted sync record: an account, or a tombstone for an account removed for good.
 /// (An account in Trash is still an account, with deletedAt set, so Trash and Restore sync too.)
@@ -103,3 +106,78 @@ bool mergeRemote(List<Account> accounts, Map<String, int> tombstones, SyncItem r
 }
 
 DateTime _laterOf(DateTime a, DateTime b) => a.isAfter(b) ? a : b;
+
+// ---------------------------------------------------------------- clashes (feature 26)
+
+/// Settings key: the sync clashes not yet looked at, newest first.
+const syncClashesKey = 'syncClashes';
+const maxSyncClashes = 50;
+
+/// Two devices both changed the same account since they last agreed. Merge keeps [kept] (the later edit) as
+/// always; [lost] is the other version, kept here so the person can choose it instead.
+class SyncClash {
+  SyncClash({required this.kept, required this.lost, required this.at});
+  factory SyncClash.fromJson(Map<String, dynamic> j) => SyncClash(
+        kept: Account.fromJson((j['kept'] as Map).cast<String, dynamic>()),
+        lost: Account.fromJson((j['lost'] as Map).cast<String, dynamic>()),
+        at: DateTime.fromMillisecondsSinceEpoch(j['at'] as int),
+      );
+  final Account kept, lost;
+  final DateTime at;
+  String get id => kept.id;
+  Map<String, dynamic> toJson() => {'kept': kept.toJson(), 'lost': lost.toJson(), 'at': at.millisecondsSinceEpoch};
+}
+
+// What a person would call "a different version": everything merge compares, minus the HOTP counter (merge
+// already settles that by taking the highest).
+String _clashContent(Account a) => jsonEncode((jsonDecode(a.syncContent) as Map)..remove('counter'));
+
+/// The clash between this device's copy and [remote], or null. [base] is the account time this device last saw on
+/// the server: a clash needs both copies changed since then (a new device with no [base] never clashes), and
+/// different content. Call before [mergeRemote], which may change the local copy.
+SyncClash? findClash(SyncItem? local, SyncItem remote, int? base, DateTime now) {
+  final mine = local?.account, theirs = remote.account;
+  if (base == null || mine == null || theirs == null) return null;
+  if (local!.time == base || remote.time == base || local.time == remote.time) return null;
+  if (_clashContent(mine) == _clashContent(theirs)) return null;
+  Account copy(Account a) => Account.fromJson(a.toJson());
+  final remoteWins = supersedes(remote, local);
+  return SyncClash(kept: copy(remoteWins ? theirs : mine), lost: copy(remoteWins ? mine : theirs), at: now);
+}
+
+List<SyncClash> syncClashes(Vault v) => [
+      for (final j in (v.settings[syncClashesKey] as List?) ?? const [])
+        SyncClash.fromJson((j as Map).cast<String, dynamic>()),
+    ];
+
+/// Adds [c] (replacing an older clash for the same account), newest first, at most [maxSyncClashes].
+void recordClash(Vault v, SyncClash c) {
+  v.settings[syncClashesKey] = [
+    c.toJson(),
+    for (final old in syncClashes(v))
+      if (old.id != c.id) old.toJson(),
+  ].take(maxSyncClashes).toList();
+}
+
+/// "Keep this one". Keeping [SyncClash.kept] just closes the clash. Keeping [SyncClash.lost] puts that version
+/// back as a fresh edit on this device, so it wins everywhere on the next sync. The caller saves.
+void resolveClash(Vault v, SyncClash c, {required bool keepLost}) {
+  v.settings[syncClashesKey] = [
+    for (final old in syncClashes(v))
+      if (old.id != c.id) old.toJson(),
+  ];
+  if (!keepLost) return;
+  final at = v.accounts.indexWhere((a) => a.id == c.id);
+  final chosen = Account.fromJson(c.lost.toJson());
+  if (at < 0) {
+    v.accounts.add(chosen); // removed since: comes back as new
+    (v.settings[Vault.tombstonesKey] as Map?)?.remove(c.id);
+    return;
+  }
+  final current = v.accounts[at];
+  // Same stamp as now, new content: the vault's save stamps it as a local edit, later than anything it replaces.
+  v.accounts[at] = chosen
+    ..updatedAt = current.updatedAt
+    ..lastUsedAt = current.lastUsedAt
+    ..counter = current.counter > chosen.counter ? current.counter : chosen.counter;
+}

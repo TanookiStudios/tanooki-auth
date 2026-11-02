@@ -29,7 +29,8 @@ export class SyncGroup extends DurableObject {
       CREATE INDEX IF NOT EXISTS records_seq ON records(seq);
       CREATE TABLE IF NOT EXISTS nonces(nonce TEXT PRIMARY KEY, exp INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS invites(nonce TEXT PRIMARY KEY, exp INTEGER NOT NULL);
-      CREATE TABLE IF NOT EXISTS meta(k TEXT PRIMARY KEY, v INTEGER NOT NULL);`);
+      CREATE TABLE IF NOT EXISTS meta(k TEXT PRIMARY KEY, v INTEGER NOT NULL);
+      CREATE TABLE IF NOT EXISTS wiped(key TEXT PRIMARY KEY, at INTEGER NOT NULL, by TEXT NOT NULL);`);
   }
 
   one(q, ...args) { return this.sql.exec(q, ...args).toArray()[0]; }
@@ -38,9 +39,21 @@ export class SyncGroup extends DurableObject {
   isDevice(key) { return !!this.one('SELECT 1 AS x FROM devices WHERE key=?', key); }
 
   // Verifies the Ed25519 request signature and burns the nonce. Returns the device key, or a Response on failure.
+  // A wiped device is refused everything, before any other check, so it learns to erase itself.
   authenticate({ registered = true, ...parts }) {
-    return verifySigned(this.sql, parts, (device) =>
-      registered && !this.isDevice(device) ? err(this.exists() ? 403 : 404, this.exists() ? 'device is not in this sync group' : 'sync group not found') : null);
+    return verifySigned(this.sql, parts, (device) => {
+      const w = this.one('SELECT at FROM wiped WHERE key=?', device);
+      if (w) return err(410, 'this device was erased from another device in its sync group', { wiped: true, at: w.at });
+      return registered && !this.isDevice(device) ? err(this.exists() ? 403 : 404, this.exists() ? 'device is not in this sync group' : 'sync group not found') : null;
+    });
+  }
+
+  // Erases the group but keeps the wipe list, so a wiped device that comes online later still erases itself.
+  async eraseGroup() {
+    const wiped = this.sql.exec('SELECT * FROM wiped').toArray();
+    await this.ctx.storage.deleteAll();
+    this.schema();
+    for (const w of wiped) this.sql.exec('INSERT INTO wiped VALUES(?, ?, ?)', w.key, w.at, w.by);
   }
 
   async fetch(req) {
@@ -107,12 +120,23 @@ export class SyncGroup extends DurableObject {
       if (!this.isDevice(rest[1])) return err(404, 'no such device in this group');
       this.sql.exec('DELETE FROM devices WHERE key=?', rest[1]);
       for (const ws of this.ctx.getWebSockets(rest[1])) ws.close(4001, 'device removed');
-      if (!this.exists()) await this.ctx.storage.deleteAll(); // last device gone: the group is gone
+      if (!this.exists()) await this.eraseGroup(); // last device gone: the group is gone
+      return json({ ok: true });
+    }
+    // Remote wipe: another device in the group marks this one. It is out at once; the next time it connects
+    // it is told to erase itself (410 with wiped: true), and it is refused for good after that.
+    if (req.method === 'POST' && rest[0] === 'devices' && rest[2] === 'wipe' && rest.length === 3) {
+      const target = rest[1];
+      if (target === dev) return err(409, 'a device cannot erase itself this way; turn off sync on it instead');
+      if (!this.isDevice(target)) return err(404, 'no such device in this group');
+      this.sql.exec('DELETE FROM devices WHERE key=?', target);
+      this.sql.exec('INSERT OR REPLACE INTO wiped VALUES(?, ?, ?)', target, Date.now(), dev);
+      for (const ws of this.ctx.getWebSockets(target)) try { ws.send(JSON.stringify({ type: 'wiped' })); ws.close(4003, 'device wiped'); } catch {}
       return json({ ok: true });
     }
     if (req.method === 'DELETE' && route === '') {
       for (const ws of this.ctx.getWebSockets()) ws.close(4002, 'sync group deleted');
-      await this.ctx.storage.deleteAll();
+      await this.eraseGroup();
       return json({ ok: true });
     }
 

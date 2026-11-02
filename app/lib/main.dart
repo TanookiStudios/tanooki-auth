@@ -28,12 +28,15 @@ import 'ui/clipboard.dart';
 import 'ui/code_view.dart' show countdownKey;
 import 'ui/help.dart' show showTourOrWhatsNew;
 import 'ui/home.dart';
+import 'ui/keys.dart';
+import 'core/sync/sync_service.dart' show SyncService;
 import 'ui/phone_link_ui.dart' show resumeSyncAndLink, startSyncAndLink, stopSyncAndLink;
 import 'ui/premium.dart';
 import 'ui/quick_pick.dart';
 import 'ui/security_ui.dart';
 import 'ui/settings.dart';
 import 'ui/theme.dart';
+import 'ui/tray_countdown.dart' show trayCountdownKey;
 
 bool get isDesktop => Platform.isMacOS || Platform.isWindows || Platform.isLinux;
 
@@ -71,7 +74,7 @@ Future<void> createDecoyVault(Vault real, Map<String, Object> passcodeRecord) as
 
 /// Settings the decoy copies from the real vault so it looks the same. Premium comes from a license key or, for an
 /// App Store / Google Play purchase, the store purchase record; without it a Premium theme would fall back to Auto.
-const decoyLookAlikeKeys = ['theme', 'license', storePurchaseKey, languageKey, easyFontKey, countdownKey, layoutKey, hideCodesKey, recentFirstKey, sortKey, lockKey, lockAfterKey, blockScreenshotsKey];
+const decoyLookAlikeKeys = ['theme', 'license', storePurchaseKey, languageKey, easyFontKey, countdownKey, layoutKey, hideCodesKey, recentFirstKey, sortKey, lockKey, lockAfterKey, blockScreenshotsKey, trayCountdownKey];
 
 bool isDecoyVault(Vault v) => v.file.path.endsWith('vault-b.json');
 
@@ -117,6 +120,8 @@ class TanookiAuthApp extends StatefulWidget {
 }
 
 class _TanookiAuthAppState extends State<TanookiAuthApp> with WidgetsBindingObserver {
+  final _navigator = GlobalKey<NavigatorState>();
+
   @override
   void initState() {
     super.initState();
@@ -160,6 +165,7 @@ class _TanookiAuthAppState extends State<TanookiAuthApp> with WidgetsBindingObse
     final fixed = themeChoices[themeChoice.value];
     return MaterialApp(
       title: 'Tanooki Auth',
+      navigatorKey: _navigator,
       debugShowCheckedModeBanner: false,
       locale: appLocale(),
       supportedLocales: AppLocalizations.supportedLocales,
@@ -173,7 +179,14 @@ class _TanookiAuthAppState extends State<TanookiAuthApp> with WidgetsBindingObse
               : ThemeMode.light,
       builder: (context, child) {
         Palette.current = fixed ?? (Theme.of(context).brightness == Brightness.dark ? darkPalette : lightPalette);
-        return child!;
+        // ⌘/ or Ctrl+/ anywhere in the app: the keyboard shortcuts list.
+        return CallbackShortcuts(
+          bindings: shortcutsSheetBindings(() {
+            final c = _navigator.currentState?.overlay?.context;
+            if (c != null) showShortcutsSheet(c);
+          }),
+          child: child!,
+        );
       },
       home: const Gate(),
     );
@@ -315,6 +328,15 @@ class _GateState extends State<Gate> implements BridgeHost {
   void initState() {
     super.initState();
     _lifecycle = AppLifecycleListener(onStateChange: _onLifecycle);
+    // Another device erased this one (Settings > Sync > Erase this device): erase everything here, the decoy
+    // vault too, then start over from an empty app. Vault.onSaved empties widgets, the watch and Spotlight.
+    SyncService.instance.onRemoteWipe = (v) async {
+      stopSyncAndLink();
+      if (v != _real) await v.resetToEmpty();
+      await _real?.resetToEmpty();
+      await deleteDecoyVault();
+      if (mounted) await _load();
+    };
     listenForPlatformActions(() async {
       _pendingAction = await takePendingAction() ?? _pendingAction;
       await _runPendingAction();
@@ -327,6 +349,11 @@ class _GateState extends State<Gate> implements BridgeHost {
     });
     _window.setMethodCallHandler((call) async {
       if (call.method == 'screenLocked') return _lockNow();
+      if (call.method == 'imageDropped') {
+        // A picture dragged onto the Mac window: the native side saved a copy for us.
+        _pendingAction = 'image:${call.arguments}';
+        return _runPendingAction();
+      }
       if (call.method != 'trayClicked') return;
       _pendingAction = 'pick';
       await _runPendingAction();
@@ -442,6 +469,8 @@ class _GateState extends State<Gate> implements BridgeHost {
     await nav.push(MaterialPageRoute<void>(
       builder: (_) => action == 'pick'
           ? QuickPickScreen(vault: _vault!)
+          : action.startsWith('image:')
+          ? AddScreen(vault: _vault!, sharedImage: action.substring('image:'.length))
           : action.startsWith('share:')
               ? AddScreen(vault: _vault!, sharedFile: action.substring('share:'.length))
               : AddScreen(vault: _vault!, scanOnOpen: true),
@@ -555,6 +584,12 @@ class _GateState extends State<Gate> implements BridgeHost {
       final away = _backgroundedAt;
       _backgroundedAt = null;
       if (!_locked && away != null) resumeSyncAndLink();
+      // A picture shared from Photos while the app was in the background (the share sheet may not open the app).
+      takePendingAction().then((a) {
+        if (a == null) return;
+        _pendingAction = a;
+        _runPendingAction();
+      });
       if (!_locked && away != null && _real != null && shouldRelock(_real!.settings, DateTime.now().difference(away))) {
         setState(() => _locked = true);
         stopSyncAndLink();

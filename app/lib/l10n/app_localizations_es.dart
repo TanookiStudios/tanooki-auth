@@ -4879,4 +4879,558 @@ class AppLocalizationsEs extends AppLocalizations {
   String exportUiLeftOutLine(String account, String reason) {
     return '• $account: $reason';
   }
+
+  @override
+  String get keysTitle => 'Atajos de teclado';
+
+  @override
+  String get keysWhere => 'En la lista de cuentas y en Selección rápida.';
+
+  @override
+  String get keysMove => 'Moverse por la lista';
+
+  @override
+  String get keysEnter => 'Intro';
+
+  @override
+  String get keysCopy => 'Copiar el código resaltado';
+
+  @override
+  String get keysAnyLetter => 'Una letra';
+
+  @override
+  String get keysSearch => 'Empezar a buscar';
+
+  @override
+  String get keysEsc => 'Esc';
+
+  @override
+  String get keysClear => 'Borrar la búsqueda';
+
+  @override
+  String get keysShowList => 'Mostrar esta lista';
+
+  @override
+  String get settingsKeysShortcutMac =>
+      'Pulsa ⌘/ en cualquier momento para verlos';
+
+  @override
+  String get settingsKeysShortcutOther =>
+      'Pulsa Ctrl+/ en cualquier momento para verlos';
+
+  @override
+  String trayTooltip(String name, int seconds) {
+    return 'Tanooki Auth: $name, quedan $seconds s';
+  }
+
+  @override
+  String get settingsTrayCountdownMac =>
+      'Mostrar la cuenta atrás en la barra de menús';
+
+  @override
+  String get settingsTrayCountdownMacHelp =>
+      'Los segundos que le quedan a tu primer favorito, junto al icono de la barra de menús. Nunca el código.';
+
+  @override
+  String get settingsTrayCountdownWindows =>
+      'Mostrar la cuenta atrás en el icono de la bandeja';
+
+  @override
+  String get settingsTrayCountdownWindowsHelp =>
+      'Pasa el ratón por el icono de Tanooki Auth junto al reloj para ver cuántos segundos le quedan a tu primer favorito. Nunca el código.';
+
+  @override
+  String get unusedTitle => 'Cuentas que nunca usas';
+
+  @override
+  String get settingsUnusedHelp => 'Sin copiar ningún código en 6 meses o más';
+
+  @override
+  String get unusedIntro =>
+      'A estas cuentas no se les ha copiado ningún código en esta app en 6 meses o más. Si ya no usas el sitio web, desactiva allí primero la verificación en dos pasos y luego ordénalas aquí. La papelera las guarda 30 días.';
+
+  @override
+  String get unusedNone =>
+      'Todas las cuentas se han usado en los últimos 6 meses. No hay nada que ordenar.';
+
+  @override
+  String unusedLastUsed(DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat.yMMMd(localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return 'Usada por última vez el $dateString';
+  }
+
+  @override
+  String unusedNeverUsed(DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat.yMMMd(localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return 'Nunca usada aquí. Añadida el $dateString';
+  }
+
+  @override
+  String get unusedPickFirst => 'Marca primero una o más cuentas.';
+
+  @override
+  String get unusedTagSuggestion => 'sin usar';
+
+  @override
+  String checkupUnusedTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cuentas que nunca usas',
+      one: '1 cuenta que nunca usas',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get checkupUnusedBody =>
+      'Sin copiar ningún código en 6 meses o más. Es fácil no enterarse si alguien entra en una cuenta antigua olvidada.';
+
+  @override
+  String get checkupUnusedReview => 'Revisarlas';
+
+  @override
+  String get halvesTitle => 'Copia en papel en dos mitades';
+
+  @override
+  String get settingsHalvesHelp =>
+      'Dos juegos de páginas. Cada mitad por sí sola no revela nada';
+
+  @override
+  String get halvesRestoreTitle => 'Restaurar desde las dos mitades';
+
+  @override
+  String get settingsHalvesRestoreHelp =>
+      'Escanea los códigos de las dos mitades de una copia en papel';
+
+  @override
+  String get halvesExplain =>
+      'Esto imprime tu copia cifrada como dos juegos de páginas separados, la mitad A y la mitad B.\n\nCada mitad por sí sola es solo ruido aleatorio: nadie puede sacar nada de ella, ni siquiera con tu frase de contraseña. Para restaurar necesitas las dos mitades y la frase de contraseña.\n\nGuarda las mitades en dos sitios distintos, por ejemplo una en casa y otra con alguien de confianza.';
+
+  @override
+  String get halvesHalfA => 'Mitad A de 2';
+
+  @override
+  String get halvesHalfB => 'Mitad B de 2';
+
+  @override
+  String halvesPart(String which, int part, int parts) {
+    return 'Mitad $which · parte $part de $parts';
+  }
+
+  @override
+  String halvesPdfHeader(String date) {
+    return 'Copia en papel de Tanooki Auth, hecha el $date';
+  }
+
+  @override
+  String get halvesPdfExplain =>
+      'Esta mitad sola no sirve de nada. Para restaurar: en Tanooki Auth, abre Ajustes > Restaurar desde las dos mitades, escanea todos los códigos de las dos mitades y escribe la frase de contraseña de la copia. Guarda las dos mitades en sitios distintos.';
+
+  @override
+  String halvesPdfPage(String half, int page, int pages) {
+    return '$half, página $page de $pages';
+  }
+
+  @override
+  String get halvesNowB => 'Ahora guarda la mitad B';
+
+  @override
+  String get halvesNowBBody =>
+      'La mitad A está guardada. La mitad B es la otra mitad: imprímela también y guárdala en otro sitio.';
+
+  @override
+  String get halvesSaveB => 'Guardar la mitad B';
+
+  @override
+  String get halvesOnlyA =>
+      'Solo se guardó la mitad A. La mitad A sola no puede restaurar nada, así que vuelve a hacer las dos mitades cuando puedas.';
+
+  @override
+  String get halvesReady =>
+      'Las dos mitades están listas. Imprímelas y guárdalas en sitios distintos.';
+
+  @override
+  String get halvesRestoreIntro =>
+      'Escanea todos los códigos de las dos mitades, en cualquier orden. Cuando estén completas, escribe la frase de contraseña que elegiste al hacer la copia.';
+
+  @override
+  String halvesNotStarted(String half) {
+    return '$half: aún no se ha escaneado ningún código';
+  }
+
+  @override
+  String halvesProgress(String half, int have, int total) {
+    return '$half: $have de $total códigos';
+  }
+
+  @override
+  String get halvesScan => 'Escanear códigos';
+
+  @override
+  String get halvesScanTitle => 'Escanea las dos mitades';
+
+  @override
+  String get halvesPictures => 'Abrir fotos de los códigos';
+
+  @override
+  String halvesSomeUnread(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'En $count fotos no había ningún código legible. Prueba con una foto más cercana de un solo código.',
+      one: 'En 1 foto no había ningún código legible. Prueba con una foto más cercana de un solo código.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get halvesNotAHalf =>
+      'Ese no es un código de una copia en papel en dos mitades.';
+
+  @override
+  String get halvesOtherSet =>
+      'Ese código es de otra copia en papel. Usa las dos mitades de la misma impresión.';
+
+  @override
+  String get halvesAlreadyHave =>
+      'Ese ya está escaneado. Sigue con el siguiente código.';
+
+  @override
+  String get halvesDontFit =>
+      'Estas mitades no encajan. Puede que se haya leído mal algún código o que sean de copias distintas. Vuelve a empezar el escaneo.';
+
+  @override
+  String get halvesRestoreNow => 'Mitades escaneadas: restaurar';
+
+  @override
+  String get healthTitle => 'Revisión de estado';
+
+  @override
+  String get settingsHealthHelp =>
+      'Sincronización, copia, reloj, bloqueo y códigos de recuperación en una pantalla';
+
+  @override
+  String get healthIntro =>
+      'Verde significa que todo está bien. Amarillo merece un vistazo, y su botón lo arregla.';
+
+  @override
+  String get healthGood => 'Bien';
+
+  @override
+  String get healthLook => 'Merece un vistazo';
+
+  @override
+  String get healthSync => 'Sincronización';
+
+  @override
+  String get healthSyncOff =>
+      'Sin configurar. La sincronización mantiene tus cuentas iguales en todos tus dispositivos.';
+
+  @override
+  String healthSyncOk(String when) {
+    return 'Última sincronización: $when';
+  }
+
+  @override
+  String healthSyncStale(String when) {
+    return 'Última sincronización: $when. Hace bastante: abre Sincronización para ver qué pasa.';
+  }
+
+  @override
+  String get healthOpenSync => 'Abrir Sincronización';
+
+  @override
+  String get healthSetUp => 'Configurar';
+
+  @override
+  String get healthOpen => 'Abrir';
+
+  @override
+  String get healthBackup => 'Copia de seguridad';
+
+  @override
+  String get healthBackupNever =>
+      'Aún no hay copia. Si pierdes este dispositivo, tus cuentas se pierden con él.';
+
+  @override
+  String healthBackupOk(DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat.yMMMd(localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return 'Última copia: $dateString';
+  }
+
+  @override
+  String healthBackupOld(DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat.yMMMd(localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return 'Última copia: $dateString. Hace más de 30 días: haz una nueva.';
+  }
+
+  @override
+  String get healthClock => 'Reloj';
+
+  @override
+  String get healthClockNotChecked =>
+      'Aún sin comprobar. Los códigos solo funcionan si el reloj de este dispositivo va bien.';
+
+  @override
+  String healthClockOk(String when) {
+    return 'Tu reloj va bien (comprobado: $when).';
+  }
+
+  @override
+  String get healthCheckNow => 'Comprobar ahora';
+
+  @override
+  String get healthPhoneLink => 'Enlace con el teléfono';
+
+  @override
+  String healthPhoneLinkOk(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Vinculado con $count navegadores',
+      one: 'Vinculado con 1 navegador',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get healthPhoneLinkOff =>
+      'Sin vincular. Vincula el navegador de tu ordenador para aprobar códigos de inicio de sesión desde este teléfono.';
+
+  @override
+  String get healthLock => 'Bloqueo';
+
+  @override
+  String get healthLockOn =>
+      'Activado. La app comprueba que eres tú antes de mostrar códigos.';
+
+  @override
+  String get healthLockOff =>
+      'Desactivado. Cualquiera que coja este dispositivo puede ver tus códigos.';
+
+  @override
+  String get healthGoToSettings => 'Ir al interruptor de bloqueo';
+
+  @override
+  String get healthRecovery => 'Códigos de recuperación';
+
+  @override
+  String healthRecoveryCount(int count, int total) {
+    return '$count de $total cuentas tienen códigos de recuperación guardados.';
+  }
+
+  @override
+  String get healthRecoveryNoAccounts => 'Aún no hay cuentas.';
+
+  @override
+  String get healthAddCodes => 'Añadir códigos';
+
+  @override
+  String get syncErrorWiped =>
+      'Otro dispositivo borró Tanooki Auth en este dispositivo. Se eliminó todo lo que había y salió de la sincronización.';
+
+  @override
+  String get syncUiEraseDevice => 'Borrar este dispositivo';
+
+  @override
+  String get syncUiEraseTitle => '¿Borrar este dispositivo?';
+
+  @override
+  String get syncUiEraseBody =>
+      'La próxima vez que ese dispositivo se conecte, Tanooki Auth borrará todo en él: sus cuentas, ajustes, widgets y resultados de búsqueda. También saldrá de la sincronización para siempre. No se puede deshacer. No cambia nada en este dispositivo ni en tus otros dispositivos.';
+
+  @override
+  String get syncUiEraseButton => 'Borrarlo';
+
+  @override
+  String get syncUiErased =>
+      'Listo. Ese dispositivo se borrará la próxima vez que se conecte.';
+
+  @override
+  String syncUiClashes(int count) {
+    return 'Conflictos de sincronización ($count)';
+  }
+
+  @override
+  String get syncUiClashesHelp =>
+      'Una cuenta se cambió en dos dispositivos antes de sincronizarse. Elige qué versión conservar.';
+
+  @override
+  String get syncUiClashTitle => 'Conflictos de sincronización';
+
+  @override
+  String get syncUiClashIntro =>
+      'Cada cuenta de abajo se cambió en dos dispositivos antes de sincronizarse. La sincronización usó el cambio más reciente. Si quieres la otra versión, toca Conservar esta debajo de ella.';
+
+  @override
+  String get syncUiClashNone => 'No hay conflictos. Nada que elegir.';
+
+  @override
+  String get syncUiClashInUse => 'En uso ahora';
+
+  @override
+  String get syncUiClashOther => 'Otra versión';
+
+  @override
+  String get syncUiClashKeep => 'Conservar esta';
+
+  @override
+  String get syncUiClashKept =>
+      'Listo. Tus otros dispositivos recibirán esta versión en la próxima sincronización.';
+
+  @override
+  String syncUiClashEdited(String when) {
+    return 'Cambiada $when';
+  }
+
+  @override
+  String get syncUiClashName => 'Nombre';
+
+  @override
+  String get syncUiClashAccount => 'Cuenta';
+
+  @override
+  String get syncUiClashFolder => 'Carpeta';
+
+  @override
+  String get syncUiClashNotes => 'Notas';
+
+  @override
+  String get syncUiClashInTrash => 'En la papelera';
+
+  @override
+  String get syncUiClashSecret => 'Clave de configuración';
+
+  @override
+  String get syncUiClashSecretDifferent => 'distinta';
+
+  @override
+  String get syncUiClashYes => 'Sí';
+
+  @override
+  String get syncUiClashNo => 'No';
+
+  @override
+  String get syncUiClashOtherDiffers =>
+      'También difieren otros ajustes, como el aspecto, el sitio web o los códigos de recuperación.';
+
+  @override
+  String get teamRoleAdmin => 'Administrador';
+
+  @override
+  String get teamRoleMember => 'Miembro';
+
+  @override
+  String get teamRoleViewer => 'Solo lectura';
+
+  @override
+  String get teamRoleOwner => 'Propietario';
+
+  @override
+  String get teamUiMakeAdmin => 'Hacer administrador';
+
+  @override
+  String get teamUiMakeMember => 'Hacer miembro';
+
+  @override
+  String get teamUiMakeViewer => 'Hacer solo lectura';
+
+  @override
+  String get teamUiRoleChanged => 'Rol cambiado.';
+
+  @override
+  String get teamUiInviteRole => 'Se une como';
+
+  @override
+  String get teamUiRoleHelp =>
+      'Los administradores invitan y quitan personas y ven el registro de actividad. Los miembros usan y cambian las cuentas del equipo. Las personas de solo lectura pueden usar las cuentas pero no cambiarlas.';
+
+  @override
+  String get teamUiInviteEmailLabel => 'Su correo (opcional)';
+
+  @override
+  String get teamUiInviteEmailHint => 'nombre@ejemplo.com';
+
+  @override
+  String get teamUiInviteMake => 'Crear invitación';
+
+  @override
+  String teamUiInviteEmailed(String email) {
+    return 'Invitación enviada a $email.';
+  }
+
+  @override
+  String get teamUiEmailNotSetUp =>
+      'El envío de correos aún no está configurado. Copia el enlace de abajo y envíalo tú.';
+
+  @override
+  String teamUiEmailFailed(String reason) {
+    return 'El correo no se envió ($reason). Copia el enlace de abajo y envíalo tú.';
+  }
+
+  @override
+  String get teamUiYoureAdmin => 'Eres administrador de este equipo';
+
+  @override
+  String get teamUiYoureViewer => 'Estás en un equipo (solo lectura)';
+
+  @override
+  String get teamUiViewOnly =>
+      'Puedes usar estas cuentas, pero solo los administradores y miembros pueden cambiarlas.';
+
+  @override
+  String get teamUiActivity => 'Actividad';
+
+  @override
+  String get teamUiActivityTitle => 'Actividad del equipo';
+
+  @override
+  String get teamUiActivityHelp =>
+      'Quién copió o cambió cuentas del equipo, y cuándo. Solo lo ven los administradores. Se guarda 90 días, hasta las últimas 2000 entradas.';
+
+  @override
+  String get teamUiActivityEmpty =>
+      'Nada todavía. Aquí aparecen las copias y los cambios en las cuentas del equipo.';
+
+  @override
+  String teamActCopy(String name) {
+    return 'Copió un código de $name';
+  }
+
+  @override
+  String teamActFill(String name) {
+    return 'Rellenó un código de $name';
+  }
+
+  @override
+  String teamActAdd(String name) {
+    return 'Añadió $name';
+  }
+
+  @override
+  String teamActEdit(String name) {
+    return 'Cambió $name';
+  }
+
+  @override
+  String teamActDelete(String name) {
+    return 'Quitó $name';
+  }
+
+  @override
+  String get teamUiBuyBusiness => 'Plan para empresas: 3 \$ por persona al año';
+
+  @override
+  String get teamUiBusinessSoon =>
+      'Plan para empresas, para equipos de más de 10 personas (3 \$ por persona al año): muy pronto.';
 }

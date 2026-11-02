@@ -192,6 +192,9 @@ class SyncService {
   final changed = ValueNotifier(0);
   /// Tests pass a folder; the app uses iCloud.
   SyncFolder folder = ICloudFolder();
+  /// Erases everything after another device erased this one. The app (main.dart) also erases the decoy vault and
+  /// reloads; the default empties [v], which also empties widgets, the watch and Spotlight through Vault.onSaved.
+  Future<void> Function(Vault v) onRemoteWipe = (v) => v.resetToEmpty();
 
   Vault? _vault;
   Timer? _timer;
@@ -230,7 +233,7 @@ class SyncService {
     try {
       final ws = await (await RelaySync(v).relay()).listen((cursor) {
         if (cursor > (syncState(v)['cursor'] as int? ?? 0)) syncNow();
-      });
+      }, onWiped: syncNow); // the sync then gets the relay's "erased" answer and acts on it
       if (_vault != v) {
         ws.close();
         return;
@@ -274,6 +277,12 @@ class SyncService {
         report = await FolderSync(v, folder).sync();
       }
       status.value = SyncStatus(lastSync: DateTime.now(), skipped: report.skipped);
+    } on RemoteWipeException {
+      detach();
+      await onRemoteWipe(v);
+      status.value = SyncStatus(error: l10n.syncErrorWiped);
+      changed.value++;
+      return;
     } catch (e) {
       status.value = SyncStatus(error: describeSyncError(e), lastSync: status.value.lastSync);
     }
@@ -284,6 +293,7 @@ class SyncService {
 /// One plain sentence per way sync can fail.
 String describeSyncError(Object e) {
   if (e is SyncSetupException) return e.message;
+  if (e is RemoteWipeException) return l10n.syncErrorWiped;
   if (e is RelayException) {
     if (e.status == 403) return l10n.syncErrorRemoved;
     if (e.status == 404) return l10n.syncErrorTurnedOff;

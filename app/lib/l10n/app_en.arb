@@ -2991,5 +2991,358 @@
         "type": "String"
       }
     }
-  }
+  },
+  "keysTitle": "Keyboard shortcuts",
+  "keysWhere": "On the account list and in Quick pick.",
+  "keysMove": "Move up and down the list",
+  "keysEnter": "Enter",
+  "keysCopy": "Copy the highlighted code",
+  "keysAnyLetter": "A letter",
+  "keysSearch": "Start searching",
+  "keysEsc": "Esc",
+  "keysClear": "Clear the search",
+  "keysShowList": "Show this list",
+  "settingsKeysShortcutMac": "Press ⌘/ anywhere to see them",
+  "settingsKeysShortcutOther": "Press Ctrl+/ anywhere to see them",
+  "trayTooltip": "Tanooki Auth: {name}, {seconds} s left",
+  "@trayTooltip": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsTrayCountdownMac": "Show countdown in menu bar",
+  "settingsTrayCountdownMacHelp": "The seconds left on your first favorite, next to the menu bar icon. Never the code itself.",
+  "settingsTrayCountdownWindows": "Show countdown on the tray icon",
+  "settingsTrayCountdownWindowsHelp": "Point at the Tanooki Auth icon by the clock to see how many seconds your first favorite has left. Never the code itself.",
+  "unusedTitle": "Accounts you never use",
+  "settingsUnusedHelp": "No code copied in 6 months or more",
+  "unusedIntro": "These accounts haven’t had a code copied in this app for 6 months or more. If you no longer use the website, turn off two-step sign-in there first, then tidy them up here. Trash keeps them for 30 days.",
+  "unusedNone": "Every account has been used in the last 6 months. Nothing to tidy.",
+  "unusedLastUsed": "Last used {date}",
+  "@unusedLastUsed": {
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "yMMMd"
+      }
+    }
+  },
+  "unusedNeverUsed": "Never used here. Added {date}",
+  "@unusedNeverUsed": {
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "yMMMd"
+      }
+    }
+  },
+  "unusedPickFirst": "Tick one or more accounts first.",
+  "unusedTagSuggestion": "unused",
+  "checkupUnusedTitle": "{count, plural, =1{1 account you never use} other{{count} accounts you never use}}",
+  "@checkupUnusedTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "checkupUnusedBody": "No code copied in 6 months or more. Old accounts you’ve forgotten are easy to miss if one gets broken into.",
+  "checkupUnusedReview": "Review them",
+  "halvesTitle": "Paper backup in two halves",
+  "settingsHalvesHelp": "Two sets of pages. Each half alone reveals nothing",
+  "halvesRestoreTitle": "Restore from two halves",
+  "settingsHalvesRestoreHelp": "Scan the codes on both halves of a paper backup",
+  "halvesExplain": "This prints your encrypted backup as two separate sets of pages, Half A and Half B.\n\nEach half alone is just random noise: nobody can learn anything from it, even with your passphrase. To restore, you need both halves and the passphrase.\n\nKeep the halves in two different places, for example one at home and one with someone you trust.",
+  "halvesHalfA": "Half A of 2",
+  "halvesHalfB": "Half B of 2",
+  "halvesPart": "Half {which} · part {part} of {parts}",
+  "@halvesPart": {
+    "placeholders": {
+      "which": {
+        "type": "String"
+      },
+      "part": {
+        "type": "int"
+      },
+      "parts": {
+        "type": "int"
+      }
+    }
+  },
+  "halvesPdfHeader": "Tanooki Auth paper backup, made {date}",
+  "@halvesPdfHeader": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "halvesPdfExplain": "This half alone is useless. To restore: in Tanooki Auth, open Settings > Restore from two halves, scan every code on both halves, then type the backup passphrase. Keep the two halves in different places.",
+  "halvesPdfPage": "{half}, page {page} of {pages}",
+  "@halvesPdfPage": {
+    "placeholders": {
+      "half": {
+        "type": "String"
+      },
+      "page": {
+        "type": "int"
+      },
+      "pages": {
+        "type": "int"
+      }
+    }
+  },
+  "halvesNowB": "Now save Half B",
+  "halvesNowBBody": "Half A is saved. Half B is the other half: print it too and keep it somewhere else.",
+  "halvesSaveB": "Save Half B",
+  "halvesOnlyA": "Only Half A was saved. Half A alone can’t restore anything, so make both halves again when you’re ready.",
+  "halvesReady": "Both halves are ready. Print them and keep them in different places.",
+  "halvesRestoreIntro": "Scan every code on both halves, in any order. When both are complete, type the passphrase you chose when you made the backup.",
+  "halvesNotStarted": "{half}: no codes scanned yet",
+  "@halvesNotStarted": {
+    "placeholders": {
+      "half": {
+        "type": "String"
+      }
+    }
+  },
+  "halvesProgress": "{half}: {have} of {total} codes",
+  "@halvesProgress": {
+    "placeholders": {
+      "half": {
+        "type": "String"
+      },
+      "have": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "halvesScan": "Scan codes",
+  "halvesScanTitle": "Scan both halves",
+  "halvesPictures": "Open pictures of the codes",
+  "halvesSomeUnread": "{count, plural, =1{1 picture had no code this app could read. Try a closer picture of one code.} other{{count} pictures had no code this app could read. Try a closer picture of one code.}}",
+  "@halvesSomeUnread": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "halvesNotAHalf": "That isn’t a code from a two-half paper backup.",
+  "halvesOtherSet": "That code belongs to a different paper backup. Use both halves from the same printout.",
+  "halvesAlreadyHave": "Already scanned that one. On to the next code.",
+  "halvesDontFit": "These halves don’t fit together. A code may have been misread, or the halves come from different backups. Start the scan again.",
+  "halvesRestoreNow": "Both halves scanned: restore",
+  "healthTitle": "Health check",
+  "settingsHealthHelp": "Sync, backup, clock, lock and recovery codes on one screen",
+  "healthIntro": "Green means fine. Yellow is worth a look, and its button fixes it.",
+  "healthGood": "Fine",
+  "healthLook": "Worth a look",
+  "healthSync": "Sync",
+  "healthSyncOff": "Not set up. Sync keeps your accounts the same on all your devices.",
+  "healthSyncOk": "Last synced {when}",
+  "@healthSyncOk": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "healthSyncStale": "Last synced {when}. That’s a while ago: open Sync to see what’s wrong.",
+  "@healthSyncStale": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "healthOpenSync": "Open Sync",
+  "healthSetUp": "Set up",
+  "healthOpen": "Open",
+  "healthBackup": "Backup",
+  "healthBackupNever": "No backup yet. If this device is lost, your accounts go with it.",
+  "healthBackupOk": "Last backup {date}",
+  "@healthBackupOk": {
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "yMMMd"
+      }
+    }
+  },
+  "healthBackupOld": "Last backup {date}. That’s over 30 days ago: make a fresh one.",
+  "@healthBackupOld": {
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "yMMMd"
+      }
+    }
+  },
+  "healthClock": "Clock",
+  "healthClockNotChecked": "Not checked yet. Codes only work when this device’s clock is right.",
+  "healthClockOk": "Your clock is right (checked {when}).",
+  "@healthClockOk": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "healthCheckNow": "Check now",
+  "healthPhoneLink": "Phone link",
+  "healthPhoneLinkOk": "{count, plural, =1{Paired with 1 browser} other{Paired with {count} browsers}}",
+  "@healthPhoneLinkOk": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthPhoneLinkOff": "Not paired. Pair your computer’s browser to approve sign-in codes from this phone.",
+  "healthLock": "Lock",
+  "healthLockOn": "On. The app asks who you are before showing codes.",
+  "healthLockOff": "Off. Anyone who picks up this device can see your codes.",
+  "healthGoToSettings": "Go to the lock switch",
+  "healthRecovery": "Recovery codes",
+  "healthRecoveryCount": "{count} of {total} accounts have recovery codes saved.",
+  "@healthRecoveryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "healthRecoveryNoAccounts": "No accounts yet.",
+  "healthAddCodes": "Add codes",
+  "syncErrorWiped": "Another device erased Tanooki Auth on this device. Everything on it was deleted and it left sync.",
+  "syncUiEraseDevice": "Erase this device",
+  "syncUiEraseTitle": "Erase this device?",
+  "syncUiEraseBody": "The next time that device goes online, Tanooki Auth on it deletes everything: its accounts, settings, widgets and search entries. It also leaves sync for good. This can't be undone. Nothing changes on this device or your other devices.",
+  "syncUiEraseButton": "Erase it",
+  "syncUiErased": "Done. That device will erase itself the next time it goes online.",
+  "syncUiClashes": "Sync clashes ({count})",
+  "@syncUiClashes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncUiClashesHelp": "An account was changed on two devices before they synced. Pick which version to keep.",
+  "syncUiClashTitle": "Sync clashes",
+  "syncUiClashIntro": "Each account below was changed on two devices before they synced. Sync used the later change. If the other version is the one you want, tap Keep this one under it.",
+  "syncUiClashNone": "No clashes. Nothing to pick.",
+  "syncUiClashInUse": "In use now",
+  "syncUiClashOther": "Other version",
+  "syncUiClashKeep": "Keep this one",
+  "syncUiClashKept": "Done. Your other devices get this version on their next sync.",
+  "syncUiClashEdited": "Changed {when}",
+  "@syncUiClashEdited": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "syncUiClashName": "Name",
+  "syncUiClashAccount": "Account",
+  "syncUiClashFolder": "Folder",
+  "syncUiClashNotes": "Notes",
+  "syncUiClashInTrash": "In Trash",
+  "syncUiClashSecret": "Setup key",
+  "syncUiClashSecretDifferent": "different",
+  "syncUiClashYes": "Yes",
+  "syncUiClashNo": "No",
+  "syncUiClashOtherDiffers": "Other settings differ too, like the look, website or recovery codes.",
+  "teamRoleAdmin": "Admin",
+  "teamRoleMember": "Member",
+  "teamRoleViewer": "View-only",
+  "teamRoleOwner": "Owner",
+  "teamUiMakeAdmin": "Make admin",
+  "teamUiMakeMember": "Make member",
+  "teamUiMakeViewer": "Make view-only",
+  "teamUiRoleChanged": "Role changed.",
+  "teamUiInviteRole": "They join as",
+  "teamUiRoleHelp": "Admins invite and remove people and see the activity log. Members use and change team accounts. View-only people can use the accounts but not change them.",
+  "teamUiInviteEmailLabel": "Their email (optional)",
+  "teamUiInviteEmailHint": "name@example.com",
+  "teamUiInviteMake": "Make invite",
+  "teamUiInviteEmailed": "Invite sent to {email}.",
+  "@teamUiInviteEmailed": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "teamUiEmailNotSetUp": "Email sending isn't set up yet. Copy the link below and send it yourself.",
+  "teamUiEmailFailed": "The email didn't go out ({reason}). Copy the link below and send it yourself.",
+  "@teamUiEmailFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "teamUiYoureAdmin": "You're an admin of this team",
+  "teamUiYoureViewer": "You're in a team (view-only)",
+  "teamUiViewOnly": "You can use these accounts, but only admins and members can change them.",
+  "teamUiActivity": "Activity",
+  "teamUiActivityTitle": "Team activity",
+  "teamUiActivityHelp": "Who copied or changed team accounts, and when. Only admins see this. Kept for 90 days, up to the last 2,000 entries.",
+  "teamUiActivityEmpty": "Nothing yet. Copies and changes to team accounts show up here.",
+  "teamActCopy": "Copied a code for {name}",
+  "@teamActCopy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "teamActFill": "Filled a code for {name}",
+  "@teamActFill": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "teamActAdd": "Added {name}",
+  "@teamActAdd": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "teamActEdit": "Changed {name}",
+  "@teamActEdit": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "teamActDelete": "Removed {name}",
+  "@teamActDelete": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "teamUiBuyBusiness": "Business plan: $3 per person a year",
+  "teamUiBusinessSoon": "Business plan for teams of more than 10 people ($3 per person a year): coming soon."
 }

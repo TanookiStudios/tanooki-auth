@@ -161,6 +161,25 @@ bool FlutterWindow::OnCreate() {
       const bool gone = Shell_NotifyIcon(NIM_MODIFY, &tray_) == FALSE;
       SendMessage(hwnd, TaskbarCreatedMessage(), 0, 0);
       result->Success(flutter::EncodableValue(gone));
+    } else if (call.method_name() == "setTrayCountdown") {
+      // "Show countdown on the tray icon": the tooltip says how long the first favorite's code has left.
+      std::wstring tip = L"Tanooki Auth";
+      if (const auto* args = std::get_if<flutter::EncodableMap>(call.arguments())) {
+        const auto it = args->find(flutter::EncodableValue("tooltip"));
+        if (it != args->end()) {
+          if (const auto* text = std::get_if<std::string>(&it->second)) {
+            const int len = MultiByteToWideChar(CP_UTF8, 0, text->c_str(), -1, nullptr, 0);
+            if (len > 1) {
+              tip.assign(len - 1, L'\0');
+              MultiByteToWideChar(CP_UTF8, 0, text->c_str(), -1, tip.data(), len);
+            }
+          }
+        }
+      }
+      wcsncpy_s(tray_.szTip, tip.c_str(), _TRUNCATE);
+      tray_.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+      Shell_NotifyIcon(NIM_MODIFY, &tray_);
+      result->Success();
     } else if (call.method_name() == "trayClick") {
       // Same path as a real click on the tray icon.
       PostMessage(hwnd, kTrayMessage, tray_.uID, WM_LBUTTONUP);

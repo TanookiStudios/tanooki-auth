@@ -115,7 +115,14 @@ member including itself. Its WebSockets are closed with code 4001. Removing the 
 Note: a removed device still knows `root`; to lock it out of future data the remaining devices must move to a
 new passphrase (new group). Removal only stops it talking to the relay.
 
-**Delete group** — `DELETE /v1/sync/<groupId>` → `{"ok":true}`. Everything is erased; sockets closed with 4002.
+**Erase a device remotely** (feature 23) — `POST /v1/sync/<groupId>/devices/<deviceKey>/wipe`, signed by another
+device in the group. The target is removed at once and remembered as wiped; its open sockets get `{"type":"wiped"}`
+and close code 4003. From then on **every** signed request from that key (sync, join, WebSocket) gets
+`410 {"error":"this device was erased from another device in its sync group","wiped":true,"at":<ms>}`, and the app
+on it erases all its Tanooki Auth data when it sees that. The wipe list survives the group being deleted.
+Refusals: `409 a device cannot erase itself this way; turn off sync on it instead`, `404 no such device in this group`.
+
+**Delete group** — `DELETE /v1/sync/<groupId>` → `{"ok":true}`. Everything is erased (except the wipe list); sockets closed with 4002.
 
 ### 1.5 Records
 
@@ -348,7 +355,7 @@ deployed relay ignores both and always waits 7 days and 24 hours; `test.mjs` run
 
 ## 4. Team vault (feature 42)
 
-A team is up to **10** devices that share a team key. The admin wraps the team key separately for each member
+A team is up to **10** devices (more with a business license, 4.2) that share a team key. The admin wraps the team key separately for each member
 (the relay stores the wrapped copies as opaque blobs) and entries are ciphertext under it. The relay sees
 device public keys, wrapped keys, entry IDs, timestamps and ciphertext only.
 
@@ -371,6 +378,12 @@ same key as Premium license keys. The relay checks it with its `LICENSE_PUBLIC` 
 is not a team license. 402 errors: `team license is malformed`, `team license signature is not valid`,
 `team license has expired; refresh it in the app`.
 
+**Business plan** (feature 44): `GET /business-license?session_id=` on the worker, after a Stripe subscription whose
+quantity is the seat count, makes `TT1.<base64url "biz1|<subscriptionId>|<periodEnd seconds>|<seats>">.<sig>`
+(seats 1 to 500). A team license (`team1`) always means 10 seats; only a `biz1` license allows more. The relay
+stores the seat count from the latest license; members past it stay, but nobody new joins until there is room.
+`/team-license/refresh` renews both kinds (a business license with the subscription's current quantity).
+
 **One license, one team.** The relay remembers which team each subscription (`subscriptionId`) pays for. A create
 or license refresh with a subscription already bound to a different team is refused with 409
 `this team license is already used by another team; delete that team first, or buy another team subscription`.
@@ -380,25 +393,47 @@ it and frees the old one. Teams made before this rule are bound the next time th
 Writes (`join`, `invites`, `entries`) keep working until **14 days after** the license period ends, then return
 402 until the admin posts a refreshed license. Reading always works, so a lapsed team can still get its data out.
 
-### 4.3 Endpoints
+### 4.3 Roles
+
+`admin`, `member`, `viewer` (view-only). The **owner** is the device that made the team (`owner`, also `admin`, in
+the status): always an admin, cannot be removed or demoted, and is the only one who posts the license or deletes the
+team. Admins invite, remove members, change roles, wrap keys, rotate and read the activity log. Members and admins
+write entries; viewers only read (`403 view-only members cannot change team accounts`). Any admin may rotate; if two
+rotate at once, the second gets 409 and simply fetches the new key. Refusals: `403 only a team admin can do this`,
+`403 only the team owner (who made the team) can do this`.
+
+### 4.4 Endpoints
 
 `teamId` is 32 random bytes from the admin. Every request is signed as in 1.3. Limit: 600 requests / 60 s per team.
 
 | Request | Who | Effect |
 |---|---|---|
 | `POST /v1/team/<teamId>/create` `{"license","boxKey"}` | anyone with a license | Creates the team with the signer as admin, epoch 1. 201 + status. 409 if it exists, or if the license is bound to another team (4.2). |
-| `GET /v1/team/<teamId>` | member | Status: `{"admin","epoch","needsRotation","licenseEnd","cursor","members":[{"key","role","boxKey","added","hasKey"}]}` (`hasKey`: has a wrapped key for the current epoch). |
-| `POST /v1/team/<teamId>/license` `{"license"}` | admin | Stores a refreshed license (the later end date wins). 409 if that license is bound to another team (4.2). |
-| `POST /v1/team/<teamId>/invites` | admin | 201 `{"invite","expiresAt"}`: a random single-use token, valid 7 days (relay keeps only its SHA-256). Max 20 unused. Put it in the invite link with the `teamId`. |
-| `POST /v1/team/<teamId>/join` `{"invite","boxKey"}` | new device | Joins as `member`. 403 `invite is not valid, expired, or already used`; 507 `team is full (10 members)`; 409 if already a member. |
+| `GET /v1/team/<teamId>` | member | Status: `{"admin","owner","seats","epoch","needsRotation","licenseEnd","cursor","members":[{"key","role","boxKey","added","hasKey"}]}` (`admin` and `owner` are both the owner's key; `hasKey`: has a wrapped key for the current epoch). |
+| `POST /v1/team/<teamId>/license` `{"license"}` | owner | Stores a refreshed license (the later end date wins; the seat count follows the license). 409 if that license is bound to another team (4.2). |
+| `POST /v1/team/<teamId>/invites` `{"role"?}` | admin | 201 `{"invite","expiresAt","role"}`: a random single-use token, valid 7 days (relay keeps only its SHA-256), for `role` (default `member`). Max 20 unused. Put it in the invite link with the `teamId`. |
+| `POST /v1/team/<teamId>/join` `{"invite","boxKey"}` | new device | Joins with the invite's role. 403 `invite is not valid, expired, or already used`; 507 `team is full (<seats> members)`; 409 if already a member. |
+| `POST /v1/team/<teamId>/members/<memberKey>/role` `{"role"}` | admin | Changes a member's role. 409 for the owner; 400 for an unknown role. |
+| `POST /v1/team/<teamId>/activity` `{"events":[{"epoch","ciphertext"}]}` | member | Appends 1 to 100 encrypted log entries (max 4,096 chars each, current epoch only). The relay records who (the signer) and when (its clock). Keeps the newest 2,000 entries from the last 90 days. |
+| `GET /v1/team/<teamId>/activity?since=<seq>` | admin | Up to 500 entries after `seq`: `{"events":[{"seq","at","by","epoch","ciphertext"}],"cursor","more"}`. Ciphertext as for entries, with `aad = "TA-TEAM-LOG-1|" + teamId + "|" + epoch` and JSON `{"a": "copy"\|"fill"\|"add"\|"edit"\|"delete", "n": account name, "d": device name}`. |
 | `POST /v1/team/<teamId>/keys` `{"epoch","keys":{"<memberKey>":"<wrapped>"}}` | admin | `epoch` = current: adds/replaces wrapped keys for the listed members (after someone joins). `epoch` = current + 1: **rotation**; must include every member (400 with `missing` otherwise), replaces all wrapped keys and clears `needsRotation`. Anything else: 409 with the current `epoch`. |
 | `GET /v1/team/<teamId>/key` | member | `{"epoch","wrapped"}` for the caller at the current epoch; 404 until the admin has wrapped one for it. |
 | `POST /v1/team/<teamId>/entries` `{"entries":[{"id","updatedAt","deleted","epoch","ciphertext"}]}` | member | 1 to 100 entries. Last writer wins by `updatedAt` (ms), like sync's merge: each result is `ok` (with `seq`) or `stale` (with `current`). `epoch` must be the current epoch, else 409 `the team key has changed` with `epoch`. Max 2,000 entries per team (deleted ones count), 65,536 chars each. |
 | `GET /v1/team/<teamId>/entries?since=<seq>` | member | Up to 500 entries after `seq`, each with its `epoch`; `{"entries","cursor","more"}`. |
-| `DELETE /v1/team/<teamId>/members/<memberKey>` | admin, or a member removing itself | Removes the member **immediately** (every later request from it is 403) and sets `needsRotation`. The admin cannot leave (409); it deletes the team instead. |
-| `DELETE /v1/team/<teamId>` | admin | Deletes the team and everything in it, and frees its license for a new team. |
+| `DELETE /v1/team/<teamId>/members/<memberKey>` | admin, or a member removing itself | Removes the member **immediately** (every later request from it is 403) and sets `needsRotation`. The owner cannot leave (409); it deletes the team instead. |
+| `DELETE /v1/team/<teamId>` | owner | Deletes the team and everything in it, and frees its license for a new team. |
 
-### 4.4 Removing someone and rotating the key
+### 4.5 Business admin page
+
+For the worker's `/business` page, the team's license is the sign-in (no device key). Header
+`authorization: Bearer <TT1 license>`; the relay finds the team bound to that license's subscription.
+- `GET /v1/business` → `{"owner","seats","used","licenseEnd","business","members":[{"key","role","added"}]}`.
+- `DELETE /v1/business/members/<memberKey>` → removes the member exactly like 4.4 step 1 (the owner's app rotates
+  the key on its next sync) and returns the same view. 409 for the owner.
+- 401 for a missing, tampered or expired license; 404 `no team uses this license yet; create the team in the app first`.
+Anyone holding the license can do this, so it should be kept like a password.
+
+### 4.6 Removing someone and rotating the key
 
 1. The admin removes the member. From that moment the relay refuses every request from that device.
 2. `needsRotation` is now true. The admin's app makes a new `teamKey`, wraps it for every remaining member and
@@ -420,5 +455,8 @@ before, so the app should suggest changing the secrets in shared entries that ma
 - Emergency access: the relay enforces only the waiting period. Someone who controls the relay could release
   the blob early, but still could not read it.
 - Team vault: rotation after removal is the admin app's job; until it happens, new entries use the old key.
+- Team activity log: who and when come from the relay, but what was done is whatever the member's app wrote. A
+  member's app that was changed to stay quiet can copy codes without logging them.
+- Remote wipe works only on the relay transport; it reaches the device the next time that device goes online.
 - The per-IP limit is approximate (Cloudflare's limiter is per data center and eventually consistent);
   the per-group and per-room limits are exact.

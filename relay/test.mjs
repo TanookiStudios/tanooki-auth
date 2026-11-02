@@ -59,6 +59,12 @@ async function send(req) {
   return { status: r.status, body: await r.json().catch(() => null) };
 }
 const call = async (dev, method, path, body, mutate) => send(await signedRequest(dev, method, path, body, mutate));
+// Query string for a signed sync WebSocket (PROTOCOL.md 1.6).
+async function wsQuery(dev, G) {
+  const ts = Date.now();
+  const nonce = b64u(rand(16));
+  return `device=${dev.pub}&ts=${ts}&nonce=${nonce}&sig=${await sign(dev, `TA-RELAY-1\nGET\n${G}/ws\n${ts}\n${nonce}\n${await sha(new Uint8Array())}`)}`;
+}
 const room = async (method, path, token, body) => {
   const r = await fetch(BASE + path, { method, headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) }, body: body ? JSON.stringify(body) : undefined });
   return { status: r.status, body: await r.json().catch(() => null) };
@@ -184,10 +190,36 @@ async function syncTests() {
   r = await call(B, 'GET', `${G}/changes?since=0`);
   check('removed device is refused (403)', r.status === 403, JSON.stringify(r));
   bws.ws.close();
+
+  // Remote wipe (#23): A marks D wiped. D is out at once, told to erase itself, and refused for good.
+  const D = await ed25519Device();
+  r = await call(D, 'POST', `${G}/join`, { invite: await invite(A) });
+  check('D joins', r.status === 201, JSON.stringify(r));
+  const dws = socket(`${BASE}${G}/ws?${await wsQuery(D, G)}`);
+  await dws.ready;
+  await dws.next(); // hello
+  r = await call(A, 'POST', `${G}/devices/${A.pub}/wipe`);
+  check('a device cannot wipe itself (409)', r.status === 409, JSON.stringify(r));
+  r = await call(A, 'POST', `${G}/devices/${b64u(rand(32))}/wipe`);
+  check('wiping a device not in the group is refused (404)', r.status === 404, JSON.stringify(r));
+  r = await call(A, 'POST', `${G}/devices/${D.pub}/wipe`);
+  check('A wipes D', r.status === 200, JSON.stringify(r));
+  const dMsg = await dws.next(5000);
+  check('D\'s open socket is told it was wiped', dMsg?.type === 'wiped', JSON.stringify(dMsg));
+  dws.ws.close();
+  r = await call(D, 'GET', `${G}/changes?since=0`);
+  check('D is told to erase itself (410, wiped)', r.status === 410 && r.body?.wiped === true, JSON.stringify(r));
+  r = await call(D, 'POST', `${G}/join`, { invite: await invite(A) });
+  check('a wiped device cannot join again (410)', r.status === 410, JSON.stringify(r));
+  r = await call(A, 'GET', `${G}/devices`);
+  check('D is gone from the device list', r.status === 200 && !r.body.devices.some((d) => d.key === D.pub), JSON.stringify(r));
+
   r = await call(A, 'DELETE', G);
   check('delete group', r.status === 200);
   r = await call(A, 'GET', `${G}/devices`);
   check('deleted group is gone (404)', r.status === 404, JSON.stringify(r));
+  r = await call(D, 'GET', `${G}/devices`);
+  check('a wiped device is still told to erase itself after the group is deleted (410)', r.status === 410 && r.body?.wiped === true, JSON.stringify(r));
 }
 
 // ---------- phone link ----------
@@ -567,6 +599,120 @@ async function teamTests() {
   check('after its team is deleted, the license can make a new team (201)', r.status === 201, JSON.stringify(r));
   r = await call(B, 'DELETE', T3);
   check('new team deleted again', r.status === 200, JSON.stringify(r));
+
+  // ---------- roles (#27), activity log (#28), business seats and admin view (#44) ----------
+  const T4 = `/v1/team/${b64u(rand(32))}`;
+  const SUB3 = `sub_test_${b64u(rand(9))}`;
+  const SUB4 = `sub_test_${b64u(rand(9))}`;
+  const O = await person();
+  const M = await person();
+  const V = await person();
+  r = await call(O, 'POST', `${T4}/create`, { boxKey: O.box.pub, license: await teamLicense(`team1|${SUB3}|${yearOut}`) });
+  check('owner makes a team: 10 seats, owner is admin', r.status === 201 && r.body.seats === 10 && r.body.owner === O.pub && r.body.members[0].role === 'admin', JSON.stringify(r));
+  r = await call(O, 'POST', `${T4}/invites`, { role: 'boss' });
+  check('an invite with a made-up role is refused (400)', r.status === 400, JSON.stringify(r));
+  r = await call(O, 'POST', `${T4}/invites`, { role: 'viewer' });
+  check('invite for a view-only member', r.status === 201 && r.body.role === 'viewer', JSON.stringify(r));
+  r = await call(V, 'POST', `${T4}/join`, { invite: r.body.invite, boxKey: V.box.pub });
+  check('V joins as view-only', r.status === 201 && r.body.members.find((m) => m.key === V.pub)?.role === 'viewer', JSON.stringify(r));
+  r = await call(M, 'POST', `${T4}/join`, { invite: (await call(O, 'POST', `${T4}/invites`)).body.invite, boxKey: M.box.pub });
+  check('M joins as a member (the default)', r.status === 201 && r.body.members.find((m) => m.key === M.pub)?.role === 'member', JSON.stringify(r));
+  const k4 = rand(32);
+  r = await call(O, 'POST', `${T4}/keys`, { epoch: 1, keys: { [O.pub]: await wrap(k4, O.box.pub), [M.pub]: await wrap(k4, M.box.pub), [V.pub]: await wrap(k4, V.box.pub) } });
+  check('owner shares the key with everyone', r.status === 200, JSON.stringify(r).slice(0, 200));
+  const e4 = b64u(rand(16));
+  const entry4 = async (updatedAt) => ({ entries: [{ id: e4, updatedAt, epoch: 1, ciphertext: await seal(k4, { issuer: 'Okta' }, `TA-TEAM-1|${T4.split('/').pop()}|${e4}|1`) }] });
+  r = await call(V, 'POST', `${T4}/entries`, await entry4(Date.now()));
+  check('a view-only member cannot write entries (403)', r.status === 403 && /view-only/.test(r.body?.error), JSON.stringify(r));
+  r = await call(V, 'GET', `${T4}/entries?since=0`);
+  check('a view-only member can read entries', r.status === 200, JSON.stringify(r));
+  r = await call(M, 'POST', `${T4}/entries`, await entry4(Date.now()));
+  check('a member can write entries', r.status === 200 && r.body.results[0].status === 'ok', JSON.stringify(r));
+  r = await call(M, 'POST', `${T4}/invites`);
+  check('a member cannot invite (403)', r.status === 403, JSON.stringify(r));
+  r = await call(M, 'POST', `${T4}/members/${V.pub}/role`, { role: 'member' });
+  check('a member cannot change roles (403)', r.status === 403, JSON.stringify(r));
+  r = await call(O, 'POST', `${T4}/members/${M.pub}/role`, { role: 'admin' });
+  check('owner makes M an admin', r.status === 200 && r.body.members.find((m) => m.key === M.pub)?.role === 'admin', JSON.stringify(r).slice(0, 300));
+  r = await call(M, 'POST', `${T4}/invites`, { role: 'member' });
+  check('the new admin can invite', r.status === 201, JSON.stringify(r));
+  r = await call(M, 'POST', `${T4}/members/${V.pub}/role`, { role: 'nobody' });
+  check('a made-up role is refused (400)', r.status === 400, JSON.stringify(r));
+  r = await call(M, 'POST', `${T4}/members/${O.pub}/role`, { role: 'viewer' });
+  check('nobody can demote the owner (409)', r.status === 409, JSON.stringify(r));
+  r = await call(M, 'DELETE', `${T4}/members/${O.pub}`);
+  check('nobody can remove the owner (409)', r.status === 409, JSON.stringify(r));
+  r = await call(M, 'DELETE', T4);
+  check('only the owner deletes the team, not another admin (403)', r.status === 403 && /owner/.test(r.body?.error), JSON.stringify(r));
+  r = await call(M, 'POST', `${T4}/license`, { license: await teamLicense(`team1|${SUB3}|${yearOut + 60}`) });
+  check('only the owner posts the license (403)', r.status === 403, JSON.stringify(r));
+
+  // Activity log: anyone logs, admins read; who and when come from the relay.
+  const logAad = `TA-TEAM-LOG-1|${T4.split('/').pop()}|1`;
+  r = await call(V, 'POST', `${T4}/activity`, { events: [{ epoch: 1, ciphertext: await seal(k4, { a: 'copy', n: 'Okta' }, logAad) }] });
+  check('a view-only member logs a copy', r.status === 201, JSON.stringify(r));
+  r = await call(M, 'POST', `${T4}/activity`, { events: [{ epoch: 1, ciphertext: await seal(k4, { a: 'edit', n: 'Okta' }, logAad) }, { epoch: 1, ciphertext: await seal(k4, { a: 'fill', n: 'Okta' }, logAad) }] });
+  check('a member logs two events', r.status === 201 && r.body.count === 2, JSON.stringify(r));
+  r = await call(M, 'POST', `${T4}/activity`, { events: [{ epoch: 7, ciphertext: 'AAAA' }] });
+  check('an event under the wrong key epoch is refused (409)', r.status === 409, JSON.stringify(r));
+  r = await call(M, 'POST', `${T4}/activity`, { events: [{ epoch: 1, ciphertext: 'A'.repeat(5000) }] });
+  check('an oversized event is refused (413)', r.status === 413, JSON.stringify(r));
+  r = await call(V, 'GET', `${T4}/activity?since=0`);
+  check('a view-only member cannot read the log (403)', r.status === 403, JSON.stringify(r));
+  r = await call(O, 'GET', `${T4}/activity?since=0`);
+  const ev = r.body?.events || [];
+  check('an admin reads the log: who, when, and what (decrypted)', r.status === 200 && ev.length === 3 && ev[0].by === V.pub && ev[1].by === M.pub
+    && Math.abs(ev[0].at - Date.now()) < 120_000 && (await open(k4, ev[0].ciphertext, logAad)).a === 'copy', JSON.stringify(r).slice(0, 300));
+  r = await call(O, 'GET', `${T4}/activity?since=${ev[1]?.seq}`);
+  check('the log pages by seq', r.status === 200 && r.body.events.length === 1 && r.body.events[0].seq === ev[2]?.seq, JSON.stringify(r).slice(0, 200));
+
+  // Seats: a team license stops at 10; a business license names its own seat count.
+  const more = [];
+  for (let i = 0; i < 7; i++) {
+    const p = await person();
+    if ((await call(p, 'POST', `${T4}/join`, { invite: (await call(O, 'POST', `${T4}/invites`)).body.invite, boxKey: p.box.pub })).status === 201) more.push(p);
+  }
+  check('7 more join (10 in all)', more.length === 7);
+  const late = await person();
+  const lateInvite = (await call(O, 'POST', `${T4}/invites`)).body.invite;
+  r = await call(late, 'POST', `${T4}/join`, { invite: lateInvite, boxKey: late.box.pub });
+  check('the 11th is refused on a team license (507)', r.status === 507 && /10 members/.test(r.body?.error), JSON.stringify(r));
+  r = await call(O, 'POST', `${T4}/license`, { license: await teamLicense(`team1|${SUB3}|${yearOut}|12`) });
+  check('a team license that names seats is malformed (402)', r.status === 402, JSON.stringify(r));
+  r = await call(O, 'POST', `${T4}/license`, { license: await teamLicense(`biz1|${SUB4}|${yearOut}|501`) });
+  check('a business license over 500 seats is refused (402)', r.status === 402, JSON.stringify(r));
+  const biz = await teamLicense(`biz1|${SUB4}|${yearOut}|12`);
+  r = await call(O, 'POST', `${T4}/license`, { license: biz });
+  check('owner moves the team to a 12-seat business license', r.status === 200 && r.body.seats === 12, JSON.stringify(r).slice(0, 200));
+  r = await call(late, 'POST', `${T4}/join`, { invite: lateInvite, boxKey: late.box.pub });
+  check('now the 11th joins', r.status === 201 && r.body.members.length === 11, JSON.stringify(r).slice(0, 200));
+
+  // Business admin page: the license is the sign-in.
+  const bizCall = async (method, path, token) => {
+    const res = await fetch(BASE + path, { method, headers: token ? { authorization: `Bearer ${token}` } : {} });
+    return { status: res.status, body: await res.json().catch(() => null) };
+  };
+  r = await bizCall('GET', '/v1/business');
+  check('business view without a license is refused (401)', r.status === 401, JSON.stringify(r));
+  r = await bizCall('GET', '/v1/business', biz.slice(0, -3) + 'AAA');
+  check('business view with a tampered license is refused (401)', r.status === 401, JSON.stringify(r));
+  r = await bizCall('GET', '/v1/business', await teamLicense(`biz1|sub_test_${b64u(rand(9))}|${yearOut}|20`));
+  check('a license no team uses yet gets 404', r.status === 404, JSON.stringify(r));
+  r = await bizCall('GET', '/v1/business', biz);
+  check('business view: seats, used, members with roles', r.status === 200 && r.body.seats === 12 && r.body.used === 11 && r.body.business === true
+    && r.body.owner === O.pub && r.body.members.find((m) => m.key === V.pub)?.role === 'viewer' && !('boxKey' in r.body.members[0]), JSON.stringify(r).slice(0, 300));
+  r = await bizCall('DELETE', `/v1/business/members/${O.pub}`, biz);
+  check('the page cannot remove the owner (409)', r.status === 409, JSON.stringify(r));
+  r = await bizCall('DELETE', `/v1/business/members/${late.pub}`, biz);
+  check('the page removes a member', r.status === 200 && r.body.used === 10, JSON.stringify(r).slice(0, 200));
+  r = await call(late, 'GET', T4);
+  check('the removed member is out at once (403)', r.status === 403, JSON.stringify(r));
+  r = await call(O, 'GET', T4);
+  check('the team now needs a key rotation', r.body?.needsRotation === true, JSON.stringify(r).slice(0, 200));
+  r = await bizCall('GET', '/v1/business', await teamLicense(`team1|${SUB3}|${yearOut}`));
+  check('the old license no longer opens the page once the team moved off it (404)', r.status === 404, JSON.stringify(r));
+  r = await call(O, 'DELETE', T4);
+  check('owner deletes the team', r.status === 200, JSON.stringify(r));
 }
 
 console.log(`relay test against ${BASE}`);

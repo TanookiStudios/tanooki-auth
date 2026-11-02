@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pdf/widgets.dart' as pw show Barcode, BarcodeBar;
 
+import '../core/account.dart';
+import '../core/sync/merge.dart';
 import '../core/sync/sync_engine.dart';
 import '../core/sync/sync_service.dart';
 import '../core/vault.dart';
@@ -302,6 +304,29 @@ class _SyncScreenState extends State<SyncScreen> {
     await _loadDevices();
   }
 
+  /// Remote wipe (relay only): that device erases its Tanooki Auth data the next time it goes online.
+  Future<void> _eraseDevice(_Device d) async {
+    final sure = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text(l10n.syncUiEraseTitle),
+        content: Text(l10n.syncUiEraseBody),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.commonCancel)),
+          FilledButton(
+            key: const ValueKey('sync-erase-confirm'),
+            style: FilledButton.styleFrom(backgroundColor: Palette.red),
+            onPressed: () => Navigator.pop(c, true),
+            child: Text(l10n.syncUiEraseButton),
+          ),
+        ],
+      ),
+    );
+    if (sure != true) return;
+    if (await _busy(() async => (await RelaySync(v).relay()).wipeDevice(d.id))) _say(l10n.syncUiErased);
+    await _loadDevices();
+  }
+
   Future<void> _turnOff() async {
     final sure = await showDialog<bool>(
       context: context,
@@ -385,6 +410,20 @@ class _SyncScreenState extends State<SyncScreen> {
             ],
           ]),
         ),
+        if (syncClashes(v).isNotEmpty)
+          Card(
+            child: ListTile(
+              key: const ValueKey('sync-clashes'),
+              leading: Icon(Icons.call_split, color: Palette.red),
+              title: Text(l10n.syncUiClashes(syncClashes(v).length)),
+              subtitle: Text(l10n.syncUiClashesHelp),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () async {
+                await Navigator.push(context, MaterialPageRoute(builder: (_) => SyncClashesScreen(vault: v)));
+                if (mounted) setState(() {});
+              },
+            ),
+          ),
         Padding(padding: const EdgeInsets.fromLTRB(4, 20, 4, 8), child: CapsLabel(l10n.syncUiDevices)),
         Card(
           child: Column(children: [
@@ -396,7 +435,19 @@ class _SyncScreenState extends State<SyncScreen> {
                 leading: Icon(d.me ? Icons.smartphone : Icons.devices_other),
                 title: Text(d.name),
                 subtitle: Text(d.detail),
-                trailing: d.me ? null : TextButton(onPressed: () => _removeDevice(d), child: Text(l10n.commonRemove)),
+                trailing: d.me
+                    ? null
+                    : relay
+                        ? PopupMenuButton<String>(
+                            key: ValueKey('sync-device-menu-${d.id}'),
+                            tooltip: l10n.teamUiChange,
+                            onSelected: (x) => x == 'erase' ? _eraseDevice(d) : _removeDevice(d),
+                            itemBuilder: (_) => [
+                              PopupMenuItem(value: 'remove', child: Text(l10n.commonRemove)),
+                              PopupMenuItem(value: 'erase', child: Text(l10n.syncUiEraseDevice, style: TextStyle(color: Palette.red))),
+                            ],
+                          )
+                        : TextButton(onPressed: () => _removeDevice(d), child: Text(l10n.commonRemove)),
               ),
               const Divider(),
             ],
@@ -534,4 +585,98 @@ List<Widget> syncAndLinkSection(BuildContext context, Vault v, VoidCallback refr
     ),
     const SizedBox(height: 20),
   ];
+}
+
+/// Settings > Sync > Sync clashes: the two versions of each account that was changed on two devices before they
+/// synced, side by side, and "Keep this one" under each.
+class SyncClashesScreen extends StatefulWidget {
+  const SyncClashesScreen({super.key, required this.vault});
+  final Vault vault;
+
+  @override
+  State<SyncClashesScreen> createState() => _SyncClashesScreenState();
+}
+
+class _SyncClashesScreenState extends State<SyncClashesScreen> {
+  Future<void> _keep(SyncClash c, {required bool lost}) async {
+    resolveClash(widget.vault, c, keepLost: lost);
+    await widget.vault.save(); // a chosen other version is a local edit, so sync sends it on
+    SyncService.instance.changed.value++;
+    if (!mounted) return;
+    setState(() {});
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(l10n.syncUiClashKept)));
+  }
+
+  Widget _version(SyncClash c, Account a, Account other, String heading, {required bool lost}) {
+    String yesNo(bool b) => b ? l10n.syncUiClashYes : l10n.syncUiClashNo;
+    String text(String? t) => (t ?? '').trim().isEmpty ? '—' : t!.trim();
+    final rows = [
+      (l10n.syncUiClashName, text(a.issuer), a.issuer != other.issuer),
+      (l10n.syncUiClashAccount, text(a.label), a.label != other.label),
+      (l10n.syncUiClashFolder, text(a.folder), a.folder != other.folder),
+      (l10n.syncUiClashNotes, text(a.notes), a.notes != other.notes),
+      (l10n.syncUiClashInTrash, yesNo(a.trashed), a.trashed != other.trashed),
+      if (a.secret != other.secret) (l10n.syncUiClashSecret, l10n.syncUiClashSecretDifferent, true),
+    ];
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(heading, style: TextStyle(color: Palette.muted, fontSize: 12, fontWeight: FontWeight.w700)),
+      const SizedBox(height: 6),
+      for (final (label, value, differs) in rows)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Text('$label: $value',
+              style: TextStyle(fontWeight: differs ? FontWeight.w700 : FontWeight.normal, color: differs ? null : Palette.muted)),
+        ),
+      Text(l10n.syncUiClashEdited(agoText(a.updatedAt.toLocal())), style: TextStyle(color: Palette.muted, fontSize: 12)),
+      const SizedBox(height: 8),
+      FilledButton.tonal(
+        key: ValueKey('clash-keep-${lost ? 'other' : 'kept'}-${c.id}'),
+        onPressed: () => _keep(c, lost: lost),
+        child: Text(l10n.syncUiClashKeep),
+      ),
+    ]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final clashes = syncClashes(widget.vault);
+    final otherKeys = {'tags', 'domains', 'iconDomain', 'color', 'emoji', 'recoveryCodes', 'favorite', 'digits', 'period', 'algorithm', 'type', 'requireAuth', 'travelHidden'};
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.syncUiClashTitle)),
+      body: ListView(padding: const EdgeInsets.all(16), children: [
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Text(l10n.syncUiClashIntro, style: TextStyle(color: Palette.muted, height: 1.4)),
+              const SizedBox(height: 12),
+              if (clashes.isEmpty) Text(l10n.syncUiClashNone, key: const ValueKey('clash-none')),
+              for (final c in clashes)
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                      Text(c.kept.issuer.isNotEmpty ? c.kept.issuer : c.kept.label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                      const SizedBox(height: 10),
+                      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Expanded(child: _version(c, c.kept, c.lost, l10n.syncUiClashInUse, lost: false)),
+                        const SizedBox(width: 12),
+                        Expanded(child: _version(c, c.lost, c.kept, l10n.syncUiClashOther, lost: true)),
+                      ]),
+                      if (otherKeys.any((k) => '${c.kept.toJson()[k]}' != '${c.lost.toJson()[k]}'))
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(l10n.syncUiClashOtherDiffers, style: TextStyle(color: Palette.muted, fontSize: 12)),
+                        ),
+                    ]),
+                  ),
+                ),
+            ]),
+          ),
+        ),
+      ]),
+    );
+  }
 }

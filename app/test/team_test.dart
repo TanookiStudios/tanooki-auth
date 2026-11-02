@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tanooki_auth/core/account.dart';
 import 'package:tanooki_auth/core/sync/relay_client.dart';
 import 'package:tanooki_auth/core/sync/relay_crypto.dart';
+import 'package:tanooki_auth/core/store.dart' show EmailNotSetUp, emailTeamInvite, workerCall;
 import 'package:tanooki_auth/core/team.dart';
 import 'package:tanooki_auth/core/vault.dart';
 
@@ -39,7 +40,8 @@ class FakeTeamRelay {
   final members = <String, Map<String, dynamic>>{};
   final wrapped = <String, Map<String, dynamic>>{};
   final entries = <String, Map<String, dynamic>>{};
-  final invites = <String>{};
+  final invites = <String, String>{}; // token -> role
+  final activity = <Map<String, dynamic>>[];
 
   Future<void> start() async {
     server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
@@ -57,6 +59,8 @@ class FakeTeamRelay {
 
   Map<String, dynamic> status() => {
         'admin': admin,
+        'owner': admin,
+        'seats': 10,
         'epoch': epoch,
         'needsRotation': needsRotation,
         'licenseEnd': licenseEnd,
@@ -91,34 +95,47 @@ class FakeTeamRelay {
     }
     if (admin == null) return err(404, 'team not found');
     if (method == 'POST' && route == 'join') {
-      if (!invites.remove(b['invite'])) return err(403, 'invite is not valid, expired, or already used');
+      final role = invites.remove(b['invite']);
+      if (role == null) return err(403, 'invite is not valid, expired, or already used');
       if (members.length >= 10) return err(507, 'team is full (10 members)');
-      members[dev] = {'role': 'member', 'boxKey': b['boxKey'], 'added': DateTime.now().millisecondsSinceEpoch};
+      members[dev] = {'role': role, 'boxKey': b['boxKey'], 'added': DateTime.now().millisecondsSinceEpoch};
       return (201, status());
     }
     if (!members.containsKey(dev)) return err(403, 'device is not in this team');
-    final isAdmin = dev == admin;
+    final isAdmin = members[dev]!['role'] == 'admin', isOwner = dev == admin;
     switch ((method, route)) {
       case ('GET', ''):
         return (200, status());
       case ('DELETE', ''):
-        if (!isAdmin) return err(403, 'only the team admin can do this');
+        if (!isOwner) return err(403, 'only the team owner (who made the team) can do this');
         admin = null;
         members.clear();
         entries.clear();
         return (200, {'ok': true});
       case ('POST', 'license'):
+        if (!isOwner) return err(403, 'only the team owner (who made the team) can do this');
         final end = _licenseEnd(b['license']);
         if (end == null) return err(402, 'team license is malformed');
         if (end > licenseEnd) licenseEnd = end;
         return (200, status());
       case ('POST', 'invites'):
-        if (!isAdmin) return err(403, 'only the team admin can do this');
-        final inv = b64u(randomBytes(24));
-        invites.add(inv);
-        return (201, {'invite': inv, 'expiresAt': 0});
+        if (!isAdmin) return err(403, 'only a team admin can do this');
+        final inv = b64u(randomBytes(32));
+        invites[inv] = b['role'] as String? ?? 'member';
+        return (201, {'invite': inv, 'expiresAt': 0, 'role': invites[inv]});
+      case ('POST', 'activity'):
+        for (final e in (b['events'] as List).cast<Map>()) {
+          if (e['epoch'] != epoch) return (409, {'error': 'the team key has changed; fetch the new key and encrypt with it', 'epoch': epoch});
+          activity.add({'seq': activity.length + 1, 'at': DateTime.now().millisecondsSinceEpoch, 'by': dev, 'epoch': epoch, 'ciphertext': e['ciphertext']});
+        }
+        return (201, {'ok': true});
+      case ('GET', 'activity'):
+        if (!isAdmin) return err(403, 'only a team admin can do this');
+        final since = int.parse(uri.queryParameters['since'] ?? '0');
+        final page = activity.where((e) => (e['seq'] as int) > since).toList();
+        return (200, {'events': page, 'cursor': page.isEmpty ? since : page.last['seq'], 'more': false});
       case ('POST', 'keys'):
-        if (!isAdmin) return err(403, 'only the team admin can do this');
+        if (!isAdmin) return err(403, 'only a team admin can do this');
         final keys = (b['keys'] as Map).cast<String, String>();
         if (b['epoch'] == epoch + 1) {
           if (members.keys.any((m) => !keys.containsKey(m))) return err(400, 'a key rotation must include a wrapped key for every member');
@@ -134,6 +151,7 @@ class FakeTeamRelay {
         final w = wrapped[dev];
         return w == null ? err(404, 'the admin has not shared the team key with this device yet') : (200, {'epoch': w['epoch'], 'wrapped': w['blob']});
       case ('POST', 'entries'):
+        if (members[dev]!['role'] == 'viewer') return err(403, 'view-only members cannot change team accounts');
         final list = (b['entries'] as List).cast<Map<String, dynamic>>();
         if (list.any((e) => e['epoch'] != epoch)) return (409, {'error': 'the team key has changed; fetch the new key and encrypt with it', 'epoch': epoch});
         final results = <Map<String, dynamic>>[];
@@ -153,9 +171,17 @@ class FakeTeamRelay {
         final page = entries.values.where((e) => (e['seq'] as int) > since).toList()..sort((a, b) => (a['seq'] as int).compareTo(b['seq'] as int));
         return (200, {'entries': page, 'cursor': page.isEmpty ? since : page.last['seq'], 'more': false});
     }
+    if (method == 'POST' && route.startsWith('members/') && route.endsWith('/role')) {
+      final target = route.split('/')[1];
+      if (!isAdmin) return err(403, 'only a team admin can do this');
+      if (target == admin) return err(409, 'the team owner is always an admin');
+      if (!members.containsKey(target)) return err(404, 'no such member in this team');
+      members[target]!['role'] = b['role'];
+      return (200, status());
+    }
     if (method == 'DELETE' && route.startsWith('members/')) {
       final target = route.substring(8);
-      if (!isAdmin && target != dev) return err(403, 'only the team admin can do this');
+      if (!isAdmin && target != dev) return err(403, 'only a team admin can do this');
       if (target == admin) return err(409, 'the admin cannot leave; delete the team instead');
       members.remove(target);
       wrapped.remove(target);
@@ -290,6 +316,83 @@ void main() {
     await relay.start();
     addTearDown(() => relay.server.close(force: true));
     await scenario(relay.base, randomBytes(32), epochOnRelay: (id) => relay.entries[id]!['epoch'] as int);
+  });
+
+  test('roles and the activity log (#27, #28): view-only can use but not change; admins see who did what', () async {
+    final relay = FakeTeamRelay();
+    await relay.start();
+    addTearDown(() => relay.server.close(force: true));
+    final seed = randomBytes(32), yearOut = DateTime.now().millisecondsSinceEpoch ~/ 1000 + 365 * 86400;
+    final a = await newVault(), viewer = await newVault(), c = await newVault();
+    await TeamClient.create(a, await teamLicense(seed, yearOut), relay: relay.base);
+    expect([isTeamOwner(a), isTeamAdmin(a), canEditTeam(a)], [true, true, true]);
+
+    await TeamClient.join(viewer, await TeamClient(a).inviteLink(role: 'viewer'));
+    await TeamClient.join(c, await TeamClient(a).inviteLink());
+    expect([teamState(viewer)!['role'], canEditTeam(viewer), teamState(c)!['role']], ['viewer', false, 'member']);
+
+    final shared = teamCopyOf(github());
+    putTeamAccount(a, shared); // logs "add"
+    await a.save();
+    await TeamClient(a).sync();
+    await TeamClient(viewer).sync();
+    await TeamClient(c).sync();
+    expect(teamAccounts(viewer).single.issuer, 'GitHub');
+
+    // The viewer copies a code: logged. A sneaked-in edit is never sent (the relay would refuse it anyway).
+    logTeamEvent(viewer, 'copy', teamAccounts(viewer).single);
+    putTeamAccount(viewer, teamAccounts(viewer).single..issuer = 'Hacked', log: false);
+    await viewer.save();
+    final rv = await TeamClient(viewer).sync();
+    expect(rv.pushed, 0);
+    expect(relay.activity.length, 2);
+    expect(teamState(viewer)!['log'], isEmpty);
+    await TeamClient(a).sync();
+    expect(teamAccounts(a).single.issuer, 'GitHub');
+
+    // Members can't read the log; the owner makes C an admin, and C's app picks the role up on its next sync.
+    await expectLater(TeamClient(c).activity(), throwsA(isA<RelayException>().having((e) => e.status, 'status', 403)));
+    await TeamClient(a).setRole(await TeamClient(c).myKey(), 'admin');
+    await TeamClient(c).sync();
+    expect([isTeamAdmin(c), isTeamOwner(c)], [true, false]);
+    final log = await TeamClient(c).activity();
+    expect([for (final e in log) e.action], ['copy', 'add'], reason: 'newest first');
+    expect(log.first.by, await TeamClient(viewer).myKey());
+    expect(log.first.name, 'GitHub');
+    expect(log.last.by, await TeamClient(a).myKey());
+    expect(log.first.device, isNotEmpty);
+
+    // Nobody demotes the owner; another admin can't delete the team.
+    await expectLater(TeamClient(c).setRole(await TeamClient(a).myKey(), 'viewer'), throwsA(isA<RelayException>().having((e) => e.status, 'status', 409)));
+    await expectLater(TeamClient(c).deleteTeam(), throwsA(isA<RelayException>()));
+
+    // The email proof is a real signed request for this team's status, by this device.
+    final proof = await TeamClient(a).emailProof();
+    final pub = SimplePublicKey(unb64u(proof['device'] as String), type: KeyPairType.ed25519);
+    final msg = 'TA-RELAY-1\nGET\n/v1/team/${TeamClient(a).teamId}\n${proof['timestamp']}\n${proof['nonce']}\n${sha256b64u(const [])}';
+    expect(await Ed25519().verify(utf8.encode(msg), signature: Signature(unb64u(proof['signature'] as String), publicKey: pub)), isTrue);
+  });
+
+  test('invite by email: sent, or "not set up yet" so the app shows the link instead', () async {
+    final calls = <Map>[];
+    var status = 503;
+    final saved = workerCall;
+    addTearDown(() => workerCall = saved);
+    workerCall = (method, path, {body}) async {
+      calls.add({'path': path, ...?(body as Map?)});
+      return status == 201
+          ? RelayResponse(201, {'ok': true})
+          : status == 503
+              ? RelayResponse(503, {'error': "Email sending isn't set up yet", 'code': 'email-not-set-up'})
+              : RelayResponse(status, {'error': 'only a team admin can send invites'});
+    };
+    Future<void> send() => emailTeamInvite(email: 'pat@example.com', teamId: 't', invite: 'i', proof: {'device': 'd'});
+    await expectLater(send(), throwsA(isA<EmailNotSetUp>()));
+    status = 403;
+    await expectLater(send(), throwsA(isA<RelayException>().having((e) => e.message, 'message', 'Only a team admin can send invites.')));
+    status = 201;
+    await send();
+    expect(calls.last, {'path': '/team-invite-email', 'email': 'pat@example.com', 'teamId': 't', 'invite': 'i', 'proof': {'device': 'd'}});
   });
 
   test('a removed device gets a plain sentence, not a crash', () async {
