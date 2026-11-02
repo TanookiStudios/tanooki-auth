@@ -129,6 +129,7 @@ class LinkService {
       }
       final account = await _ask!(r);
       await r.link.answer(r, account);
+      if (account?.type == OtpType.hotp) await _vault?.save(); // keeps (and syncs) the counter answer() moved on
     } catch (_) {
       // Offline or the browser gave up: it times out on its own and shows why.
     } finally {

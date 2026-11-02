@@ -168,6 +168,40 @@ void main() {
     expect(vault.accounts.single.issuer, 'Slack');
     expect(jsonEncode(sent).contains('KRUGKIDROVUWG2ZAMJZG653OEBTG66BAN52XE'), isFalse);
   }, _RealHttp()));
+  test('phone link: filling a counter-based (HOTP) account sends the next code each time and moves the counter on',
+      () => HttpOverrides.runWithHttpOverrides(() async {
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    addTearDown(() => server.close(force: true));
+    final ext = await X25519().newKeyPair();
+    final link = BrowserLink({
+      'relay': 'http://127.0.0.1:${server.port}',
+      'room': 'room1',
+      'extPub': b64u((await ext.extractPublicKey()).bytes),
+      'secret': b64u(randomBytes(32)),
+      'seed': b64u(randomBytes(32)),
+      'phonePub': 'p',
+      'token': 't',
+      'pairedAt': DateTime.now().toIso8601String(),
+    });
+    final keys = await link.keys();
+    final sent = <Map<String, dynamic>>[];
+    server.listen((req) async {
+      final body = await utf8.decoder.bind(req).join();
+      if (req.method == 'POST') {
+        sent.add(await open(keys.p2e, (jsonDecode(body) as Map)['ciphertext'] as String, 'TA-LINK-1|room1|p2e'));
+        req.response.statusCode = 201;
+      }
+      req.response.write('{}');
+      await req.response.close();
+    });
+    final a = Account(id: 'h', issuer: 'Bank', secret: 'JBSWY3DPEHPK3PXP', type: OtpType.hotp, domains: ['bank.com']);
+    final first = a.codeAt(DateTime.now());
+    await link.answer(FillRequest(link, 'r1', 'bank.com', 1), a);
+    await link.answer(FillRequest(link, 'r2', 'bank.com', 2), a);
+    expect(sent.map((m) => m['code']), [first, (Account.fromJson(a.toJson())..counter = 1).codeAt(DateTime.now())]);
+    expect(sent[0]['code'], isNot(sent[1]['code']), reason: 'a counter code works once');
+    expect(a.counter, 2, reason: 'the counter moves on with each code sent, like Next code');
+  }, _RealHttp()));
 }
 
 /// The widget test binding fakes every HTTP request with a 400; this test talks to its own local relay.

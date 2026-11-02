@@ -186,6 +186,8 @@ class BrowserLink {
         'domain': domain,
         'issuer': account.issuer,
       });
+      // A counter code works once: the next fill gets the next one, like Next code. The caller saves the vault.
+      if (account.type == OtpType.hotp) account.counter++;
     }
     await relayFetch(relay, 'DELETE', '$roomPath/messages/${r.messageId}', token: token).catchError((_) => RelayResponse(0, {}));
   }
