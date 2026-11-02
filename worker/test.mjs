@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import worker, { appleLicense, inviteCode, makeLicense } from './src/index.js';
+import { TEAM_EMAILS_PER_DAY } from './src/team.js';
 import { APPLE_ROOT_G3, verifyChain, verifyTransaction } from './src/apple.js';
 import { checkTeamLicense } from '../relay/src/license.js';
 
@@ -142,7 +143,7 @@ const teamPage = await (await call('/team-license?session_id=cs_test_team1234567
 const teamToken = teamPage.match(/TT1\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/)[0];
 assert.equal(payloadOf(teamToken), `team1|sub_test123456|${periodEnd}`);
 assert.ok(verifies(teamToken), 'team token verifies');
-assert.deepEqual(await checkTeamLicense(teamToken, env.LICENSE_PUBLIC), { subscription: 'sub_test123456', periodEnd: periodEnd * 1000 }, 'relay accepts the worker\'s token');
+assert.deepEqual(await checkTeamLicense(teamToken, env.LICENSE_PUBLIC), { subscription: 'sub_test123456', periodEnd: periodEnd * 1000, seats: 10, business: false }, 'relay accepts the worker\'s token');
 assert.equal((await checkTeamLicense(key, env.LICENSE_PUBLIC)).error, 'team license is malformed', 'relay refuses a Premium key as a team license');
 assert.equal((await call('/team-license?session_id=cs_test_paid1234567890')).status, 400, 'one-time purchase is not a team subscription');
 const refresh = (token) => call('/team-license/refresh', { method: 'POST', body: JSON.stringify({ token }) });
@@ -166,6 +167,100 @@ const forbiddenPage = await call('/team-license?session_id=cs_test_team123456789
 assert.equal(forbiddenPage.status, 503);
 assert.match(await forbiddenPage.text(), /subscription read access/);
 subsForbidden = false;
+
+// ---------- business plan (#44) ----------
+sessions.cs_test_biz12345678901 = { payment_status: 'paid', mode: 'subscription', subscription: 'sub_biz123456', created: 1793145600 };
+subs.sub_biz123456 = { id: 'sub_biz123456', status: 'active', items: { data: [{ current_period_end: periodEnd, quantity: 25 }] } };
+const bizPage = await call('/business-license?session_id=cs_test_biz12345678901');
+const bizHtml = await bizPage.text();
+assert.equal(bizPage.status, 200);
+assert.match(bizHtml, /up to 25 people/);
+const bizToken = bizHtml.match(/TT1\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/)[0];
+assert.equal(payloadOf(bizToken), `biz1|sub_biz123456|${periodEnd}|25`, 'business token carries the seats');
+assert.deepEqual(await checkTeamLicense(bizToken, env.LICENSE_PUBLIC), { subscription: 'sub_biz123456', periodEnd: periodEnd * 1000, seats: 25, business: true }, 'relay reads the seats');
+assert.equal((await call('/business-license?session_id=cs_test_paid1234567890')).status, 400, 'a one-time purchase is not a business plan');
+assert.equal((await call('/business-license?session_id=nope')).status, 400);
+subs.sub_biz123456.items.data[0].quantity = 30;
+rr = await refresh(bizToken);
+rb = await rr.json();
+assert.equal(rr.status, 200);
+assert.equal(payloadOf(rb.token), `biz1|sub_biz123456|${periodEnd}|30`, 'refresh follows the new seat count');
+assert.match(payloadOf((await (await refresh(teamToken)).json()).token), /^team1\|/, 'a team license refreshes as a team license');
+const adminPage = await call('/business');
+const adminHtml = await adminPage.text();
+assert.equal(adminPage.status, 200);
+assert.match(adminHtml, /business license/);
+assert.match(adminHtml, /tanooki-auth-relay\.kirbymail\.workers\.dev/, 'the page talks to the live relay');
+assert.doesNotMatch(adminHtml, /Stripe\)/, 'no billing link until a portal URL is set');
+assert.match(await (await worker.fetch(new Request('https://x.dev/business'), { ...env, STRIPE_PORTAL_URL: 'https://billing.stripe.com/p/login/test_123' })).text(), /billing\.stripe\.com\/p\/login\/test_123/);
+
+// ---------- team invite by email (#29) ----------
+const stripeFetch = globalThis.fetch;
+const sentMail = [];
+let resendStatus = 200;
+globalThis.fetch = async (url, opts) => {
+  if (url !== 'https://api.resend.com/emails') return stripeFetch(url, opts);
+  assert.equal(opts.headers.authorization, 'Bearer re_test');
+  sentMail.push(JSON.parse(opts.body));
+  return new Response(resendStatus === 200 ? '{"id":"m1"}' : '{"message":"nope"}', { status: resendStatus });
+};
+const TEAM = 'T'.repeat(43);
+const ADMIN = 'A'.repeat(43);
+const MEMBER = 'M'.repeat(43);
+const relaySeen = [];
+const relay = { fetch: async (req) => {
+  const u = new URL(req.url);
+  relaySeen.push({ path: u.pathname, device: req.headers.get('x-ta-device'), sig: req.headers.get('x-ta-signature') });
+  if (req.headers.get('x-ta-signature') === 'B'.repeat(86)) return new Response('{"error":"bad signature"}', { status: 401 });
+  return new Response(JSON.stringify({ members: [{ key: ADMIN, role: 'admin' }, { key: MEMBER, role: 'member' }] }));
+} };
+const mailEnv = { ...env, RESEND_API_KEY: 're_test', RELAY: relay };
+const proof = (device = ADMIN, signature = 'S'.repeat(86)) => ({ device, timestamp: Date.now(), nonce: 'N'.repeat(22), signature });
+const mail = (body, e = mailEnv) => worker.fetch(new Request('https://x.dev/team-invite-email', { method: 'POST', body: JSON.stringify(body) }), e);
+const goodMail = { email: 'pat@example.com', teamId: TEAM, invite: 'I'.repeat(43), proof: proof() };
+
+let m = await mail(goodMail, env);
+assert.equal(m.status, 503, 'no RESEND_API_KEY yet');
+assert.deepEqual(await m.json(), { error: "Email sending isn't set up yet", code: 'email-not-set-up' });
+assert.equal(sentMail.length + relaySeen.length, 0, 'nothing sent and the relay not asked');
+for (const bad of [{ ...goodMail, email: 'not-an-email' }, { ...goodMail, email: 'a b@example.com' }, { ...goodMail, teamId: 'short' }, { ...goodMail, invite: '<x>' }, { ...goodMail, proof: {} }]) {
+  assert.equal((await mail(bad)).status, 400, JSON.stringify(bad).slice(0, 80));
+}
+m = await mail({ ...goodMail, proof: proof(MEMBER) });
+assert.equal(m.status, 403);
+assert.match((await m.json()).error, /only a team admin/);
+m = await mail({ ...goodMail, proof: proof(ADMIN, 'B'.repeat(86)) });
+assert.equal(m.status, 403, 'the relay refused the signature');
+assert.match((await m.json()).error, /bad signature/);
+assert.equal(sentMail.length, 0);
+
+m = await mail(goodMail);
+assert.equal(m.status, 201);
+assert.equal(relaySeen.at(-1).path, `/v1/team/${TEAM}`, 'the proof is checked against this team');
+assert.equal(relaySeen.at(-1).device, ADMIN);
+const letter = sentMail.at(-1);
+assert.deepEqual(letter.to, ['pat@example.com']);
+assert.equal(letter.from, 'Tanooki Auth <noreply@tanookistudios.com>');
+const joinUrl = letter.text.match(/https:\/\/x\.dev\/join-team#\S+/)[0];
+assert.equal(decodeURIComponent(joinUrl.split('#')[1]), `tanookiauth://team?v=1&relay=${encodeURIComponent('https://tanooki-auth-relay.kirbymail.workers.dev')}&team=${TEAM}&invite=${'I'.repeat(43)}`);
+assert.match(letter.html, /Join the team/);
+await mail(goodMail, { ...mailEnv, EMAIL_FROM: 'Team <team@example.com>' });
+assert.equal(sentMail.at(-1).from, 'Team <team@example.com>', 'the from address is a setting');
+resendStatus = 422;
+m = await mail(goodMail);
+assert.equal(m.status, 502);
+assert.match((await m.json()).error, /copy the link/);
+resendStatus = 200;
+const before = sentMail.length;
+for (let i = 0; i < TEAM_EMAILS_PER_DAY; i++) await mail(goodMail);
+assert.equal(sentMail.length - before, TEAM_EMAILS_PER_DAY - 2, 'two already sent today; the failed one did not count');
+m = await mail(goodMail);
+assert.equal(m.status, 429);
+assert.equal(sentMail.length - before, TEAM_EMAILS_PER_DAY - 2, 'nothing sent over the limit');
+assert.equal((await mail({ ...goodMail, teamId: 'U'.repeat(43) })).status, 201, 'the limit is per team');
+const joinPage = await (await call('/join-team')).text();
+assert.match(joinPage, /location\.hash/, 'the join page reads the invite from the #fragment');
+globalThis.fetch = stripeFetch;
 
 // ---------- App Store (#39) ----------
 const apple = JSON.parse(readFileSync(new URL('./test-fixtures/apple-library.json', import.meta.url)));

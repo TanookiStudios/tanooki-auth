@@ -3,6 +3,7 @@
 // deterministic and the payload only uses the session, so revisiting the link shows the same key.
 // Also here: App Store purchases (/iap/apple), invites, team licenses, feedback and /health.
 import { PRODUCTS, BUNDLE_ID, Refused, verifyTransaction } from './apple.js';
+import { teamRoutes } from './team.js';
 
 const b64url = (bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const fromB64 = (s) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
@@ -17,7 +18,7 @@ const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const REFERRALS_FOR_FAMILY = 3;
 
 // Signs `text` with the license key: base64url(text) + '.' + base64url(signature).
-async function signPayload(text, seedB64, publicB64) {
+export async function signPayload(text, seedB64, publicB64) {
   const key = await crypto.subtle.importKey(
     'jwk',
     { kty: 'OKP', crv: 'Ed25519', d: b64url(fromB64(seedB64)), x: b64url(fromB64(publicB64)) },
@@ -29,7 +30,7 @@ async function signPayload(text, seedB64, publicB64) {
 }
 
 // Returns the payload text when `p.s` is signed by our key, else null.
-async function openSigned(p, s, publicB64) {
+export async function openSigned(p, s, publicB64) {
   try {
     const key = await crypto.subtle.importKey('raw', fromB64(publicB64), { name: 'Ed25519' }, false, ['verify']);
     const payload = fromB64(p);
@@ -57,6 +58,10 @@ export async function readLicense(key, publicB64) {
 }
 
 // Team license token for the relay: TT1.<base64url "team1|<subscriptionId>|<periodEnd seconds>">.<signature>
+// Business plan (more than 10 people): the same token with "biz1" and the seat count (PROTOCOL.md 4.2).
+export const makeBusinessLicense = async (subscription, periodEnd, seats, env) =>
+  `TT1.${await signPayload(`biz1|${subscription}|${periodEnd}|${seats}`, env.LICENSE_SEED, env.LICENSE_PUBLIC)}`;
+
 export const makeTeamLicense = async (subscription, periodEnd, env) => `TT1.${await signPayload(`team1|${subscription}|${periodEnd}`, env.LICENSE_SEED, env.LICENSE_PUBLIC)}`;
 
 // Invite code: 8 characters from HMAC(key derived from LICENSE_SEED, orderId). Same order -> same code, and
@@ -88,8 +93,8 @@ const CORS = {
   'access-control-allow-headers': 'authorization, content-type',
   'access-control-max-age': '86400',
 };
-const json = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', ...CORS } });
-const fail = (status, error, extra = {}) => json({ error, ...extra }, status);
+export const json = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', ...CORS } });
+export const fail = (status, error, extra = {}) => json({ error, ...extra }, status);
 
 const PRIVACY = `<h1>Privacy policy</h1><p>Tanooki Auth, by Tanooki Studios. Last updated October 29, 2026.</p>
 <p><b>The app collects nothing.</b> Your accounts and setup keys are encrypted and stored only on your own device. There is no account to create, no analytics, no ads, and no tracking. The app makes no internet connections except opening a web page when you tap a link, and the features below, which stay off unless you turn them on.</p>
@@ -101,9 +106,9 @@ const PRIVACY = `<h1>Privacy policy</h1><p>Tanooki Auth, by Tanooki Studios. Las
 <p><b>Feedback</b> you send from the app is stored with the time, your platform and app version, and contact details only if you type them in. It never includes your accounts or codes. Your internet address is not stored; a scrambled form of it is kept for up to two hours to limit how much one address can send.</p>
 <p>Questions: tanookistudios.com/support</p>`;
 
-const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+export const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
-function page(title, body, status = 200, css = '') {
+export function page(title, body, status = 200, css = '') {
   return new Response(
     `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title><meta name="robots" content="noindex">
@@ -125,7 +130,7 @@ const GIFT_CSS = `
 @media print{body{background:#fff;color:#000;padding:0}main>*:not(.gift){display:none}
 .gift{border:2px dashed #000;background:#fff;margin:0}.gift *{color:#000!important}button{display:none}}`;
 
-async function stripe(env, path) {
+export async function stripe(env, path) {
   return fetch(`https://api.stripe.com/v1/${path}`, { headers: { authorization: `Bearer ${env.STRIPE_KEY}` } });
 }
 
@@ -216,7 +221,7 @@ export async function appleLicense(signedTransaction, env, roots) {
 }
 
 // Subscription -> { periodEnd } when active, or a Response explaining why not.
-async function activeSubscription(env, id) {
+export async function activeSubscription(env, id) {
   if (!/^sub_[A-Za-z0-9]{6,200}$/.test(String(id))) return fail(400, 'that checkout has no subscription');
   const r = await stripe(env, `subscriptions/${id}`);
   if (r.status === 401 || r.status === 403) {
@@ -229,10 +234,11 @@ async function activeSubscription(env, id) {
   // Newer Stripe API versions moved current_period_end onto the subscription item.
   const periodEnd = sub.current_period_end ?? sub.items?.data?.[0]?.current_period_end;
   if (!Number.isInteger(periodEnd)) return fail(502, 'Stripe did not say when the subscription period ends');
-  return { periodEnd };
+  return { periodEnd, quantity: sub.items?.data?.[0]?.quantity ?? sub.quantity ?? 1 };
 }
 
-async function teamLicensePage(url, env) {
+// The page Stripe sends a team (or, with `business`, a business plan) subscriber to after paying.
+export async function teamLicensePage(url, env, business = false) {
   const session = url.searchParams.get('session_id') || '';
   if (!/^cs_(test|live)_[A-Za-z0-9]{10,200}$/.test(session)) return page('Link not recognized', '<h1>That link isn\'t complete</h1><p>Open the link from the page you landed on after subscribing.</p>', 400);
   const r = await stripe(env, `checkout/sessions/${session}`);
@@ -245,6 +251,15 @@ async function teamLicensePage(url, env) {
   if (sub instanceof Response) {
     const { error } = await sub.json();
     return page('Team license not ready', `<h1>Couldn't make your team license</h1><p>${esc(error[0].toUpperCase() + error.slice(1))}. Reload this page later, or get in touch through tanookistudios.com/support.</p>`, sub.status);
+  }
+  if (business) {
+    const token = await makeBusinessLicense(s.subscription, sub.periodEnd, sub.quantity, env);
+    return page('Your business license', `
+<h1>Your business plan is ready</h1><p>Here's your business license for up to ${esc(sub.quantity)} people. Paste it into Tanooki Auth when you create your team vault
+(Settings → Team vault → I have a team license).</p>
+<div class="card"><code id="k">${esc(token)}</code><button onclick="navigator.clipboard.writeText(document.getElementById('k').textContent);this.textContent='Copied'">Copy business license</button></div>
+<p>Keep this license safe like a password: it also signs you in to the admin page at <a href="/business" style="color:var(--accent)">/business</a>, where you can see seats and remove people.
+The app renews it by itself while your subscription is active, and picks up seat changes. Bookmark this page to find it again.</p>`);
   }
   const token = await makeTeamLicense(s.subscription, sub.periodEnd, env);
   return page('Your team license', `
@@ -317,11 +332,16 @@ export default {
       const [tag, p, sig, extra] = String(b?.token || '').split('.');
       const text = tag === 'TT1' && extra === undefined ? await openSigned(p, sig, env.LICENSE_PUBLIC) : null;
       const [kind, subscription] = text?.split('|') ?? [];
-      if (kind !== 'team1' || !subscription) return fail(400, 'that team license is not valid');
+      if ((kind !== 'team1' && kind !== 'biz1') || !subscription) return fail(400, 'that team license is not valid');
       const sub = await activeSubscription(env, subscription);
       if (sub instanceof Response) return sub;
-      return json({ token: await makeTeamLicense(subscription, sub.periodEnd, env), periodEnd: sub.periodEnd });
+      // A business license follows the subscription's current seat count.
+      const token = kind === 'biz1' ? await makeBusinessLicense(subscription, sub.periodEnd, sub.quantity, env) : await makeTeamLicense(subscription, sub.periodEnd, env);
+      return json({ token, periodEnd: sub.periodEnd });
     }
+
+    const team = await teamRoutes(request, url, env);
+    if (team) return team;
 
     if (route === 'POST /feedback') return feedback(request, env);
     if (route === 'GET /feedback/list') return feedbackList(request, env);
