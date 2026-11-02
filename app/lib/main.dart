@@ -16,6 +16,7 @@ import 'core/emergency.dart';
 import 'core/security.dart';
 import 'core/security_key.dart';
 import 'core/spotlight.dart';
+import 'core/store.dart' show storePurchaseKey;
 import 'core/vault.dart';
 import 'core/widget_share.dart';
 import 'l10n/l10n.dart';
@@ -58,8 +59,7 @@ Future<void> createDecoyVault(Vault real, Map<String, Object> passcodeRecord) as
   }
   final decoy = await openVault(second: true);
   await decoy.resetToEmpty();
-  const lookAlike = ['theme', 'license', languageKey, easyFontKey, countdownKey, layoutKey, hideCodesKey, recentFirstKey, sortKey, lockKey, lockAfterKey, blockScreenshotsKey];
-  for (final k in lookAlike) {
+  for (final k in decoyLookAlikeKeys) {
     if (real.settings.containsKey(k)) decoy.settings[k] = real.settings[k];
   }
   decoy.settings[passcodeKey] = passcodeRecord; // so its Settings shows a passcode, like the real one
@@ -68,6 +68,10 @@ Future<void> createDecoyVault(Vault real, Map<String, Object> passcodeRecord) as
   real.settings[decoyPasscodeKey] = passcodeRecord;
   await real.save();
 }
+
+/// Settings the decoy copies from the real vault so it looks the same. Premium comes from a license key or, for an
+/// App Store / Google Play purchase, the store purchase record; without it a Premium theme would fall back to Auto.
+const decoyLookAlikeKeys = ['theme', 'license', storePurchaseKey, languageKey, easyFontKey, countdownKey, layoutKey, hideCodesKey, recentFirstKey, sortKey, lockKey, lockAfterKey, blockScreenshotsKey];
 
 bool isDecoyVault(Vault v) => v.file.path.endsWith('vault-b.json');
 
