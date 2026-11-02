@@ -7429,6 +7429,342 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'• {account}: {reason}'**
   String exportUiLeftOutLine(String account, String reason);
+
+  /// No description provided for @syncErrorWiped.
+  ///
+  /// In en, this message translates to:
+  /// **'Another device erased Tanooki Auth on this device. Everything on it was deleted and it left sync.'**
+  String get syncErrorWiped;
+
+  /// No description provided for @syncUiEraseDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase this device'**
+  String get syncUiEraseDevice;
+
+  /// No description provided for @syncUiEraseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase this device?'**
+  String get syncUiEraseTitle;
+
+  /// No description provided for @syncUiEraseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The next time that device goes online, Tanooki Auth on it deletes everything: its accounts, settings, widgets and search entries. It also leaves sync for good. This can\'t be undone. Nothing changes on this device or your other devices.'**
+  String get syncUiEraseBody;
+
+  /// No description provided for @syncUiEraseButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase it'**
+  String get syncUiEraseButton;
+
+  /// No description provided for @syncUiErased.
+  ///
+  /// In en, this message translates to:
+  /// **'Done. That device will erase itself the next time it goes online.'**
+  String get syncUiErased;
+
+  /// No description provided for @syncUiClashes.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync clashes ({count})'**
+  String syncUiClashes(int count);
+
+  /// No description provided for @syncUiClashesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'An account was changed on two devices before they synced. Pick which version to keep.'**
+  String get syncUiClashesHelp;
+
+  /// No description provided for @syncUiClashTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync clashes'**
+  String get syncUiClashTitle;
+
+  /// No description provided for @syncUiClashIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Each account below was changed on two devices before they synced. Sync used the later change. If the other version is the one you want, tap Keep this one under it.'**
+  String get syncUiClashIntro;
+
+  /// No description provided for @syncUiClashNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No clashes. Nothing to pick.'**
+  String get syncUiClashNone;
+
+  /// No description provided for @syncUiClashInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'In use now'**
+  String get syncUiClashInUse;
+
+  /// No description provided for @syncUiClashOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other version'**
+  String get syncUiClashOther;
+
+  /// No description provided for @syncUiClashKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep this one'**
+  String get syncUiClashKeep;
+
+  /// No description provided for @syncUiClashKept.
+  ///
+  /// In en, this message translates to:
+  /// **'Done. Your other devices get this version on their next sync.'**
+  String get syncUiClashKept;
+
+  /// No description provided for @syncUiClashEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'Changed {when}'**
+  String syncUiClashEdited(String when);
+
+  /// No description provided for @syncUiClashName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get syncUiClashName;
+
+  /// No description provided for @syncUiClashAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get syncUiClashAccount;
+
+  /// No description provided for @syncUiClashFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder'**
+  String get syncUiClashFolder;
+
+  /// No description provided for @syncUiClashNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get syncUiClashNotes;
+
+  /// No description provided for @syncUiClashInTrash.
+  ///
+  /// In en, this message translates to:
+  /// **'In Trash'**
+  String get syncUiClashInTrash;
+
+  /// No description provided for @syncUiClashSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup key'**
+  String get syncUiClashSecret;
+
+  /// No description provided for @syncUiClashSecretDifferent.
+  ///
+  /// In en, this message translates to:
+  /// **'different'**
+  String get syncUiClashSecretDifferent;
+
+  /// No description provided for @syncUiClashYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get syncUiClashYes;
+
+  /// No description provided for @syncUiClashNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get syncUiClashNo;
+
+  /// No description provided for @syncUiClashOtherDiffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Other settings differ too, like the look, website or recovery codes.'**
+  String get syncUiClashOtherDiffers;
+
+  /// No description provided for @teamRoleAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get teamRoleAdmin;
+
+  /// No description provided for @teamRoleMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get teamRoleMember;
+
+  /// No description provided for @teamRoleViewer.
+  ///
+  /// In en, this message translates to:
+  /// **'View-only'**
+  String get teamRoleViewer;
+
+  /// No description provided for @teamRoleOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get teamRoleOwner;
+
+  /// No description provided for @teamUiMakeAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Make admin'**
+  String get teamUiMakeAdmin;
+
+  /// No description provided for @teamUiMakeMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Make member'**
+  String get teamUiMakeMember;
+
+  /// No description provided for @teamUiMakeViewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Make view-only'**
+  String get teamUiMakeViewer;
+
+  /// No description provided for @teamUiRoleChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Role changed.'**
+  String get teamUiRoleChanged;
+
+  /// No description provided for @teamUiInviteRole.
+  ///
+  /// In en, this message translates to:
+  /// **'They join as'**
+  String get teamUiInviteRole;
+
+  /// No description provided for @teamUiRoleHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Admins invite and remove people and see the activity log. Members use and change team accounts. View-only people can use the accounts but not change them.'**
+  String get teamUiRoleHelp;
+
+  /// No description provided for @teamUiInviteEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Their email (optional)'**
+  String get teamUiInviteEmailLabel;
+
+  /// No description provided for @teamUiInviteEmailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'name@example.com'**
+  String get teamUiInviteEmailHint;
+
+  /// No description provided for @teamUiInviteMake.
+  ///
+  /// In en, this message translates to:
+  /// **'Make invite'**
+  String get teamUiInviteMake;
+
+  /// No description provided for @teamUiInviteEmailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite sent to {email}.'**
+  String teamUiInviteEmailed(String email);
+
+  /// No description provided for @teamUiEmailNotSetUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Email sending isn\'t set up yet. Copy the link below and send it yourself.'**
+  String get teamUiEmailNotSetUp;
+
+  /// No description provided for @teamUiEmailFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The email didn\'t go out ({reason}). Copy the link below and send it yourself.'**
+  String teamUiEmailFailed(String reason);
+
+  /// No description provided for @teamUiYoureAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re an admin of this team'**
+  String get teamUiYoureAdmin;
+
+  /// No description provided for @teamUiYoureViewer.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re in a team (view-only)'**
+  String get teamUiYoureViewer;
+
+  /// No description provided for @teamUiViewOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'You can use these accounts, but only admins and members can change them.'**
+  String get teamUiViewOnly;
+
+  /// No description provided for @teamUiActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get teamUiActivity;
+
+  /// No description provided for @teamUiActivityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Team activity'**
+  String get teamUiActivityTitle;
+
+  /// No description provided for @teamUiActivityHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Who copied or changed team accounts, and when. Only admins see this. Kept for 90 days, up to the last 2,000 entries.'**
+  String get teamUiActivityHelp;
+
+  /// No description provided for @teamUiActivityEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing yet. Copies and changes to team accounts show up here.'**
+  String get teamUiActivityEmpty;
+
+  /// No description provided for @teamActCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied a code for {name}'**
+  String teamActCopy(String name);
+
+  /// No description provided for @teamActFill.
+  ///
+  /// In en, this message translates to:
+  /// **'Filled a code for {name}'**
+  String teamActFill(String name);
+
+  /// No description provided for @teamActAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {name}'**
+  String teamActAdd(String name);
+
+  /// No description provided for @teamActEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Changed {name}'**
+  String teamActEdit(String name);
+
+  /// No description provided for @teamActDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed {name}'**
+  String teamActDelete(String name);
+
+  /// No description provided for @teamUiBuyBusiness.
+  ///
+  /// In en, this message translates to:
+  /// **'Business plan: \$3 per person a year'**
+  String get teamUiBuyBusiness;
+
+  /// No description provided for @teamUiBusinessSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Business plan for teams of more than 10 people (\$3 per person a year): coming soon.'**
+  String get teamUiBusinessSoon;
 }
 
 class _AppLocalizationsDelegate

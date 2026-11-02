@@ -24,6 +24,11 @@ const familyCheckoutUrl = '';
 /// it; while empty the Team screen says "Team plan coming soon".
 const teamCheckoutUrl = '';
 
+/// TODO(maddie): Stripe Payment Link for the business plan ($3 per person per year, more than 10 people; the
+/// quantity is the seat count). Its "after payment" page must be the worker's
+/// /business-license?session_id={CHECKOUT_SESSION_ID}. While empty the Team screen says "coming soon".
+const businessCheckoutUrl = '';
+
 /// Stripe link that sells a gift: the worker's /thanks shows a printable gift card instead of the buyer's key.
 String giftUrl(String paymentLink) => '$paymentLink?client_reference_id=gift';
 

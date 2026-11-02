@@ -4593,4 +4593,197 @@ class AppLocalizationsJa extends AppLocalizations {
   String exportUiLeftOutLine(String account, String reason) {
     return '・$account：$reason';
   }
+
+  @override
+  String get syncErrorWiped =>
+      '別のデバイスがこのデバイスの Tanooki Auth を消去しました。すべてのデータが削除され、同期から外れました。';
+
+  @override
+  String get syncUiEraseDevice => 'このデバイスを消去';
+
+  @override
+  String get syncUiEraseTitle => 'このデバイスを消去しますか?';
+
+  @override
+  String get syncUiEraseBody =>
+      'そのデバイスが次にオンラインになったとき、Tanooki Auth はそのデバイス上のすべて(アカウント、設定、ウィジェット、検索項目)を削除し、同期からも完全に外れます。元に戻すことはできません。このデバイスや他のデバイスには何も変わりません。';
+
+  @override
+  String get syncUiEraseButton => '消去する';
+
+  @override
+  String get syncUiErased => '完了しました。そのデバイスは次にオンラインになったときに自動で消去されます。';
+
+  @override
+  String syncUiClashes(int count) {
+    return '同期の衝突($count件)';
+  }
+
+  @override
+  String get syncUiClashesHelp =>
+      '同期される前に、2台のデバイスで同じアカウントが変更されました。残すバージョンを選んでください。';
+
+  @override
+  String get syncUiClashTitle => '同期の衝突';
+
+  @override
+  String get syncUiClashIntro =>
+      '以下のアカウントは、同期される前に2台のデバイスで変更されました。同期では後の変更が使われています。もう一方のバージョンにしたい場合は、その下の「これを残す」をタップしてください。';
+
+  @override
+  String get syncUiClashNone => '衝突はありません。選ぶものはありません。';
+
+  @override
+  String get syncUiClashInUse => '現在使用中';
+
+  @override
+  String get syncUiClashOther => 'もう一方のバージョン';
+
+  @override
+  String get syncUiClashKeep => 'これを残す';
+
+  @override
+  String get syncUiClashKept => '完了しました。他のデバイスにも次の同期でこのバージョンが届きます。';
+
+  @override
+  String syncUiClashEdited(String when) {
+    return '変更: $when';
+  }
+
+  @override
+  String get syncUiClashName => '名前';
+
+  @override
+  String get syncUiClashAccount => 'アカウント';
+
+  @override
+  String get syncUiClashFolder => 'フォルダ';
+
+  @override
+  String get syncUiClashNotes => 'メモ';
+
+  @override
+  String get syncUiClashInTrash => 'ゴミ箱';
+
+  @override
+  String get syncUiClashSecret => 'セットアップキー';
+
+  @override
+  String get syncUiClashSecretDifferent => '異なる';
+
+  @override
+  String get syncUiClashYes => 'はい';
+
+  @override
+  String get syncUiClashNo => 'いいえ';
+
+  @override
+  String get syncUiClashOtherDiffers => '見た目、ウェブサイト、リカバリーコードなど、他の設定も異なります。';
+
+  @override
+  String get teamRoleAdmin => '管理者';
+
+  @override
+  String get teamRoleMember => 'メンバー';
+
+  @override
+  String get teamRoleViewer => '閲覧のみ';
+
+  @override
+  String get teamRoleOwner => 'オーナー';
+
+  @override
+  String get teamUiMakeAdmin => '管理者にする';
+
+  @override
+  String get teamUiMakeMember => 'メンバーにする';
+
+  @override
+  String get teamUiMakeViewer => '閲覧のみにする';
+
+  @override
+  String get teamUiRoleChanged => '役割を変更しました。';
+
+  @override
+  String get teamUiInviteRole => '参加時の役割';
+
+  @override
+  String get teamUiRoleHelp =>
+      '管理者は人の招待や削除ができ、アクティビティ履歴を見られます。メンバーはチームのアカウントを使い、変更できます。閲覧のみの人はアカウントを使えますが、変更はできません。';
+
+  @override
+  String get teamUiInviteEmailLabel => '相手のメールアドレス(任意)';
+
+  @override
+  String get teamUiInviteEmailHint => 'name@example.com';
+
+  @override
+  String get teamUiInviteMake => '招待を作成';
+
+  @override
+  String teamUiInviteEmailed(String email) {
+    return '$email に招待を送りました。';
+  }
+
+  @override
+  String get teamUiEmailNotSetUp =>
+      'メール送信はまだ設定されていません。下のリンクをコピーして、ご自身で送ってください。';
+
+  @override
+  String teamUiEmailFailed(String reason) {
+    return 'メールを送れませんでした($reason)。下のリンクをコピーして、ご自身で送ってください。';
+  }
+
+  @override
+  String get teamUiYoureAdmin => 'あなたはこのチームの管理者です';
+
+  @override
+  String get teamUiYoureViewer => 'チームに参加しています(閲覧のみ)';
+
+  @override
+  String get teamUiViewOnly => 'これらのアカウントは使えますが、変更できるのは管理者とメンバーだけです。';
+
+  @override
+  String get teamUiActivity => 'アクティビティ';
+
+  @override
+  String get teamUiActivityTitle => 'チームのアクティビティ';
+
+  @override
+  String get teamUiActivityHelp =>
+      '誰がいつチームのアカウントをコピー・変更したか。管理者だけが見られます。90日間、最新2,000件まで保存されます。';
+
+  @override
+  String get teamUiActivityEmpty => 'まだありません。チームのアカウントのコピーや変更がここに表示されます。';
+
+  @override
+  String teamActCopy(String name) {
+    return '$name のコードをコピー';
+  }
+
+  @override
+  String teamActFill(String name) {
+    return '$name のコードを入力';
+  }
+
+  @override
+  String teamActAdd(String name) {
+    return '$name を追加';
+  }
+
+  @override
+  String teamActEdit(String name) {
+    return '$name を変更';
+  }
+
+  @override
+  String teamActDelete(String name) {
+    return '$name を削除';
+  }
+
+  @override
+  String get teamUiBuyBusiness => 'ビジネスプラン:1人あたり年3ドル';
+
+  @override
+  String get teamUiBusinessSoon => '11人以上のチーム向けビジネスプラン(1人あたり年3ドル):近日公開。';
 }

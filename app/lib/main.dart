@@ -28,6 +28,7 @@ import 'ui/clipboard.dart';
 import 'ui/code_view.dart' show countdownKey;
 import 'ui/help.dart' show showTourOrWhatsNew;
 import 'ui/home.dart';
+import 'core/sync/sync_service.dart' show SyncService;
 import 'ui/phone_link_ui.dart' show resumeSyncAndLink, startSyncAndLink, stopSyncAndLink;
 import 'ui/premium.dart';
 import 'ui/quick_pick.dart';
@@ -314,6 +315,15 @@ class _GateState extends State<Gate> implements BridgeHost {
   void initState() {
     super.initState();
     _lifecycle = AppLifecycleListener(onStateChange: _onLifecycle);
+    // Another device erased this one (Settings > Sync > Erase this device): erase everything here, the decoy
+    // vault too, then start over from an empty app. Vault.onSaved empties widgets, the watch and Spotlight.
+    SyncService.instance.onRemoteWipe = (v) async {
+      stopSyncAndLink();
+      if (v != _real) await v.resetToEmpty();
+      await _real?.resetToEmpty();
+      await deleteDecoyVault();
+      if (mounted) await _load();
+    };
     listenForPlatformActions(() async {
       _pendingAction = await takePendingAction() ?? _pendingAction;
       await _runPendingAction();

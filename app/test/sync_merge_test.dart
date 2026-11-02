@@ -347,4 +347,56 @@ void main() {
       expect(raw.contains('GitHub'), isFalse);
     });
   });
+
+  group('sync clashes (#26)', () {
+    Account at(String issuer, int t, {String folder = 'Work', String id = 'a'}) =>
+        acct(id, 'AAAA', issuer: issuer)..folder = folder..updatedAt = DateTime.fromMillisecondsSinceEpoch(t, isUtc: true);
+    final now = DateTime.utc(2026, 11, 2);
+
+    test('both sides changed since the last sync: a clash, keeping the later edit and the other version', () {
+      final c = findClash(SyncItem.account(at('Mine', 2000)), SyncItem.account(at('Theirs', 3000)), 1000, now)!;
+      expect([c.kept.issuer, c.lost.issuer], ['Theirs', 'Mine']);
+      final c2 = findClash(SyncItem.account(at('Mine', 4000)), SyncItem.account(at('Theirs', 3000)), 1000, now)!;
+      expect([c2.kept.issuer, c2.lost.issuer], ['Mine', 'Theirs'], reason: 'the kept one is always the one merge keeps');
+    });
+
+    test('no clash when only one side changed, without a base, for the same content, or for a delete', () {
+      expect(findClash(SyncItem.account(at('Mine', 1000)), SyncItem.account(at('Theirs', 3000)), 1000, now), isNull, reason: 'only remote changed');
+      expect(findClash(SyncItem.account(at('Mine', 2000)), SyncItem.account(at('Theirs', 1000)), 1000, now), isNull, reason: 'only we changed');
+      expect(findClash(SyncItem.account(at('Mine', 2000)), SyncItem.account(at('Theirs', 3000)), null, now), isNull, reason: 'never synced it');
+      expect(findClash(SyncItem.account(at('Same', 2000)), SyncItem.account(at('Same', 3000)), 1000, now), isNull, reason: 'same edit on both');
+      expect(findClash(SyncItem.account(at('Mine', 2000)), SyncItem.tombstone('a', 3000), 1000, now), isNull, reason: 'a delete is not a clash');
+      expect(findClash(null, SyncItem.account(at('Theirs', 3000)), 1000, now), isNull);
+      final h1 = at('Same', 2000)..counter = 4, h2 = at('Same', 3000)..counter = 9;
+      expect(findClash(SyncItem.account(h1), SyncItem.account(h2), 1000, now), isNull, reason: 'HOTP counters settle themselves');
+    });
+
+    test('clashes are kept newest first, one per account, at most 50; keeping either version closes it', () async {
+      final v = Vault(File('${Directory.systemTemp.createTempSync('clash').path}/v.json'), MemoryKeyStore());
+      await v.load();
+      v.accounts.add(at('Theirs', 3000));
+      await v.save();
+      recordClash(v, findClash(SyncItem.account(at('Old', 1500)), SyncItem.account(at('Theirs', 3000)), 1000, now)!);
+      recordClash(v, findClash(SyncItem.account(at('Mine', 2000)), SyncItem.account(at('Theirs', 3000)), 1000, now)!);
+      expect(syncClashes(v).single.lost.issuer, 'Mine', reason: 'a newer clash for the same account replaces the old one');
+      for (var i = 0; i < 60; i++) {
+        recordClash(v, SyncClash(kept: at('K', 3000, id: 'x$i'), lost: at('L', 2000, id: 'x$i'), at: now));
+      }
+      expect(syncClashes(v).length, maxSyncClashes);
+      expect(syncClashes(v).first.id, 'x59');
+
+      final c = SyncClash(kept: at('Theirs', 3000), lost: at('Mine', 2000, folder: 'Home'), at: now);
+      recordClash(v, c);
+      resolveClash(v, c, keepLost: false);
+      expect(v.accounts.single.issuer, 'Theirs', reason: 'keeping the one in use changes nothing');
+      expect(syncClashes(v).any((x) => x.id == 'a'), isFalse);
+
+      recordClash(v, c);
+      resolveClash(v, c, keepLost: true);
+      await v.save();
+      expect([v.accounts.single.issuer, v.accounts.single.folder], ['Mine', 'Home']);
+      expect(v.accounts.single.updatedAt.millisecondsSinceEpoch, greaterThan(3000), reason: 'stamped as a fresh edit, so it wins on every device');
+      expect(syncClashes(v).any((x) => x.id == 'a'), isFalse);
+    });
+  });
 }
