@@ -32,7 +32,9 @@ const forcedLanguage = String.fromEnvironment('TA_LANG');
 /// The language the app shows: the forced one, else the Settings choice, else the device's best match.
 Locale appLocale([List<Locale>? device]) {
   final pick = forcedLanguage.isNotEmpty ? forcedLanguage : appLanguage.value;
-  if (pick != null && languageNames.containsKey(pick)) return Locale(pick);
+  if (pick != null && languageNames.containsKey(pick)) {
+    return pick == 'zh' ? const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hans') : Locale(pick);
+  }
   return basicLocaleListResolution(device ?? _deviceLocales, AppLocalizations.supportedLocales);
 }
 
