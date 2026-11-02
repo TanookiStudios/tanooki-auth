@@ -320,16 +320,16 @@ the relay treats `blob` as opaque.
 
 | Request | Who | Effect |
 |---|---|---|
-| `POST /v1/emergency/<grantId>` `{"contactKey","blob"}` | first signer becomes owner; then owner only | Creates (201) or replaces (200) the sealed blob. Naming a different `contactKey` cancels any pending request. `blob` max 786,432 chars. |
+| `POST /v1/emergency/<grantId>` `{"contactKey","blob"}` | first signer becomes owner; then owner only | Creates (201) or replaces (200) the sealed blob. Naming a different `contactKey` cancels any pending request and any deny cooldown. `blob` max 786,432 chars. |
 | `GET /v1/emergency/<grantId>` | owner or contact | Status (below). Never includes the blob. |
 | `POST /v1/emergency/<grantId>/push` `{"platform","token","environment"}` | owner | Registers an owner device for the "someone asked" notification (same rules as 2.6; up to 10 devices, newest kept). 503 `push not configured` without push keys. |
-| `POST /v1/emergency/<grantId>/request` `{}` | contact | Starts the 7-day wait and notifies every registered owner device. 201 with status plus `push: {sent, tokens}`. Asking again while waiting or released returns 200 with the same status and sends nothing. |
-| `POST /v1/emergency/<grantId>/deny` | owner | Cancels a waiting (or released) request: back to `idle`. 409 `there is no request to deny` otherwise. The contact may ask again later. |
+| `POST /v1/emergency/<grantId>/request` `{}` | contact | Starts the 7-day wait and notifies every registered owner device. 201 with status plus `push: {sent, tokens}`. Asking again while waiting or released returns 200 with the same status and sends nothing. Within 24 hours of a deny: 429 `the owner denied the last request; you can ask again after retryAt` with `retryAt`, and nothing is sent. |
+| `POST /v1/emergency/<grantId>/deny` | owner | Cancels a waiting (or released) request: back to `idle`, and starts a **24-hour cooldown** (`retryAt`) before the contact may ask again. 409 `there is no request to deny` otherwise. |
 | `GET /v1/emergency/<grantId>/blob` | contact | 200 `{"blob","updatedAt"}` once released. 409 if the contact has not asked; 403 `the waiting period has not ended` with `releaseAt` while waiting. |
 | `DELETE /v1/emergency/<grantId>` | owner | Deletes everything for this grant. |
 
-Status: `{"owner","contactKey","state":"idle"|"waiting"|"released","requestedAt","releaseAt","updatedAt","blobLength"}`
-(times in Unix ms; `requestedAt`/`releaseAt` are `null` when idle). Other errors: 404 `grant not found`,
+Status: `{"owner","contactKey","state":"idle"|"waiting"|"released","requestedAt","releaseAt","retryAt","updatedAt","blobLength"}`
+(times in Unix ms; `requestedAt`/`releaseAt` are `null` when idle; `retryAt` is `null` unless a deny cooldown is running). Other errors: 404 `grant not found`,
 403 `device is neither the owner nor the contact of this grant`, 403 `only the owner can change this grant`,
 400 for a malformed `contactKey` or `blob` (or a contact equal to the owner).
 
@@ -338,9 +338,13 @@ APNs `{"aps":{"alert":{"title":"Tanooki Auth","body":"Someone asked for emergenc
 expiring after 7 days; FCM `data {"type":"emergency-request"}`, ttl 7 days. The app should also poll
 `GET /v1/emergency/<grantId>` when opened, since a push can be missed.
 
-**Testing.** The relay honors `{"delaySeconds": n}` in `request` **only** when its `TEST_MODE` variable is set,
-which only happens for a local `npx wrangler dev --var TEST_MODE:1`. The deployed relay ignores it and always
-waits 7 days; `test.mjs` run without `TEST_MODE=1` checks that.
+**Push limit.** Each request pushes the owner once. Asking again while a request is open sends nothing, and after
+a deny the contact cannot ask for 24 hours, so a contact can push the owner at most once a day by asking and being
+denied over and over.
+
+**Testing.** The relay honors `{"delaySeconds": n}` in `request` and `{"cooldownSeconds": n}` in `deny` **only**
+when its `TEST_MODE` variable is set, which only happens for a local `npx wrangler dev --var TEST_MODE:1`. The
+deployed relay ignores both and always waits 7 days and 24 hours; `test.mjs` run without `TEST_MODE=1` checks that.
 
 ## 4. Team vault (feature 42)
 
@@ -367,6 +371,12 @@ same key as Premium license keys. The relay checks it with its `LICENSE_PUBLIC` 
 is not a team license. 402 errors: `team license is malformed`, `team license signature is not valid`,
 `team license has expired; refresh it in the app`.
 
+**One license, one team.** The relay remembers which team each subscription (`subscriptionId`) pays for. A create
+or license refresh with a subscription already bound to a different team is refused with 409
+`this team license is already used by another team; delete that team first, or buy another team subscription`.
+Deleting the team frees the license for a new team. Refreshing with a different subscription moves the team onto
+it and frees the old one. Teams made before this rule are bound the next time their admin refreshes the license.
+
 Writes (`join`, `invites`, `entries`) keep working until **14 days after** the license period ends, then return
 402 until the admin posts a refreshed license. Reading always works, so a lapsed team can still get its data out.
 
@@ -376,9 +386,9 @@ Writes (`join`, `invites`, `entries`) keep working until **14 days after** the l
 
 | Request | Who | Effect |
 |---|---|---|
-| `POST /v1/team/<teamId>/create` `{"license","boxKey"}` | anyone with a license | Creates the team with the signer as admin, epoch 1. 201 + status. 409 if it exists. |
+| `POST /v1/team/<teamId>/create` `{"license","boxKey"}` | anyone with a license | Creates the team with the signer as admin, epoch 1. 201 + status. 409 if it exists, or if the license is bound to another team (4.2). |
 | `GET /v1/team/<teamId>` | member | Status: `{"admin","epoch","needsRotation","licenseEnd","cursor","members":[{"key","role","boxKey","added","hasKey"}]}` (`hasKey`: has a wrapped key for the current epoch). |
-| `POST /v1/team/<teamId>/license` `{"license"}` | admin | Stores a refreshed license (the later end date wins). |
+| `POST /v1/team/<teamId>/license` `{"license"}` | admin | Stores a refreshed license (the later end date wins). 409 if that license is bound to another team (4.2). |
 | `POST /v1/team/<teamId>/invites` | admin | 201 `{"invite","expiresAt"}`: a random single-use token, valid 7 days (relay keeps only its SHA-256). Max 20 unused. Put it in the invite link with the `teamId`. |
 | `POST /v1/team/<teamId>/join` `{"invite","boxKey"}` | new device | Joins as `member`. 403 `invite is not valid, expired, or already used`; 507 `team is full (10 members)`; 409 if already a member. |
 | `POST /v1/team/<teamId>/keys` `{"epoch","keys":{"<memberKey>":"<wrapped>"}}` | admin | `epoch` = current: adds/replaces wrapped keys for the listed members (after someone joins). `epoch` = current + 1: **rotation**; must include every member (400 with `missing` otherwise), replaces all wrapped keys and clears `needsRotation`. Anything else: 409 with the current `epoch`. |
@@ -386,7 +396,7 @@ Writes (`join`, `invites`, `entries`) keep working until **14 days after** the l
 | `POST /v1/team/<teamId>/entries` `{"entries":[{"id","updatedAt","deleted","epoch","ciphertext"}]}` | member | 1 to 100 entries. Last writer wins by `updatedAt` (ms), like sync's merge: each result is `ok` (with `seq`) or `stale` (with `current`). `epoch` must be the current epoch, else 409 `the team key has changed` with `epoch`. Max 2,000 entries per team (deleted ones count), 65,536 chars each. |
 | `GET /v1/team/<teamId>/entries?since=<seq>` | member | Up to 500 entries after `seq`, each with its `epoch`; `{"entries","cursor","more"}`. |
 | `DELETE /v1/team/<teamId>/members/<memberKey>` | admin, or a member removing itself | Removes the member **immediately** (every later request from it is 403) and sets `needsRotation`. The admin cannot leave (409); it deletes the team instead. |
-| `DELETE /v1/team/<teamId>` | admin | Deletes the team and everything in it. |
+| `DELETE /v1/team/<teamId>` | admin | Deletes the team and everything in it, and frees its license for a new team. |
 
 ### 4.4 Removing someone and rotating the key
 
@@ -409,7 +419,6 @@ before, so the app should suggest changing the secrets in shared entries that ma
 - Removing a device does not rotate the group key (see 1.4).
 - Emergency access: the relay enforces only the waiting period. Someone who controls the relay could release
   the blob early, but still could not read it.
-- Team vault: one team license can create more than one team (the relay does not keep a global list of
-  subscriptions). Rotation after removal is the admin app's job; until it happens, new entries use the old key.
+- Team vault: rotation after removal is the admin app's job; until it happens, new entries use the old key.
 - The per-IP limit is approximate (Cloudflare's limiter is per data center and eventually consistent);
   the per-group and per-room limits are exact.

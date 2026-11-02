@@ -357,19 +357,26 @@ async function emergencyTests() {
   else check('no push service: 0 tokens', r.body?.push?.tokens === 0, JSON.stringify(r.body?.push));
   r = await call(contact, 'GET', `${E}/blob`);
   check('blob locked while waiting (403 + releaseAt)', r.status === 403 && r.body.releaseAt > Date.now(), JSON.stringify(r));
-  r = await call(owner, 'POST', `${E}/deny`);
-  check('owner denies: back to idle', r.status === 200 && r.body.state === 'idle' && r.body.releaseAt === null, JSON.stringify(r));
+  r = await call(contact, 'POST', `${E}/request`, { delaySeconds: 0 });
+  check('asking twice keeps the first timer (200, no new push)', r.status === 200 && r.body.releaseAt === r.body.requestedAt + wait && r.body.push === undefined, JSON.stringify(r));
+  r = await call(owner, 'POST', `${E}/deny`, { cooldownSeconds: 2 });
+  const retryAt = r.body?.retryAt;
+  check('owner denies: back to idle, with a retry time', r.status === 200 && r.body.state === 'idle' && r.body.releaseAt === null && retryAt > Date.now(), JSON.stringify(r));
+  if (process.env.TEST_MODE) check('TEST_MODE relay shortens the deny cooldown to 2 s', retryAt - Date.now() <= 2000, String(retryAt - Date.now()));
+  else check('relay ignores cooldownSeconds: cooldown is 24 hours', retryAt - Date.now() > 86400_000 - 60_000, String(retryAt - Date.now()));
   r = await call(owner, 'POST', `${E}/deny`);
   check('second deny: nothing to deny (409)', r.status === 409, JSON.stringify(r));
   r = await call(contact, 'GET', `${E}/blob`);
   check('denied: blob not available (409)', r.status === 409, JSON.stringify(r));
-
   r = await call(contact, 'POST', `${E}/request`, { delaySeconds: 2 });
-  const releaseAt = r.body?.releaseAt;
-  check('contact asks again (201)', r.status === 201, JSON.stringify(r));
-  r = await call(contact, 'POST', `${E}/request`, { delaySeconds: 0 });
-  check('asking twice keeps the first timer (200, no new push)', r.status === 200 && r.body.releaseAt === releaseAt && r.body.push === undefined, JSON.stringify(r));
+  check('asking again right after a deny is refused (429 + retryAt), no push', r.status === 429 && r.body.retryAt === retryAt && r.body.push === undefined, JSON.stringify(r));
+  r = await call(contact, 'GET', E);
+  check('status shows the retry time while idle', r.body?.state === 'idle' && r.body.retryAt === retryAt, JSON.stringify(r));
+
   if (process.env.TEST_MODE) {
+    await sleep(2500);
+    r = await call(contact, 'POST', `${E}/request`, { delaySeconds: 2 });
+    check('after the cooldown the contact can ask again (201)', r.status === 201 && r.body.state === 'waiting' && r.body.retryAt === null, JSON.stringify(r));
     await sleep(2500);
     r = await call(contact, 'GET', `${E}/blob`);
     check('after the wait the contact downloads and opens it', r.status === 200 && (await openFrom(contactBox.privateKey, unwire(r.body.blob), 'TA-EMERGENCY-1')).accounts[0].secret === snapshot.accounts[0].secret, JSON.stringify(r).slice(0, 200));
@@ -377,12 +384,12 @@ async function emergencyTests() {
     check('status says released', r.body?.state === 'released', JSON.stringify(r));
   } else {
     r = await call(contact, 'GET', `${E}/blob`);
-    check('deployed relay still locks the blob (403)', r.status === 403, JSON.stringify(r));
+    check('deployed relay still locks the blob (409 after the deny)', r.status === 409, JSON.stringify(r));
   }
 
   const newContact = await ed25519Device();
   r = await call(owner, 'POST', E, { contactKey: newContact.pub, blob: 'BBBB' });
-  check('owner switches contact: 200, request cleared', r.status === 200 && r.body.state === 'idle', JSON.stringify(r));
+  check('owner switches contact: 200, request and deny cooldown cleared', r.status === 200 && r.body.state === 'idle' && r.body.retryAt === null, JSON.stringify(r));
   r = await call(contact, 'GET', `${E}/blob`);
   check('old contact is locked out (403)', r.status === 403, JSON.stringify(r));
   r = await call(owner, 'POST', E, { contactKey: owner.pub, blob: 'BBBB' });
@@ -409,6 +416,10 @@ async function teamTests() {
     `${tag}.${b64u(te.encode(payload))}.${b64u(await subtle.sign({ name: 'Ed25519' }, key, te.encode(payload)))}`;
   const yearOut = Math.floor(Date.now() / 1000) + 365 * 86400;
   const T = `/v1/team/${b64u(rand(32))}`;
+  const T2 = `/v1/team/${b64u(rand(32))}`;
+  // Fresh subscription IDs every run: a license stays bound to its team until that team is deleted.
+  const SUB = `sub_test_${b64u(rand(9))}`;
+  const SUB2 = `sub_test_${b64u(rand(9))}`;
   const box = async () => {
     const kp = await subtle.generateKey({ name: 'X25519' }, true, ['deriveBits']);
     return { kp, pub: b64u(await subtle.exportKey('raw', kp.publicKey)) };
@@ -439,15 +450,27 @@ async function teamTests() {
   check('create without a license is refused (402)', r.status === 402, JSON.stringify(r));
   r = await call(A, 'POST', `${T}/create`, { boxKey: A.box.pub, license: await teamLicense(`1|cs_test_x|20261030`, realKey, 'TA1') });
   check('a Premium key is not a team license (402)', r.status === 402 && /malformed/.test(r.body?.error), JSON.stringify(r));
-  r = await call(A, 'POST', `${T}/create`, { boxKey: A.box.pub, license: await teamLicense(`team1|sub_test|${Math.floor(Date.now() / 1000) - 60}`) });
+  r = await call(A, 'POST', `${T}/create`, { boxKey: A.box.pub, license: await teamLicense(`team1|${SUB}|${Math.floor(Date.now() / 1000) - 60}`) });
   check('expired team license is refused (402)', r.status === 402 && /expired/.test(r.body?.error), JSON.stringify(r));
   const fake = await subtle.generateKey({ name: 'Ed25519' }, true, ['sign', 'verify']);
-  r = await call(A, 'POST', `${T}/create`, { boxKey: A.box.pub, license: await teamLicense(`team1|sub_test|${yearOut}`, fake.privateKey) });
+  r = await call(A, 'POST', `${T}/create`, { boxKey: A.box.pub, license: await teamLicense(`team1|${SUB}|${yearOut}`, fake.privateKey) });
   check('team license signed by another key is refused (402)', r.status === 402 && /signature/.test(r.body?.error), JSON.stringify(r));
-  r = await call(A, 'POST', `${T}/create`, { boxKey: A.box.pub, license: await teamLicense(`team1|sub_test|${yearOut}`) });
+  r = await call(A, 'POST', `${T}/create`, { boxKey: A.box.pub, license: await teamLicense(`team1|${SUB}|${yearOut}`) });
   check('admin creates the team with a valid license (201)', r.status === 201 && r.body.admin === A.pub && r.body.epoch === 1, JSON.stringify(r));
-  r = await call(B, 'POST', `${T}/create`, { boxKey: B.box.pub, license: await teamLicense(`team1|sub_test|${yearOut}`) });
+  r = await call(B, 'POST', `${T}/create`, { boxKey: B.box.pub, license: await teamLicense(`team1|${SUB}|${yearOut}`) });
   check('second create is refused (409)', r.status === 409, JSON.stringify(r));
+  r = await call(B, 'POST', `${T2}/create`, { boxKey: B.box.pub, license: await teamLicense(`team1|${SUB}|${yearOut}`) });
+  check('the same license cannot make a second team (409)', r.status === 409 && /already used by another team/.test(r.body?.error), JSON.stringify(r));
+  r = await call(B, 'GET', T2);
+  check('the refused second team was not created (404)', r.status === 404, JSON.stringify(r));
+  r = await call(B, 'POST', `${T2}/create`, { boxKey: B.box.pub, license: await teamLicense(`team1|${SUB2}|${yearOut}`) });
+  check('another license makes another team (201)', r.status === 201, JSON.stringify(r));
+  r = await call(B, 'POST', `${T2}/license`, { license: await teamLicense(`team1|${SUB}|${yearOut + 60}`) });
+  check('a license bound to another team cannot be moved onto this one by refresh (409)', r.status === 409 && /already used/.test(r.body?.error), JSON.stringify(r));
+  r = await call(B, 'POST', `${T2}/license`, { license: await teamLicense(`team1|${SUB2}|${yearOut + 60}`) });
+  check('refreshing with its own license still works', r.status === 200 && r.body.licenseEnd === (yearOut + 60) * 1000, JSON.stringify(r).slice(0, 200));
+  r = await call(B, 'DELETE', T2);
+  check('second team deleted', r.status === 200, JSON.stringify(r));
 
   r = await call(B, 'POST', `${T}/join`, { invite: 'made-up', boxKey: B.box.pub });
   check('made-up invite is refused (403)', r.status === 403, JSON.stringify(r));
@@ -531,7 +554,7 @@ async function teamTests() {
   check('the admin cannot leave (409)', r.status === 409, JSON.stringify(r));
   r = await call(C, 'DELETE', `${T}/members/${C.pub}`);
   check('a member can leave (team needs rotation again)', r.status === 200 && r.body.needsRotation === true, JSON.stringify(r).slice(0, 200));
-  r = await call(A, 'POST', `${T}/license`, { license: await teamLicense(`team1|sub_test|${yearOut + 86400}`) });
+  r = await call(A, 'POST', `${T}/license`, { license: await teamLicense(`team1|${SUB}|${yearOut + 86400}`) });
   check('admin refreshes the license', r.status === 200 && r.body.licenseEnd === (yearOut + 86400) * 1000, JSON.stringify(r).slice(0, 200));
   r = await call(extra[1], 'DELETE', T);
   check('only the admin deletes the team (403)', r.status === 403, JSON.stringify(r));
@@ -539,6 +562,11 @@ async function teamTests() {
   check('admin deletes the team', r.status === 200);
   r = await call(A, 'GET', T);
   check('deleted team is gone (404)', r.status === 404, JSON.stringify(r));
+  const T3 = `/v1/team/${b64u(rand(32))}`;
+  r = await call(B, 'POST', `${T3}/create`, { boxKey: B.box.pub, license: await teamLicense(`team1|${SUB}|${yearOut}`) });
+  check('after its team is deleted, the license can make a new team (201)', r.status === 201, JSON.stringify(r));
+  r = await call(B, 'DELETE', T3);
+  check('new team deleted again', r.status === 200, JSON.stringify(r));
 }
 
 console.log(`relay test against ${BASE}`);

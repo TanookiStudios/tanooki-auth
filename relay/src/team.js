@@ -15,6 +15,22 @@ const LICENSE_GRACE = 14 * 86400_000; // writes keep working this long after the
 const ENTRY_ID = /^[A-Za-z0-9_-]{1,64}$/;
 const BOX_KEY = /^[A-Za-z0-9_-]{43}$/; // member's X25519 public key, used by the admin to wrap the team key
 
+const LICENSE_TAKEN = 'this team license is already used by another team; delete that team first, or buy another team subscription';
+
+// One TeamLicense Durable Object per team subscription: the one team it pays for (PROTOCOL.md 4.2).
+export class TeamLicense extends DurableObject {
+  // True when the license is free or already this team's; binds it to `team`.
+  async claim(team) {
+    const bound = await this.ctx.storage.get('team');
+    if (bound && bound !== team) return false;
+    if (!bound) await this.ctx.storage.put('team', team);
+    return true;
+  }
+  async release(team) {
+    if ((await this.ctx.storage.get('team')) === team) await this.ctx.storage.delete('team');
+  }
+}
+
 const rowToEntry = (r) => ({ id: r.id, updatedAt: r.updated_at, deleted: !!r.deleted, epoch: r.epoch, ciphertext: r.ct, seq: r.seq });
 
 export class Team extends DurableObject {
@@ -45,6 +61,7 @@ export class Team extends DurableObject {
   cursor() { return Number(this.get('seq') || 0); }
   member(key) { return this.one('SELECT * FROM members WHERE key=?', key); }
   memberCount() { return this.one('SELECT COUNT(*) AS n FROM members').n; }
+  licenseFor(subscription) { return this.env.TEAM_LICENSE.get(this.env.TEAM_LICENSE.idFromName(subscription)); }
   licensed() { return Date.now() < Number(this.get('licenseEnd') || 0) + LICENSE_GRACE; }
 
   status() {
@@ -73,12 +90,18 @@ export class Team extends DurableObject {
     const dev = await verifySigned(this.sql, signedParts(req, url, bytes));
     if (dev instanceof Response) return dev;
     const exists = !!this.get('admin');
+    const teamId = url.pathname.split('/')[3];
 
     if (req.method === 'POST' && route === 'create') {
       if (exists) return err(409, 'team already exists');
       if (!BOX_KEY.test(body.boxKey || '')) return err(400, 'boxKey must be an X25519 public key (43 base64url characters)');
       const lic = await checkTeamLicense(body.license, this.env.LICENSE_PUBLIC);
       if (lic.error) return err(402, lic.error);
+      if (!(await this.licenseFor(lic.subscription).claim(teamId))) return err(409, LICENSE_TAKEN);
+      if (this.get('admin')) { // a parallel create finished while we waited for the claim
+        if (this.get('subscription') !== lic.subscription) await this.licenseFor(lic.subscription).release(teamId);
+        return err(409, 'team already exists');
+      }
       const now = Date.now();
       this.set('admin', dev);
       this.set('epoch', 1);
@@ -113,6 +136,7 @@ export class Team extends DurableObject {
 
     if (req.method === 'DELETE' && route === '') {
       if (!admin) return adminOnly();
+      await this.licenseFor(this.get('subscription')).release(teamId); // the license can now make a new team
       await this.ctx.storage.deleteAll();
       return json({ ok: true });
     }
@@ -121,6 +145,10 @@ export class Team extends DurableObject {
       if (!admin) return adminOnly();
       const lic = await checkTeamLicense(body.license, this.env.LICENSE_PUBLIC);
       if (lic.error) return err(402, lic.error);
+      // Claimed every time, so teams made before licenses were bound get bound on their next refresh.
+      if (!(await this.licenseFor(lic.subscription).claim(teamId))) return err(409, LICENSE_TAKEN);
+      const old = this.get('subscription');
+      if (old !== lic.subscription) await this.licenseFor(old).release(teamId);
       if (lic.periodEnd > Number(this.get('licenseEnd'))) this.set('licenseEnd', lic.periodEnd);
       this.set('subscription', lic.subscription);
       return json(this.status());

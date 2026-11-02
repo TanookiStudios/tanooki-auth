@@ -63,6 +63,12 @@ void main() {
 
     step('app up; checking tray');
     expect(await window.invokeMethod<bool>('trayStatus'), isTrue, reason: 'menu bar / tray icon is not there');
+    if (Platform.isWindows) {
+      // Explorer restart: the icon is removed, then TaskbarCreated must bring it back.
+      expect(await window.invokeMethod<bool>('trayExplorerRestart'), isTrue, reason: 'tray icon was not removed, so the check proves nothing');
+      expect(await window.invokeMethod<bool>('trayStatus'), isTrue, reason: 'tray icon not re-added after TaskbarCreated');
+      step('tray re-added after simulated Explorer restart');
+    }
     step('tray ok; clicking it');
     await window.invokeMethod<void>('trayClick'); // native click handler -> trayClicked -> Quick pick
     await waitFor(t, find.text('Quick pick'));

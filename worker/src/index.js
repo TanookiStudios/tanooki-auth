@@ -129,16 +129,21 @@ async function stripe(env, path) {
   return fetch(`https://api.stripe.com/v1/${path}`, { headers: { authorization: `Bearer ${env.STRIPE_KEY}` } });
 }
 
-// Counts one paid checkout for an invite code. KV holds only the code, the count and the counted session IDs.
-// shortcut: KV is not transactional, so two referred purchases in the same second can count once; fine at this
-// volume, move the counter into a Durable Object if invites get busy.
-async function countReferral(env, code, session) {
-  const k = `ref:${code}`;
-  const rec = JSON.parse((await env.INVITES.get(k)) || '{"count":0,"sessions":[]}');
-  if (rec.sessions.includes(session)) return;
-  rec.sessions.push(session);
-  rec.count = rec.sessions.length;
-  await env.INVITES.put(k, JSON.stringify(rec));
+// Counts one paid checkout for an invite code: one KV key per checkout, `ref:<code>:<session>`. Separate keys
+// never overwrite each other, so purchases landing at the same instant all count, and a reload re-puts the same key.
+const countReferral = (env, code, session) => env.INVITES.put(`ref:${code}:${session}`, '1');
+
+// Paid friends for a code: the per-checkout keys plus any from the older single `ref:<code>` record.
+async function referralCount(env, code) {
+  const legacy = JSON.parse((await env.INVITES.get(`ref:${code}`)) || '{"sessions":[]}').sessions;
+  const counted = new Set(legacy);
+  let cursor;
+  do {
+    const page = await env.INVITES.list({ prefix: `ref:${code}:`, cursor });
+    for (const k of page.keys) counted.add(k.name.slice(`ref:${code}:`.length));
+    cursor = page.list_complete ? undefined : page.cursor;
+  } while (cursor);
+  return counted.size;
 }
 
 async function thanks(url, env) {
@@ -301,7 +306,7 @@ export default {
       if (!lic) return fail(400, 'that license key is not valid');
       const code = await inviteCode(lic.orderId, env.LICENSE_SEED);
       if (route === 'GET /invite') return json({ code, link: `${PAYMENT_LINK}?prefilled_promo_code=FRIEND20&client_reference_id=ref_${code}` });
-      const { count = 0 } = JSON.parse((await env.INVITES.get(`ref:${code}`)) || '{}');
+      const count = await referralCount(env, code);
       const out = { code, count, needed: REFERRALS_FOR_FAMILY };
       if (count >= REFERRALS_FOR_FAMILY && lic.seats < 5) out.familyKey = await makeLicense(lic.orderId, lic.created, env.LICENSE_SEED, env.LICENSE_PUBLIC, 5);
       return json(out);
