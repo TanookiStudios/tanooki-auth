@@ -60,7 +60,7 @@ void main() {
     await pumpFor(t, find.text('GitHub'));
 
     await t.tap(find.byTooltip('Settings').evaluate().isNotEmpty ? find.byTooltip('Settings') : find.text('Settings'));
-    await pumpFor(t, find.text('Export backup'));
+    await pumpFor(t, find.text('Get Premium'));
     await binding.takeScreenshot('3-settings');
     await t.scrollUntilVisible(find.text('About Maddie'), 200, scrollable: find.byType(Scrollable).first);
     await t.tap(find.text('About Maddie'));
@@ -70,7 +70,7 @@ void main() {
     await pumpFor(t, find.text('Support my work: tanookistudios.com/support'));
     await binding.takeScreenshot('6-about-signature');
     await t.pageBack();
-    await pumpFor(t, find.text('Export backup'));
+    await pumpFor(t, find.text('About Maddie'));
     await t.pageBack();
 
     await pumpFor(t, find.text('GitHub'));
@@ -84,7 +84,7 @@ void main() {
     await pumpFor(t, find.text('Every Premium theme'));
     await binding.takeScreenshot('7-premium');
     await t.pageBack();
-    await pumpFor(t, find.text('APPEARANCE'));
+    await pumpFor(t, find.text('Get Premium'));
     await binding.takeScreenshot('8-appearance');
     await t.pageBack();
 
