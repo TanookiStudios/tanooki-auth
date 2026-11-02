@@ -53,7 +53,7 @@ final class Extras: NSObject, FlutterSceneLifeCycleDelegate, WCSessionDelegate {
         }
         CodeActivity.start(call.arguments as? [String: Any] ?? [:], result)
       case "takeAction":
-        result(self.pendingAction)
+        result(self.pendingAction ?? self.takeSharedImage())
         self.pendingAction = nil
       case "getAppIcon":
         // Alternate icon sets are named AppIcon-<id> in Assets.xcassets; nil is the main icon.
@@ -107,10 +107,30 @@ final class Extras: NSObject, FlutterSceneLifeCycleDelegate, WCSessionDelegate {
       channel?.invokeMethod("action", arguments: nil)
       return true
     }
+    if urls.contains(where: { $0.url.scheme == "tanookiauth" && $0.url.host == "image" }) {
+      // The share extension (TanookiShare) left a QR code picture in the keychain.
+      guard let action = takeSharedImage() else { return true }
+      pendingAction = action
+      channel?.invokeMethod("action", arguments: nil)
+      return true
+    }
     guard urls.contains(where: { $0.url.scheme == "tanookiauth" && $0.url.host == "scan" }) else { return false }
     pendingAction = "scan"
     channel?.invokeMethod("action", arguments: nil)
     return true
+  }
+
+  /// A picture from the share sheet, moved from the keychain into a temporary file the app deletes once read.
+  private func takeSharedImage() -> String? {
+    guard let data = SharedImage.take(group: FavoriteStore.sharedGroup) else { return nil }
+    let file = FileManager.default.temporaryDirectory.appendingPathComponent("shared-image-\(UUID().uuidString)")
+    do {
+      try data.write(to: file, options: .completeFileProtection)
+    } catch {
+      return nil
+    }
+    NSLog("TanookiShareImage: %ld bytes", data.count)
+    return "image:" + file.path
   }
 
   func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions?) -> Bool {

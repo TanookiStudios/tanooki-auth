@@ -1,8 +1,9 @@
 import Cocoa
 import FlutterMacOS
 import ScreenCaptureKit
+import UniformTypeIdentifiers
 
-class MainFlutterWindow: NSWindow {
+class MainFlutterWindow: NSWindow, NSDraggingDestination {
   private var channel: FlutterMethodChannel?
   private var statusItem: NSStatusItem?
   private let pasteOnce = PasteOnce()
@@ -53,6 +54,11 @@ class MainFlutterWindow: NSWindow {
           result(nil)
         case "trayStatus":
           result(self?.statusItem?.button?.image != nil && self?.statusItem?.isVisible == true)
+        case "setTrayCountdown":
+          // "Show countdown in menu bar": seconds left on the first favorite next to the icon (nil: icon only).
+          let args = call.arguments as? [String: String]
+          self?.showTrayCountdown(args?["title"], tooltip: args?["tooltip"])
+          result(nil)
         case "trayClick":
           // Same path as a real click on the menu bar icon.
           self?.statusItem?.button?.performClick(nil)
@@ -89,7 +95,50 @@ class MainFlutterWindow: NSWindow {
     item.button?.action = #selector(statusItemClicked)
     statusItem = item
 
+    // A picture of a QR code dragged onto the window adds that account (the app asks first).
+    registerForDraggedTypes([.fileURL])
+
     super.awakeFromNib()
+  }
+
+  private func showTrayCountdown(_ title: String?, tooltip: String?) {
+    guard let item = statusItem, let button = item.button else { return }
+    if let title {
+      item.length = NSStatusItem.variableLength
+      button.title = " " + title
+      button.font = NSFont.monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
+      button.imagePosition = .imageLeading
+      button.toolTip = tooltip ?? "Tanooki Auth"
+    } else {
+      button.title = ""
+      button.imagePosition = .imageOnly
+      item.length = NSStatusItem.squareLength
+      button.toolTip = "Tanooki Auth"
+    }
+  }
+
+  // MARK: drag and drop
+
+  private func droppedImage(_ info: NSDraggingInfo) -> URL? {
+    let urls = info.draggingPasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL] ?? []
+    return urls.first { (try? $0.resourceValues(forKeys: [.contentTypeKey]).contentType)?.conforms(to: .image) == true }
+  }
+
+  func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+    droppedImage(sender) == nil ? [] : .copy
+  }
+
+  func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+    droppedImage(sender) == nil ? [] : .copy
+  }
+
+  func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+    // Copied into our own temporary folder (the app deletes it once read): the dropped file's access ends with the drop.
+    guard let url = droppedImage(sender), let data = try? Data(contentsOf: url), data.count <= 20 * 1024 * 1024 else { return false }
+    let copy = FileManager.default.temporaryDirectory.appendingPathComponent("dropped-image-\(UUID().uuidString)")
+    guard (try? data.write(to: copy)) != nil else { return false }
+    channel?.invokeMethod("imageDropped", arguments: copy.path)
+    return true
   }
 
   @objc private func statusItemClicked() {

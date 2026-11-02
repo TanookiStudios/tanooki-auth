@@ -7429,6 +7429,528 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'• {account}: {reason}'**
   String exportUiLeftOutLine(String account, String reason);
+
+  /// No description provided for @keysTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard shortcuts'**
+  String get keysTitle;
+
+  /// No description provided for @keysWhere.
+  ///
+  /// In en, this message translates to:
+  /// **'On the account list and in Quick pick.'**
+  String get keysWhere;
+
+  /// No description provided for @keysMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Move up and down the list'**
+  String get keysMove;
+
+  /// No description provided for @keysEnter.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter'**
+  String get keysEnter;
+
+  /// No description provided for @keysCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the highlighted code'**
+  String get keysCopy;
+
+  /// No description provided for @keysAnyLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'A letter'**
+  String get keysAnyLetter;
+
+  /// No description provided for @keysSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Start searching'**
+  String get keysSearch;
+
+  /// No description provided for @keysEsc.
+  ///
+  /// In en, this message translates to:
+  /// **'Esc'**
+  String get keysEsc;
+
+  /// No description provided for @keysClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the search'**
+  String get keysClear;
+
+  /// No description provided for @keysShowList.
+  ///
+  /// In en, this message translates to:
+  /// **'Show this list'**
+  String get keysShowList;
+
+  /// No description provided for @settingsKeysShortcutMac.
+  ///
+  /// In en, this message translates to:
+  /// **'Press ⌘/ anywhere to see them'**
+  String get settingsKeysShortcutMac;
+
+  /// No description provided for @settingsKeysShortcutOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Press Ctrl+/ anywhere to see them'**
+  String get settingsKeysShortcutOther;
+
+  /// No description provided for @trayTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Tanooki Auth: {name}, {seconds} s left'**
+  String trayTooltip(String name, int seconds);
+
+  /// No description provided for @settingsTrayCountdownMac.
+  ///
+  /// In en, this message translates to:
+  /// **'Show countdown in menu bar'**
+  String get settingsTrayCountdownMac;
+
+  /// No description provided for @settingsTrayCountdownMacHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The seconds left on your first favorite, next to the menu bar icon. Never the code itself.'**
+  String get settingsTrayCountdownMacHelp;
+
+  /// No description provided for @settingsTrayCountdownWindows.
+  ///
+  /// In en, this message translates to:
+  /// **'Show countdown on the tray icon'**
+  String get settingsTrayCountdownWindows;
+
+  /// No description provided for @settingsTrayCountdownWindowsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Point at the Tanooki Auth icon by the clock to see how many seconds your first favorite has left. Never the code itself.'**
+  String get settingsTrayCountdownWindowsHelp;
+
+  /// No description provided for @unusedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts you never use'**
+  String get unusedTitle;
+
+  /// No description provided for @settingsUnusedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'No code copied in 6 months or more'**
+  String get settingsUnusedHelp;
+
+  /// No description provided for @unusedIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'These accounts haven’t had a code copied in this app for 6 months or more. If you no longer use the website, turn off two-step sign-in there first, then tidy them up here. Trash keeps them for 30 days.'**
+  String get unusedIntro;
+
+  /// No description provided for @unusedNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Every account has been used in the last 6 months. Nothing to tidy.'**
+  String get unusedNone;
+
+  /// No description provided for @unusedLastUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Last used {date}'**
+  String unusedLastUsed(DateTime date);
+
+  /// No description provided for @unusedNeverUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Never used here. Added {date}'**
+  String unusedNeverUsed(DateTime date);
+
+  /// No description provided for @unusedPickFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Tick one or more accounts first.'**
+  String get unusedPickFirst;
+
+  /// No description provided for @unusedTagSuggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'unused'**
+  String get unusedTagSuggestion;
+
+  /// No description provided for @checkupUnusedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 account you never use} other{{count} accounts you never use}}'**
+  String checkupUnusedTitle(int count);
+
+  /// No description provided for @checkupUnusedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No code copied in 6 months or more. Old accounts you’ve forgotten are easy to miss if one gets broken into.'**
+  String get checkupUnusedBody;
+
+  /// No description provided for @checkupUnusedReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review them'**
+  String get checkupUnusedReview;
+
+  /// No description provided for @halvesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paper backup in two halves'**
+  String get halvesTitle;
+
+  /// No description provided for @settingsHalvesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Two sets of pages. Each half alone reveals nothing'**
+  String get settingsHalvesHelp;
+
+  /// No description provided for @halvesRestoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from two halves'**
+  String get halvesRestoreTitle;
+
+  /// No description provided for @settingsHalvesRestoreHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the codes on both halves of a paper backup'**
+  String get settingsHalvesRestoreHelp;
+
+  /// No description provided for @halvesExplain.
+  ///
+  /// In en, this message translates to:
+  /// **'This prints your encrypted backup as two separate sets of pages, Half A and Half B.\n\nEach half alone is just random noise: nobody can learn anything from it, even with your passphrase. To restore, you need both halves and the passphrase.\n\nKeep the halves in two different places, for example one at home and one with someone you trust.'**
+  String get halvesExplain;
+
+  /// No description provided for @halvesHalfA.
+  ///
+  /// In en, this message translates to:
+  /// **'Half A of 2'**
+  String get halvesHalfA;
+
+  /// No description provided for @halvesHalfB.
+  ///
+  /// In en, this message translates to:
+  /// **'Half B of 2'**
+  String get halvesHalfB;
+
+  /// No description provided for @halvesPart.
+  ///
+  /// In en, this message translates to:
+  /// **'Half {which} · part {part} of {parts}'**
+  String halvesPart(String which, int part, int parts);
+
+  /// No description provided for @halvesPdfHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Tanooki Auth paper backup, made {date}'**
+  String halvesPdfHeader(String date);
+
+  /// No description provided for @halvesPdfExplain.
+  ///
+  /// In en, this message translates to:
+  /// **'This half alone is useless. To restore: in Tanooki Auth, open Settings > Restore from two halves, scan every code on both halves, then type the backup passphrase. Keep the two halves in different places.'**
+  String get halvesPdfExplain;
+
+  /// No description provided for @halvesPdfPage.
+  ///
+  /// In en, this message translates to:
+  /// **'{half}, page {page} of {pages}'**
+  String halvesPdfPage(String half, int page, int pages);
+
+  /// No description provided for @halvesNowB.
+  ///
+  /// In en, this message translates to:
+  /// **'Now save Half B'**
+  String get halvesNowB;
+
+  /// No description provided for @halvesNowBBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Half A is saved. Half B is the other half: print it too and keep it somewhere else.'**
+  String get halvesNowBBody;
+
+  /// No description provided for @halvesSaveB.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Half B'**
+  String get halvesSaveB;
+
+  /// No description provided for @halvesOnlyA.
+  ///
+  /// In en, this message translates to:
+  /// **'Only Half A was saved. Half A alone can’t restore anything, so make both halves again when you’re ready.'**
+  String get halvesOnlyA;
+
+  /// No description provided for @halvesReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Both halves are ready. Print them and keep them in different places.'**
+  String get halvesReady;
+
+  /// No description provided for @halvesRestoreIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan every code on both halves, in any order. When both are complete, type the passphrase you chose when you made the backup.'**
+  String get halvesRestoreIntro;
+
+  /// No description provided for @halvesNotStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'{half}: no codes scanned yet'**
+  String halvesNotStarted(String half);
+
+  /// No description provided for @halvesProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{half}: {have} of {total} codes'**
+  String halvesProgress(String half, int have, int total);
+
+  /// No description provided for @halvesScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan codes'**
+  String get halvesScan;
+
+  /// No description provided for @halvesScanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan both halves'**
+  String get halvesScanTitle;
+
+  /// No description provided for @halvesPictures.
+  ///
+  /// In en, this message translates to:
+  /// **'Open pictures of the codes'**
+  String get halvesPictures;
+
+  /// No description provided for @halvesSomeUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 picture had no code this app could read. Try a closer picture of one code.} other{{count} pictures had no code this app could read. Try a closer picture of one code.}}'**
+  String halvesSomeUnread(int count);
+
+  /// No description provided for @halvesNotAHalf.
+  ///
+  /// In en, this message translates to:
+  /// **'That isn’t a code from a two-half paper backup.'**
+  String get halvesNotAHalf;
+
+  /// No description provided for @halvesOtherSet.
+  ///
+  /// In en, this message translates to:
+  /// **'That code belongs to a different paper backup. Use both halves from the same printout.'**
+  String get halvesOtherSet;
+
+  /// No description provided for @halvesAlreadyHave.
+  ///
+  /// In en, this message translates to:
+  /// **'Already scanned that one. On to the next code.'**
+  String get halvesAlreadyHave;
+
+  /// No description provided for @halvesDontFit.
+  ///
+  /// In en, this message translates to:
+  /// **'These halves don’t fit together. A code may have been misread, or the halves come from different backups. Start the scan again.'**
+  String get halvesDontFit;
+
+  /// No description provided for @halvesRestoreNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Both halves scanned: restore'**
+  String get halvesRestoreNow;
+
+  /// No description provided for @healthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Health check'**
+  String get healthTitle;
+
+  /// No description provided for @settingsHealthHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync, backup, clock, lock and recovery codes on one screen'**
+  String get settingsHealthHelp;
+
+  /// No description provided for @healthIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Green means fine. Yellow is worth a look, and its button fixes it.'**
+  String get healthIntro;
+
+  /// No description provided for @healthGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Fine'**
+  String get healthGood;
+
+  /// No description provided for @healthLook.
+  ///
+  /// In en, this message translates to:
+  /// **'Worth a look'**
+  String get healthLook;
+
+  /// No description provided for @healthSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync'**
+  String get healthSync;
+
+  /// No description provided for @healthSyncOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set up. Sync keeps your accounts the same on all your devices.'**
+  String get healthSyncOff;
+
+  /// No description provided for @healthSyncOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Last synced {when}'**
+  String healthSyncOk(String when);
+
+  /// No description provided for @healthSyncStale.
+  ///
+  /// In en, this message translates to:
+  /// **'Last synced {when}. That’s a while ago: open Sync to see what’s wrong.'**
+  String healthSyncStale(String when);
+
+  /// No description provided for @healthOpenSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Sync'**
+  String get healthOpenSync;
+
+  /// No description provided for @healthSetUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up'**
+  String get healthSetUp;
+
+  /// No description provided for @healthOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get healthOpen;
+
+  /// No description provided for @healthBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup'**
+  String get healthBackup;
+
+  /// No description provided for @healthBackupNever.
+  ///
+  /// In en, this message translates to:
+  /// **'No backup yet. If this device is lost, your accounts go with it.'**
+  String get healthBackupNever;
+
+  /// No description provided for @healthBackupOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Last backup {date}'**
+  String healthBackupOk(DateTime date);
+
+  /// No description provided for @healthBackupOld.
+  ///
+  /// In en, this message translates to:
+  /// **'Last backup {date}. That’s over 30 days ago: make a fresh one.'**
+  String healthBackupOld(DateTime date);
+
+  /// No description provided for @healthClock.
+  ///
+  /// In en, this message translates to:
+  /// **'Clock'**
+  String get healthClock;
+
+  /// No description provided for @healthClockNotChecked.
+  ///
+  /// In en, this message translates to:
+  /// **'Not checked yet. Codes only work when this device’s clock is right.'**
+  String get healthClockNotChecked;
+
+  /// No description provided for @healthClockOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Your clock is right (checked {when}).'**
+  String healthClockOk(String when);
+
+  /// No description provided for @healthCheckNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Check now'**
+  String get healthCheckNow;
+
+  /// No description provided for @healthPhoneLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone link'**
+  String get healthPhoneLink;
+
+  /// No description provided for @healthPhoneLinkOk.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Paired with 1 browser} other{Paired with {count} browsers}}'**
+  String healthPhoneLinkOk(int count);
+
+  /// No description provided for @healthPhoneLinkOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Not paired. Pair your computer’s browser to approve sign-in codes from this phone.'**
+  String get healthPhoneLinkOff;
+
+  /// No description provided for @healthLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock'**
+  String get healthLock;
+
+  /// No description provided for @healthLockOn.
+  ///
+  /// In en, this message translates to:
+  /// **'On. The app asks who you are before showing codes.'**
+  String get healthLockOn;
+
+  /// No description provided for @healthLockOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off. Anyone who picks up this device can see your codes.'**
+  String get healthLockOff;
+
+  /// No description provided for @healthGoToSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to the lock switch'**
+  String get healthGoToSettings;
+
+  /// No description provided for @healthRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery codes'**
+  String get healthRecovery;
+
+  /// No description provided for @healthRecoveryCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of {total} accounts have recovery codes saved.'**
+  String healthRecoveryCount(int count, int total);
+
+  /// No description provided for @healthRecoveryNoAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'No accounts yet.'**
+  String get healthRecoveryNoAccounts;
+
+  /// No description provided for @healthAddCodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Add codes'**
+  String get healthAddCodes;
 }
 
 class _AppLocalizationsDelegate

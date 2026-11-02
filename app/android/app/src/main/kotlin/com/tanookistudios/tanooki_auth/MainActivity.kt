@@ -30,7 +30,33 @@ class MainActivity : FlutterFragmentActivity() {
     private fun actionOf(intent: Intent?): String? = when {
         intent?.dataString == SCAN_URI -> "scan"
         intent?.action == Intent.ACTION_VIEW && intent.data?.scheme == "content" -> "share:" + readSharedFile(intent)
+        intent?.action == Intent.ACTION_SEND && intent.type?.startsWith("image/") == true -> "image:" + (readSharedImage(intent) ?: "") // empty: the app says it could not read it
         else -> null
+    }
+
+    /** Copies a shared picture into the app's own cache (the app deletes it once read) and returns its path.
+     *  Null for anything unreadable or over 20 MB; nothing that big is a QR code screenshot. */
+    private fun readSharedImage(intent: Intent): String? = try {
+        @Suppress("DEPRECATION")
+        val uri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM) ?: intent.clipData?.getItemAt(0)?.uri
+        val out = java.io.File(cacheDir, "shared-image")
+        var total = 0L
+        contentResolver.openInputStream(uri!!)?.use { input ->
+            out.outputStream().use { o ->
+                val buf = ByteArray(64 * 1024)
+                while (true) {
+                    val r = input.read(buf)
+                    if (r < 0) break
+                    total += r
+                    if (total > 20L * 1024 * 1024) throw IOException("too big")
+                    o.write(buf, 0, r)
+                }
+            }
+        }
+        if (total > 0) out.absolutePath else null
+    } catch (e: Exception) {
+        java.io.File(cacheDir, "shared-image").delete()
+        null
     }
 
     /** The text of a tapped shared-account file. Anything big can't be one, so it's left empty (the app then says so). */

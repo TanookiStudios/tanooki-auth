@@ -23,8 +23,11 @@ import 'clipboard.dart';
 import 'code_view.dart';
 import 'emergency_ui.dart';
 import 'export_ui.dart';
+import 'health_ui.dart';
 import 'help.dart';
 import 'home.dart';
+import 'keys.dart';
+import 'paper_halves_ui.dart';
 import 'premium.dart';
 import 'team_ui.dart';
 import 'security_extras.dart';
@@ -33,6 +36,8 @@ import 'sync_ui.dart' show syncAndLinkSection;
 import 'theme.dart';
 import 'tidy_ui.dart';
 import 'trash.dart';
+import 'tray_countdown.dart';
+import 'unused_ui.dart';
 import '../l10n/l10n.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -460,6 +465,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const Divider(),
           ListTile(
+            key: const Key('healthCheck'),
+            leading: const Icon(Icons.monitor_heart_outlined),
+            title: Text(l10n.healthTitle),
+            subtitle: Text(l10n.settingsHealthHelp),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () async {
+              await Navigator.push(context, MaterialPageRoute(builder: (_) => HealthScreen(vault: widget.vault)));
+              setState(() {});
+            },
+          ),
+          const Divider(),
+          ListTile(
             leading: const Icon(Icons.report_gmailerrorred_outlined),
             title: Text(premium.value ? l10n.premiumPerkBreach : l10n.settingsBreachPremium),
             subtitle: Text(_s[breachAlertsKey] == true ? l10n.settingsBreachOn : l10n.settingsBreachOff),
@@ -657,6 +674,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           const Divider(),
+          ListTile(
+            key: const Key('unusedAccounts'),
+            leading: const Icon(Icons.hourglass_empty),
+            title: Text(l10n.unusedTitle),
+            subtitle: Text(l10n.settingsUnusedHelp),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () async {
+              await Navigator.push(context, MaterialPageRoute(builder: (_) => UnusedAccountsScreen(vault: widget.vault)));
+              setState(() {});
+            },
+          ),
+          const Divider(),
           SwitchListTile(
             title: Text(l10n.settingsHideCodes),
             subtitle: Text(l10n.settingsHideCodesHelp),
@@ -745,6 +774,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: s[copyOnOpenKey] == true,
             onChanged: (on) => _set(copyOnOpenKey, on),
           ),
+          if (trayCountdownSupported) ...[
+            const Divider(),
+            SwitchListTile(
+              title: Text(Platform.isMacOS ? l10n.settingsTrayCountdownMac : l10n.settingsTrayCountdownWindows),
+              subtitle: Text(Platform.isMacOS ? l10n.settingsTrayCountdownMacHelp : l10n.settingsTrayCountdownWindowsHelp),
+              value: s[trayCountdownKey] == true,
+              onChanged: (on) => _set(trayCountdownKey, on),
+            ),
+          ],
           if (Platform.isMacOS) ...[
             const Divider(),
             SwitchListTile(
@@ -888,6 +926,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   subtitle: Text(l10n.settingsPaperHelp),
                   onTap: () => paperBackupFlow(context, widget.vault),
                 ),
+                const Divider(),
+                ListTile(
+                  key: const Key('paperHalves'),
+                  leading: const Icon(Icons.call_split),
+                  title: Text(l10n.halvesTitle),
+                  subtitle: Text(l10n.settingsHalvesHelp),
+                  onTap: () => paperHalvesFlow(context, widget.vault),
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.qr_code_scanner),
+                  title: Text(l10n.halvesRestoreTitle),
+                  subtitle: Text(l10n.settingsHalvesRestoreHelp),
+                  onTap: () async {
+                    await Navigator.push(context, MaterialPageRoute(builder: (_) => HalvesRestoreScreen(vault: widget.vault)));
+                    setState(() {});
+                  },
+                ),
               ],
             ),
           ),
@@ -911,6 +967,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: Text(l10n.settingsTour),
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TourScreen(vault: widget.vault))),
                 ),
+                if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) ...[
+                  const Divider(),
+                  ListTile(
+                    key: const Key('keyboardShortcuts'),
+                    leading: const Icon(Icons.keyboard_outlined),
+                    title: Text(l10n.keysTitle),
+                    subtitle: Text(Platform.isMacOS ? l10n.settingsKeysShortcutMac : l10n.settingsKeysShortcutOther),
+                    onTap: () => showShortcutsSheet(context),
+                  ),
+                ],
                 const Divider(),
                 ListTile(
                   key: const Key('sendFeedback'),

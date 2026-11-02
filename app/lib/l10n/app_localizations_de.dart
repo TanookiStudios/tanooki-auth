@@ -4844,4 +4844,358 @@ class AppLocalizationsDe extends AppLocalizations {
   String exportUiLeftOutLine(String account, String reason) {
     return '• $account: $reason';
   }
+
+  @override
+  String get keysTitle => 'Tastenkürzel';
+
+  @override
+  String get keysWhere => 'In der Kontenliste und in der Schnellauswahl.';
+
+  @override
+  String get keysMove => 'In der Liste nach oben und unten gehen';
+
+  @override
+  String get keysEnter => 'Eingabe';
+
+  @override
+  String get keysCopy => 'Markierten Code kopieren';
+
+  @override
+  String get keysAnyLetter => 'Ein Buchstabe';
+
+  @override
+  String get keysSearch => 'Suche starten';
+
+  @override
+  String get keysEsc => 'Esc';
+
+  @override
+  String get keysClear => 'Suche löschen';
+
+  @override
+  String get keysShowList => 'Diese Liste anzeigen';
+
+  @override
+  String get settingsKeysShortcutMac => 'Drücke überall ⌘/, um sie zu sehen';
+
+  @override
+  String get settingsKeysShortcutOther =>
+      'Drücke überall Strg+/, um sie zu sehen';
+
+  @override
+  String trayTooltip(String name, int seconds) {
+    return 'Tanooki Auth: $name, noch $seconds s';
+  }
+
+  @override
+  String get settingsTrayCountdownMac => 'Countdown in der Menüleiste zeigen';
+
+  @override
+  String get settingsTrayCountdownMacHelp =>
+      'Die verbleibenden Sekunden deines ersten Favoriten neben dem Menüleisten-Symbol. Nie der Code selbst.';
+
+  @override
+  String get settingsTrayCountdownWindows =>
+      'Countdown am Infobereich-Symbol zeigen';
+
+  @override
+  String get settingsTrayCountdownWindowsHelp =>
+      'Zeige auf das Tanooki-Auth-Symbol neben der Uhr, um die verbleibenden Sekunden deines ersten Favoriten zu sehen. Nie der Code selbst.';
+
+  @override
+  String get unusedTitle => 'Konten, die du nie nutzt';
+
+  @override
+  String get settingsUnusedHelp =>
+      'Seit 6 Monaten oder länger kein Code kopiert';
+
+  @override
+  String get unusedIntro =>
+      'Bei diesen Konten wurde seit 6 Monaten oder länger in dieser App kein Code kopiert. Wenn du die Website nicht mehr nutzt, schalte dort zuerst die Zwei-Faktor-Anmeldung aus und räume dann hier auf. Der Papierkorb behält sie 30 Tage.';
+
+  @override
+  String get unusedNone =>
+      'Alle Konten wurden in den letzten 6 Monaten genutzt. Nichts aufzuräumen.';
+
+  @override
+  String unusedLastUsed(DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat.yMMMd(localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return 'Zuletzt genutzt am $dateString';
+  }
+
+  @override
+  String unusedNeverUsed(DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat.yMMMd(localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return 'Hier nie genutzt. Hinzugefügt am $dateString';
+  }
+
+  @override
+  String get unusedPickFirst => 'Hake zuerst ein oder mehrere Konten an.';
+
+  @override
+  String get unusedTagSuggestion => 'ungenutzt';
+
+  @override
+  String checkupUnusedTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Konten, die du nie nutzt',
+      one: '1 Konto, das du nie nutzt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get checkupUnusedBody =>
+      'Seit 6 Monaten oder länger kein Code kopiert. Wird ein vergessenes altes Konto geknackt, merkt man es leicht nicht.';
+
+  @override
+  String get checkupUnusedReview => 'Ansehen';
+
+  @override
+  String get halvesTitle => 'Papier-Backup in zwei Hälften';
+
+  @override
+  String get settingsHalvesHelp =>
+      'Zwei Seitensätze. Eine Hälfte allein verrät nichts';
+
+  @override
+  String get halvesRestoreTitle => 'Aus zwei Hälften wiederherstellen';
+
+  @override
+  String get settingsHalvesRestoreHelp =>
+      'Scanne die Codes auf beiden Hälften eines Papier-Backups';
+
+  @override
+  String get halvesExplain =>
+      'Dein verschlüsseltes Backup wird als zwei getrennte Seitensätze gedruckt, Hälfte A und Hälfte B.\n\nEine Hälfte allein ist nur zufälliges Rauschen: Niemand kann daraus etwas erfahren, nicht einmal mit deiner Passphrase. Zum Wiederherstellen brauchst du beide Hälften und die Passphrase.\n\nBewahre die Hälften an zwei verschiedenen Orten auf, zum Beispiel eine zu Hause und eine bei einer Person deines Vertrauens.';
+
+  @override
+  String get halvesHalfA => 'Hälfte A von 2';
+
+  @override
+  String get halvesHalfB => 'Hälfte B von 2';
+
+  @override
+  String halvesPart(String which, int part, int parts) {
+    return 'Hälfte $which · Teil $part von $parts';
+  }
+
+  @override
+  String halvesPdfHeader(String date) {
+    return 'Tanooki-Auth-Papier-Backup vom $date';
+  }
+
+  @override
+  String get halvesPdfExplain =>
+      'Diese Hälfte allein ist nutzlos. Zum Wiederherstellen: Öffne in Tanooki Auth Einstellungen > Aus zwei Hälften wiederherstellen, scanne alle Codes beider Hälften und gib dann die Passphrase des Backups ein. Bewahre die beiden Hälften an verschiedenen Orten auf.';
+
+  @override
+  String halvesPdfPage(String half, int page, int pages) {
+    return '$half, Seite $page von $pages';
+  }
+
+  @override
+  String get halvesNowB => 'Jetzt Hälfte B sichern';
+
+  @override
+  String get halvesNowBBody =>
+      'Hälfte A ist gesichert. Hälfte B ist die andere Hälfte: Drucke sie auch aus und bewahre sie woanders auf.';
+
+  @override
+  String get halvesSaveB => 'Hälfte B sichern';
+
+  @override
+  String get halvesOnlyA =>
+      'Nur Hälfte A wurde gesichert. Allein kann sie nichts wiederherstellen, also erstelle beide Hälften noch einmal, wenn du so weit bist.';
+
+  @override
+  String get halvesReady =>
+      'Beide Hälften sind fertig. Drucke sie aus und bewahre sie an verschiedenen Orten auf.';
+
+  @override
+  String get halvesRestoreIntro =>
+      'Scanne alle Codes beider Hälften, in beliebiger Reihenfolge. Wenn beide vollständig sind, gib die Passphrase ein, die du beim Erstellen des Backups gewählt hast.';
+
+  @override
+  String halvesNotStarted(String half) {
+    return '$half: noch keine Codes gescannt';
+  }
+
+  @override
+  String halvesProgress(String half, int have, int total) {
+    return '$half: $have von $total Codes';
+  }
+
+  @override
+  String get halvesScan => 'Codes scannen';
+
+  @override
+  String get halvesScanTitle => 'Beide Hälften scannen';
+
+  @override
+  String get halvesPictures => 'Bilder der Codes öffnen';
+
+  @override
+  String halvesSomeUnread(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Auf $count Bildern war kein lesbarer Code. Versuche ein näheres Bild von einem einzelnen Code.',
+      one: 'Auf 1 Bild war kein lesbarer Code. Versuche ein näheres Bild von einem einzelnen Code.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get halvesNotAHalf =>
+      'Das ist kein Code aus einem Papier-Backup in zwei Hälften.';
+
+  @override
+  String get halvesOtherSet =>
+      'Dieser Code gehört zu einem anderen Papier-Backup. Verwende beide Hälften aus demselben Ausdruck.';
+
+  @override
+  String get halvesAlreadyHave =>
+      'Den hast du schon gescannt. Weiter zum nächsten Code.';
+
+  @override
+  String get halvesDontFit =>
+      'Diese Hälften passen nicht zusammen. Vielleicht wurde ein Code falsch gelesen, oder sie stammen aus verschiedenen Backups. Beginne den Scan von vorn.';
+
+  @override
+  String get halvesRestoreNow => 'Beide Hälften gescannt: wiederherstellen';
+
+  @override
+  String get healthTitle => 'Statuscheck';
+
+  @override
+  String get settingsHealthHelp =>
+      'Sync, Backup, Uhr, Sperre und Wiederherstellungscodes auf einen Blick';
+
+  @override
+  String get healthIntro =>
+      'Grün heißt alles gut. Gelb ist einen Blick wert, und der Knopf daneben behebt es.';
+
+  @override
+  String get healthGood => 'In Ordnung';
+
+  @override
+  String get healthLook => 'Ansehen lohnt sich';
+
+  @override
+  String get healthSync => 'Sync';
+
+  @override
+  String get healthSyncOff =>
+      'Nicht eingerichtet. Sync hält deine Konten auf allen Geräten gleich.';
+
+  @override
+  String healthSyncOk(String when) {
+    return 'Zuletzt synchronisiert: $when';
+  }
+
+  @override
+  String healthSyncStale(String when) {
+    return 'Zuletzt synchronisiert: $when. Das ist eine Weile her: Öffne Sync, um zu sehen, was los ist.';
+  }
+
+  @override
+  String get healthOpenSync => 'Sync öffnen';
+
+  @override
+  String get healthSetUp => 'Einrichten';
+
+  @override
+  String get healthOpen => 'Öffnen';
+
+  @override
+  String get healthBackup => 'Backup';
+
+  @override
+  String get healthBackupNever =>
+      'Noch kein Backup. Geht dieses Gerät verloren, sind deine Konten mit weg.';
+
+  @override
+  String healthBackupOk(DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat.yMMMd(localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return 'Letztes Backup: $dateString';
+  }
+
+  @override
+  String healthBackupOld(DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat.yMMMd(localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return 'Letztes Backup: $dateString. Das ist über 30 Tage her: Mach ein neues.';
+  }
+
+  @override
+  String get healthClock => 'Uhr';
+
+  @override
+  String get healthClockNotChecked =>
+      'Noch nicht geprüft. Codes funktionieren nur, wenn die Uhr dieses Geräts stimmt.';
+
+  @override
+  String healthClockOk(String when) {
+    return 'Deine Uhr stimmt (geprüft: $when).';
+  }
+
+  @override
+  String get healthCheckNow => 'Jetzt prüfen';
+
+  @override
+  String get healthPhoneLink => 'Telefon-Verknüpfung';
+
+  @override
+  String healthPhoneLinkOk(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Mit $count Browsern verbunden',
+      one: 'Mit 1 Browser verbunden',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get healthPhoneLinkOff =>
+      'Nicht verbunden. Verbinde den Browser deines Computers, um Anmeldecodes von diesem Telefon aus zu bestätigen.';
+
+  @override
+  String get healthLock => 'Sperre';
+
+  @override
+  String get healthLockOn =>
+      'An. Die App fragt nach, wer du bist, bevor sie Codes zeigt.';
+
+  @override
+  String get healthLockOff =>
+      'Aus. Wer dieses Gerät in die Hand bekommt, sieht deine Codes.';
+
+  @override
+  String get healthGoToSettings => 'Zum Sperr-Schalter';
+
+  @override
+  String get healthRecovery => 'Wiederherstellungscodes';
+
+  @override
+  String healthRecoveryCount(int count, int total) {
+    return '$count von $total Konten haben gespeicherte Wiederherstellungscodes.';
+  }
+
+  @override
+  String get healthRecoveryNoAccounts => 'Noch keine Konten.';
+
+  @override
+  String get healthAddCodes => 'Codes hinzufügen';
 }

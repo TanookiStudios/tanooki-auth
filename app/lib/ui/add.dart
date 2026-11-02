@@ -357,12 +357,15 @@ class _TickerState extends State<_Ticker> {
 }
 
 class AddScreen extends StatefulWidget {
-  const AddScreen({super.key, required this.vault, this.scanOnOpen = false, this.sharedFile});
+  const AddScreen({super.key, required this.vault, this.scanOnOpen = false, this.sharedFile, this.sharedImage});
   final Vault vault;
   /// Opens the camera straight away (from the Control Center button or quick settings tile).
   final bool scanOnOpen;
   /// The text of a shared-account file the person tapped in another app; opened straight away.
   final String? sharedFile;
+  /// A picture shared to the app (share sheet, Android "Share", or dropped on the Mac window), as a file the
+  /// app owns. Read, deleted, and its QR code offered for adding (always asking first).
+  final String? sharedImage;
 
   @override
   State<AddScreen> createState() => _AddScreenState();
@@ -379,6 +382,33 @@ class _AddScreenState extends State<AddScreen> {
           ? _fromText(shared)
           : _say(l10n.addNotASharedFile));
     }
+    final image = widget.sharedImage;
+    if (image != null) WidgetsBinding.instance.addPostFrameCallback((_) => _fromSharedImage(image));
+  }
+
+  Future<void> _fromSharedImage(String path) async {
+    final file = File(path);
+    final Uint8List bytes;
+    try {
+      bytes = await file.readAsBytes();
+    } on FileSystemException {
+      return _say(l10n.qrImageNotAPicture);
+    } finally {
+      // Our own copy of someone's QR code: it holds a secret, so it never stays on disk.
+      if (file.existsSync()) file.deleteSync();
+    }
+    await _fromImageBytes(bytes);
+  }
+
+  Future<void> _fromImageBytes(Uint8List bytes) async {
+    final String text;
+    try {
+      text = await Isolate.run(() => decodeQrImage(bytes));
+    } on FormatException catch (e) {
+      if (mounted) _say(qrImageError(e));
+      return;
+    }
+    if (mounted) await _fromText(text);
   }
 
   void _say(String msg) => ScaffoldMessenger.of(context)
@@ -451,15 +481,7 @@ class _AddScreenState extends State<AddScreen> {
   Future<void> _image() async {
     final files = await FilePicker.pickFiles(type: FileType.image);
     if (files.isEmpty) return;
-    final bytes = await files.first.readAsBytes();
-    final String text;
-    try {
-      text = await Isolate.run(() => decodeQrImage(bytes));
-    } on FormatException catch (e) {
-      _say(qrImageError(e));
-      return;
-    }
-    await _fromText(text);
+    await _fromImageBytes(await files.first.readAsBytes());
   }
 
   Future<void> _openShareFile() async {
@@ -651,11 +673,14 @@ class _AddScreenState extends State<AddScreen> {
 }
 
 class ScanScreen extends StatefulWidget {
-  const ScanScreen({super.key, this.prefixes = const ['otpauth://', 'otpauth-migration://', 'steam://', sharePrefix], this.title, this.wrongCode});
+  const ScanScreen({super.key, this.prefixes = const ['otpauth://', 'otpauth-migration://', 'steam://', sharePrefix], this.title, this.wrongCode, this.onEach});
   /// QR codes this scan accepts; anything else shows [wrongCode].
   final List<String> prefixes;
   final String? title;
   final String? wrongCode;
+  /// Keeps scanning (for codes that come in sets): gets each new code and returns what to say, or null when
+  /// it has everything, which closes the scanner.
+  final String? Function(String code)? onEach;
 
   @override
   State<ScanScreen> createState() => _ScanScreenState();
@@ -664,6 +689,7 @@ class ScanScreen extends StatefulWidget {
 class _ScanScreenState extends State<ScanScreen> {
   bool _done = false;
   String? _hint;
+  final _seen = <String>{};
 
   void _onDetect(BarcodeCapture capture) {
     if (_done) return;
@@ -671,6 +697,15 @@ class _ScanScreenState extends State<ScanScreen> {
       final v = b.rawValue;
       if (v == null) continue;
       if (widget.prefixes.any(v.startsWith)) {
+        final each = widget.onEach;
+        if (each != null) {
+          if (!_seen.add(v)) continue; // the camera reports the same code many times a second
+          final say = each(v);
+          if (say != null) {
+            setState(() => _hint = say);
+            continue;
+          }
+        }
         _done = true;
         Navigator.pop(context, v);
         return;

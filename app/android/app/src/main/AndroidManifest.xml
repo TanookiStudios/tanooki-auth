@@ -41,6 +41,13 @@
                 <data android:scheme="content"/>
                 <data android:mimeType="application/octet-stream"/>
             </intent-filter>
+            <!-- "Share" a picture of a 2FA QR code from Photos or a browser: the app reads the code and asks
+                 before adding anything (MainActivity.readSharedImage). -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="image/*"/>
+            </intent-filter>
         </activity>
         <!-- Home-screen icons (Premium app icons). Exactly one is enabled; MainActivity.setAppIcon switches them.
              Images come from app/tool/make_app_icons.cjs; ids match appIcons in lib/ui/app_icon.dart. -->

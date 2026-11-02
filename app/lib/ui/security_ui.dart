@@ -7,12 +7,14 @@ import 'package:local_auth/local_auth.dart';
 import '../core/auto_backup.dart';
 import '../core/breaches.dart';
 import '../core/security.dart';
+import '../core/unused.dart';
 import '../core/vault.dart';
 import 'auto_backup_ui.dart';
 import 'backup_ui.dart';
 import 'home.dart';
 import 'premium.dart';
 import 'theme.dart';
+import 'unused_ui.dart';
 import '../l10n/l10n.dart';
 
 const _window = MethodChannel('tanooki/window');
@@ -232,6 +234,12 @@ class _CheckupScreenState extends State<CheckupScreen> {
                 l10n.securityUiNoRecoveryTitle(f.accounts.length),
                 l10n.securityUiNoRecoveryBody(f.accounts.map(accountTitle).join(', '))),
           },
+        if (unusedAccounts(widget.vault.visible, DateTime.now()) case final unused when unused.isNotEmpty)
+          item(Icons.hourglass_empty, l10n.checkupUnusedTitle(unused.length), l10n.checkupUnusedBody,
+              action: l10n.checkupUnusedReview, onAction: () async {
+            await Navigator.push(context, MaterialPageRoute(builder: (_) => UnusedAccountsScreen(vault: widget.vault)));
+            setState(() {});
+          }),
         const SizedBox(height: 8),
         Card(
           child: ListTile(
