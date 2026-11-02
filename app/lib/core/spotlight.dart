@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -21,12 +20,20 @@ List<Map<String, String>> spotlightItems(Vault v) => v.settings[spotlightKey] ==
       ];
 
 String? _lastSent;
+bool _decoyOpen = false;
 
-/// Replaces the Spotlight index with [spotlightItems]. An empty list removes every item.
-/// Called after every save of the real vault, so adds, edits, deletes and travel mode show up right away.
+/// Called on every unlock with the real vault. Opening the decoy empties the index, and it stays empty while the
+/// decoy is open even if the real vault saves in the background (sync); opening the real vault fills it again.
+Future<void> spotlightVaultOpened(Vault real, {required bool decoy}) {
+  _decoyOpen = decoy;
+  return publishSpotlight(real);
+}
+
+/// Replaces the Spotlight index with [spotlightItems] (nothing while the decoy is open). An empty list removes
+/// every item. Called after every save of the real vault, so adds, edits, deletes and travel mode show up right away.
 Future<void> publishSpotlight(Vault v) async {
-  if (!Platform.isIOS && !Platform.isMacOS) return;
-  final json = jsonEncode(spotlightItems(v));
+  if (defaultTargetPlatform != TargetPlatform.iOS && defaultTargetPlatform != TargetPlatform.macOS) return;
+  final json = jsonEncode(_decoyOpen ? const [] : spotlightItems(v));
   if (json == _lastSent) return;
   try {
     await _channel.invokeMethod<void>('index', json);

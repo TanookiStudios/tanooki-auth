@@ -353,7 +353,6 @@ class _GateState extends State<Gate> implements BridgeHost {
       return;
     }
     await publishSharedFavorites(vault);
-    if (storageName.isEmpty) await publishSpotlight(vault);
     _pendingAction = await takePendingAction() ?? _pendingAction;
     final spotlightId = await takeSpotlightOpen();
     if (spotlightId != null) _pendingAction = 'account:$spotlightId';
@@ -393,6 +392,8 @@ class _GateState extends State<Gate> implements BridgeHost {
       _pinError = null;
     });
     if (mounted) startSyncAndLink(context, v, bringToFront);
+    // Not at launch: the index waits for the real vault to be unlocked, so the decoy never sits beside real names.
+    if (storageName.isEmpty) await spotlightVaultOpened(_real!, decoy: v != _real);
     pasteOnce = v.settings[pasteOnceKey] == true;
     if (_pendingAction == null) await _copyOnOpen(v);
     if (v != _real) return _runPendingAction();

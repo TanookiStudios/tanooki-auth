@@ -2,7 +2,11 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tanooki_auth/core/account.dart';
+import 'package:tanooki_auth/core/spotlight.dart';
 import 'package:tanooki_auth/core/store.dart';
 import 'package:tanooki_auth/core/vault.dart';
 import 'package:tanooki_auth/main.dart' show decoyLookAlikeKeys;
@@ -21,5 +25,37 @@ void main() {
     }
     expect(await hasPremium(real), isTrue);
     expect(await hasPremium(decoy), isTrue, reason: 'otherwise its Premium theme falls back to Auto and gives the decoy away');
+  });
+
+  test('Spotlight: opening the decoy empties the index; opening the real vault fills it again', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS; // publishSpotlight only talks to iPhone, iPad and Mac
+    final sent = <List<String>>[];
+    const channel = MethodChannel('tanooki/spotlight');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, (call) async {
+      if (call.method == 'index') sent.add([for (final i in jsonDecode(call.arguments as String) as List) i['issuer'] as String]);
+      return null;
+    });
+    addTearDown(() {
+      debugDefaultTargetPlatformOverride = null;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
+    });
+    final dir = Directory.systemTemp.createTempSync('decoy_spotlight');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final real = Vault(File('${dir.path}/real.json'), MemoryKeyStore()..value = base64.encode(List.filled(32, 1)))
+      ..accounts.add(Account(id: '1', issuer: 'Bank', secret: 'JBSWY3DPEHPK3PXP'));
+
+    await spotlightVaultOpened(real, decoy: false);
+    expect(sent.last, ['Bank']);
+    await spotlightVaultOpened(real, decoy: true);
+    expect(sent.last, isEmpty, reason: 'the decoy is open: Spotlight must not list the real vault');
+    real.accounts.add(Account(id: '2', issuer: 'Mail', secret: 'JBSWY3DPEHPK3PXP'));
+    await publishSpotlight(real); // a background save of the real vault (sync) while the decoy is open
+    expect(sent.last, isEmpty, reason: 'still the decoy on screen');
+    await spotlightVaultOpened(real, decoy: false);
+    expect(sent.last, ['Bank', 'Mail']);
+    real.settings[spotlightKey] = false;
+    await spotlightVaultOpened(real, decoy: false);
+    expect(sent.last, isEmpty, reason: 'setting off: the real vault does not re-index');
   });
 }
