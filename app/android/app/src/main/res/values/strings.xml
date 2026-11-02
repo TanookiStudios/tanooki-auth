@@ -5,4 +5,5 @@
     <string name="widget_locked">Unlock to see codes</string>
     <string name="widget_empty">No favorites to show. In Tanooki Auth, star an account and turn on Settings &gt; Show codes on widgets and watch.</string>
     <string name="backup_folder">Backup folder</string>
+    <string name="autofill_auth_title">Fill a code for an account that asks first</string>
 </resources>

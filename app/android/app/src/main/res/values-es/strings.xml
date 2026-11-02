@@ -5,4 +5,5 @@
     <string name="widget_locked">Desbloquea para ver los códigos</string>
     <string name="widget_empty">No hay favoritos que mostrar. En Tanooki Auth, marca una cuenta con estrella y activa Ajustes &gt; Mostrar códigos en widgets y reloj.</string>
     <string name="backup_folder">Carpeta de copias</string>
+    <string name="autofill_auth_title">Rellenar un código de una cuenta que pide confirmación</string>
 </resources>

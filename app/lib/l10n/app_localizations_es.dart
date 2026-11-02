@@ -1700,6 +1700,31 @@ class AppLocalizationsEs extends AppLocalizations {
       'Los códigos de tus favoritos se muestran en tu pantalla de inicio, pantalla bloqueada y reloj sin abrir esta app, así que cualquiera que tenga tu teléfono desbloqueado o tu reloj puede leerlos. Marca una cuenta con una estrella para hacerla favorita.';
 
   @override
+  String get settingsAutofill => 'Rellenar códigos con Autorrelleno';
+
+  @override
+  String get settingsAutofillHelpIos =>
+      'Cuando un sitio web o una app pide un código 2FA, tu iPhone lo ofrece encima del teclado, así no tienes que copiarlo. Las cuentas que piden confirmación necesitan Face ID antes de rellenarse. Las cuentas ocultas en modo viaje nunca se ofrecen.';
+
+  @override
+  String get settingsAutofillHelpAndroid =>
+      'Cuando una app o un sitio web pide un código 2FA, tu teléfono lo ofrece en una pequeña ventana, así no tienes que copiarlo. Android solo permite una app de autorrelleno a la vez, así que esto sustituye el autorrelleno de tu gestor de contraseñas. Si dependes de él, déjalo desactivado.';
+
+  @override
+  String get settingsAutofillStepsTitle => 'Activar Autorrelleno';
+
+  @override
+  String get settingsAutofillStepsIos =>
+      'Necesita iOS 18 o posterior.\n\n1. Abre la app Ajustes (el icono gris de engranaje).\n2. Toca General y luego Autorrelleno y contraseñas.\n3. En la lista de apps que pueden autorrellenar, activa el interruptor junto a Tanooki Auth.\n\nFuncionó si el interruptor está en verde. La próxima vez que un sitio web o una app pida un código, toca la casilla del código y toca la sugerencia de Tanooki Auth encima del teclado.';
+
+  @override
+  String get settingsAutofillStepsAndroid =>
+      '1. Toca Abrir Ajustes abajo. Se abre una lista de apps de autorrelleno.\n2. Toca Tanooki Auth y luego Aceptar si el teléfono lo pide.\n\nSi no se abre ninguna lista: abre la app Ajustes, busca \"Servicio de autocompletar\", tócalo y elige Tanooki Auth.\n\nFuncionó si Tanooki Auth aparece ahora como servicio de autocompletar. La próxima vez que una app o un sitio web pida un código, toca la casilla del código y elige Tanooki Auth en la ventana.\n\nAndroid solo permite una app de autorrelleno a la vez. Elegir Tanooki Auth hace que tu gestor de contraseñas (como Google, Bitwarden o 1Password) deje de rellenar contraseñas. Para volver, elígelo otra vez en el mismo lugar.';
+
+  @override
+  String get settingsAutofillOpen => 'Abrir Ajustes';
+
+  @override
   String get settingsTrash => 'Papelera';
 
   @override

@@ -94,6 +94,7 @@ void main() {
   Vault.onSaved = (v) {
     if (!isDecoyVault(v)) {
       publishSharedFavorites(v);
+      publishAutofill(v);
       // Test and screenshot stores never reach the real Spotlight index.
       if (storageName.isEmpty) publishSpotlight(v);
       autoBackup.vaultChanged(v);
@@ -353,6 +354,7 @@ class _GateState extends State<Gate> implements BridgeHost {
       return;
     }
     await publishSharedFavorites(vault);
+    await publishAutofill(vault);
     if (storageName.isEmpty) await publishSpotlight(vault);
     _pendingAction = await takePendingAction() ?? _pendingAction;
     final spotlightId = await takeSpotlightOpen();

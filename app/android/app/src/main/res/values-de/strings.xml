@@ -5,4 +5,5 @@
     <string name="widget_locked">Entsperren, um Codes zu sehen</string>
     <string name="widget_empty">Keine Favoriten zum Anzeigen. Markiere in Tanooki Auth ein Konto mit einem Stern und schalte Einstellungen &gt; Codes auf Widgets und Uhr anzeigen ein.</string>
     <string name="backup_folder">Backup-Ordner</string>
+    <string name="autofill_auth_title">Code für ein Konto einfügen, das zuerst nachfragt</string>
 </resources>

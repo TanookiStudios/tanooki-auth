@@ -5,4 +5,5 @@
     <string name="widget_locked">ロックを解除するとコードが表示されます</string>
     <string name="widget_empty">表示するお気に入りがありません。Tanooki Auth でアカウントに星を付け、［設定］&gt;［ウィジェットとウォッチにコードを表示］をオンにしてください。</string>
     <string name="backup_folder">バックアップフォルダー</string>
+    <string name="autofill_auth_title">確認が必要なアカウントのコードを入力</string>
 </resources>

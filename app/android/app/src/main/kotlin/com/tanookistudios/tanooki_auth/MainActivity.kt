@@ -4,7 +4,9 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.provider.DocumentsContract
 import android.view.WindowManager
 import io.flutter.embedding.android.FlutterFragmentActivity
@@ -15,6 +17,7 @@ import java.io.FileNotFoundException
 import java.io.IOException
 import com.google.android.gms.wearable.PutDataRequest
 import com.google.android.gms.wearable.Wearable
+import com.tanookistudios.shared.AutofillStore
 import com.tanookistudios.shared.FavoriteStore
 
 // FragmentActivity is required by local_auth's biometric prompt.
@@ -71,6 +74,14 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
+    /** Android's "pick your autofill service" list, with Tanooki Auth offered. False if this phone has none. */
+    private fun openAutofillSettings(): Boolean = Build.VERSION.SDK_INT >= 26 && try {
+        startActivity(Intent(Settings.ACTION_REQUEST_SET_AUTOFILL_SERVICE, Uri.parse("package:$packageName")))
+        true
+    } catch (e: Exception) {
+        false // some phones remove the screen
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         actionOf(intent)?.let {
@@ -113,6 +124,12 @@ class MainActivity : FlutterFragmentActivity() {
                         sendToWatch(json)
                         result.success(null)
                     }
+                    "setAutofill" -> {
+                        // Every account autofill may offer (autofillAccounts in widget_share.dart), or [] to erase.
+                        AutofillStore.save(this@MainActivity, call.arguments as String)
+                        result.success(null)
+                    }
+                    "openAutofillSettings" -> result.success(openAutofillSettings())
                     "takeAction" -> {
                         result.success(pendingAction)
                         pendingAction = null
