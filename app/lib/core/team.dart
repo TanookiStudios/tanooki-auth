@@ -12,12 +12,19 @@ import 'account.dart';
 import 'otpauth_uri.dart' show newId;
 import 'sync/relay_client.dart';
 import 'sync/relay_crypto.dart';
+import 'sync/sync_service.dart' show thisDeviceName;
 import 'vault.dart';
 import '../l10n/l10n.dart';
 
 const teamStateKey = 'team';
 const teamLinkPrefix = 'tanookiauth://team?';
 const teamMaxMembers = 10;
+
+/// Team roles (PROTOCOL.md 4.3). The owner (who made the team) is always an admin.
+const teamRoles = ['admin', 'member', 'viewer'];
+
+/// Activity log entries waiting on this device to be sent (kept while there's no team key yet).
+const _maxPendingLog = 200;
 
 class TeamException implements Exception {
   TeamException(this.message);
@@ -59,15 +66,30 @@ Future<Uint8List> unwrapTeamKey(String wrapped, SimpleKeyPair box) async {
 }
 
 String teamAad(String teamId, String entryId, int epoch) => 'TA-TEAM-1|$teamId|$entryId|$epoch';
+String teamLogAad(String teamId, int epoch) => 'TA-TEAM-LOG-1|$teamId|$epoch';
 
 // ---------------------------------------------------------------- local state
 
-/// vault.settings['team']: relay, teamId, role ('admin' or 'member'), device and box (seeds), keys (epoch -> team
-/// key), cursor, license (admin), and entries: id -> {u: updatedAt ms, d: deleted, a: account JSON, e: epoch the
-/// relay holds it under (0 = never sent), dirty: changed here and not yet sent}.
+/// vault.settings['team']: relay, teamId, role ('admin', 'member' or 'viewer', refreshed on every sync), owner (true
+/// on the device that made the team), device and box (seeds), keys (epoch -> team key), cursor, license (owner),
+/// log (activity entries not sent yet), and entries: id -> {u: updatedAt ms, d: deleted, a: account JSON, e: epoch
+/// the relay holds it under (0 = never sent), dirty: changed here and not yet sent}.
 Map<String, dynamic>? teamState(Vault v) => (v.settings[teamStateKey] as Map?)?.cast<String, dynamic>();
 bool inTeam(Vault v) => teamState(v) != null;
 bool isTeamAdmin(Vault v) => teamState(v)?['role'] == 'admin';
+bool isTeamOwner(Vault v) => teamState(v)?['owner'] == true;
+/// View-only members can use team accounts but not add, change or remove them.
+bool canEditTeam(Vault v) => inTeam(v) && teamState(v)?['role'] != 'viewer';
+
+/// Adds one activity log entry (copy, fill, add, edit, delete) for [a]; the next sync sends it, encrypted.
+/// The caller saves.
+void logTeamEvent(Vault v, String action, Account a) {
+  final s = teamState(v);
+  if (s == null) return;
+  final log = [...(s['log'] as List? ?? const []), {'a': action, 'n': a.issuer.isNotEmpty ? a.issuer : a.label, 't': DateTime.now().millisecondsSinceEpoch}];
+  s['log'] = log.length > _maxPendingLog ? log.sublist(log.length - _maxPendingLog) : log;
+  v.settings[teamStateKey] = s;
+}
 
 Map<String, dynamic> _entries(Map<String, dynamic> s) =>
     (s['entries'] as Map? ?? {}).map((k, e) => MapEntry(k as String, (e as Map).cast<String, dynamic>()));
@@ -110,11 +132,20 @@ void _writeEntry(Vault v, String id, Account? a) {
   v.settings[teamStateKey] = s;
 }
 
-/// Adds or changes a team account on this device; the next [TeamClient.sync] sends it. The caller saves.
-void putTeamAccount(Vault v, Account a) => _writeEntry(v, a.id, a);
+/// Adds or changes a team account on this device; the next [TeamClient.sync] sends it, and logs it as an add or
+/// edit unless [log] is false. The caller saves.
+void putTeamAccount(Vault v, Account a, {bool log = true}) {
+  final isNew = _entries(teamState(v)!)[a.id]?['a'] == null;
+  _writeEntry(v, a.id, a);
+  if (log) logTeamEvent(v, isNew ? 'add' : 'edit', a);
+}
 
-/// Removes a team account for everyone (on the next sync). The caller saves.
-void removeTeamAccount(Vault v, String id) => _writeEntry(v, id, null);
+/// Removes a team account for everyone (on the next sync), and logs it. The caller saves.
+void removeTeamAccount(Vault v, String id) {
+  final a = teamAccounts(v).where((x) => x.id == id).firstOrNull;
+  _writeEntry(v, id, null);
+  if (a != null) logTeamEvent(v, 'delete', a);
+}
 
 // ---------------------------------------------------------------- invite links
 
@@ -141,7 +172,8 @@ class TeamMember {
   final Map<String, dynamic> json;
   String get key => json['key'] as String;
   String get boxKey => json['boxKey'] as String;
-  bool get admin => json['role'] == 'admin';
+  String get role => json['role'] as String? ?? 'member';
+  bool get admin => role == 'admin';
   bool get hasKey => json['hasKey'] == true;
   DateTime get added => DateTime.fromMillisecondsSinceEpoch(json['added'] as int);
 }
@@ -150,9 +182,18 @@ class TeamStatus {
   TeamStatus(this.json);
   final Map<String, dynamic> json;
   int get epoch => json['epoch'] as int;
+  String? get owner => (json['owner'] ?? json['admin']) as String?;
+  int get seats => json['seats'] as int? ?? teamMaxMembers;
   bool get needsRotation => json['needsRotation'] == true;
   DateTime get licenseEnd => DateTime.fromMillisecondsSinceEpoch(json['licenseEnd'] as int? ?? 0);
   List<TeamMember> get members => [for (final m in json['members'] as List) TeamMember((m as Map).cast<String, dynamic>())];
+}
+
+/// One activity log entry, decrypted (admins only). [by] is the member's device key, from the relay.
+class TeamEvent {
+  TeamEvent({required this.at, required this.by, required this.action, required this.name, required this.device});
+  final DateTime at;
+  final String by, action, name, device;
 }
 
 class TeamReport {
@@ -214,6 +255,7 @@ class TeamClient {
       'epoch': 1,
       'cursor': 0,
       'license': lic,
+      'owner': true,
       'licenseCheckedAt': DateTime.now().millisecondsSinceEpoch,
       'entries': <String, dynamic>{},
     };
@@ -232,11 +274,11 @@ class TeamClient {
     if (r.status == 404) throw TeamException(l10n.teamGone);
     if (r.status == 403) throw TeamException(l10n.teamInviteUsed);
     if (r.status == 507) throw TeamException(l10n.teamFull);
-    expectStatus(r, [201]);
+    final st = TeamStatus(expectStatus(r, [201]));
     v.settings[teamStateKey] = {
       'relay': inv.relay,
       'teamId': inv.teamId,
-      'role': 'member',
+      'role': st.members.where((m) => m.key == me.publicKey).firstOrNull?.role ?? 'member',
       'device': b64u(device),
       'box': b64u(box),
       'keys': <String, dynamic>{},
@@ -249,10 +291,59 @@ class TeamClient {
 
   Future<TeamStatus> status() async => TeamStatus(await _call('GET', _path, [200]));
 
-  /// A single-use invite link (valid 7 days). Admin only.
-  Future<String> inviteLink() async {
-    final b = await _call('POST', '$_path/invites', [201]);
-    return teamInviteLink(_s['relay'] as String, teamId, b['invite'] as String);
+  /// A single-use invite link (valid 7 days) for [role]. Admin only.
+  Future<String> inviteLink({String role = 'member'}) async => (await createInvite(role: role)).link;
+
+  /// A single-use invite: the link, and the bare token (for [emailProof]).
+  Future<({String link, String invite})> createInvite({String role = 'member'}) async {
+    final b = await _call('POST', '$_path/invites', [201], {'role': role});
+    final invite = b['invite'] as String;
+    return (link: teamInviteLink(_s['relay'] as String, teamId, invite), invite: invite);
+  }
+
+  /// Admin: changes a member's role.
+  Future<void> setRole(String memberKey, String role) async => _call('POST', '$_path/members/$memberKey/role', [200], {'role': role});
+
+  /// A one-time signed request for `GET /v1/team/<id>`. The Premium worker hands it to the relay to check that
+  /// this device is a team admin before it emails an invite (worker/src/team.js).
+  Future<Map<String, dynamic>> emailProof() async {
+    final device = await DeviceKey.fromSeed(unb64u(_s['device'] as String));
+    final ts = DateTime.now().millisecondsSinceEpoch, nonce = b64u(randomBytes(16));
+    return {
+      'device': device.publicKey,
+      'timestamp': ts,
+      'nonce': nonce,
+      'signature': await device.sign('TA-RELAY-1\nGET\n$_path\n$ts\n$nonce\n${sha256b64u(const [])}'),
+    };
+  }
+
+  /// Admin: the team's activity log, newest first. Entries under a key this device never had are left out.
+  Future<List<TeamEvent>> activity() async {
+    final out = <TeamEvent>[];
+    var since = 0;
+    for (var more = true; more;) {
+      final b = await _call('GET', '$_path/activity?since=$since', [200]);
+      for (final e in (b['events'] as List).cast<Map>()) {
+        final epoch = e['epoch'] as int;
+        final key = _keyFor(_s, epoch);
+        if (key == null) continue;
+        try {
+          final j = await open(key, e['ciphertext'] as String, teamLogAad(teamId, epoch));
+          out.add(TeamEvent(
+            at: DateTime.fromMillisecondsSinceEpoch(e['at'] as int),
+            by: e['by'] as String,
+            action: j['a'] as String? ?? '',
+            name: j['n'] as String? ?? '',
+            device: j['d'] as String? ?? '',
+          ));
+        } catch (_) {
+          // tampered or unreadable: left out
+        }
+      }
+      since = b['cursor'] as int;
+      more = b['more'] == true;
+    }
+    return out.reversed.toList();
   }
 
   /// Admin: removes [memberKey] at once, then gives everyone left a new team key.
@@ -261,7 +352,7 @@ class TeamClient {
     await _rotate(await status());
   }
 
-  /// Member: leaves the team and forgets it on this device.
+  /// Leaves the team and forgets it on this device (anyone but the owner).
   Future<void> leave() async {
     try {
       await _call('DELETE', '$_path/members/${await myKey()}', [200]);
@@ -287,14 +378,21 @@ class TeamClient {
     await vault.save();
   }
 
-  /// New team key (next epoch), wrapped for every member.
+  /// New team key (next epoch), wrapped for every member. Another admin rotating at the same moment wins: this
+  /// one then just fetches the new key on its next sync.
   Future<void> _rotate(TeamStatus st) async {
     final key = randomBytes(32);
     final epoch = st.epoch + 1;
-    final b = await _call('POST', '$_path/keys', [200], {
-      'epoch': epoch,
-      'keys': {for (final m in st.members) m.key: await wrapTeamKey(key, m.boxKey)},
-    });
+    final Map<String, dynamic> b;
+    try {
+      b = await _call('POST', '$_path/keys', [200], {
+        'epoch': epoch,
+        'keys': {for (final m in st.members) m.key: await wrapTeamKey(key, m.boxKey)},
+      });
+    } on RelayException catch (e) {
+      if (e.status == 409 || e.status == 400) return; // someone else rotated, or the members changed meanwhile
+      rethrow;
+    }
     final s = _s;
     s['keys'] = {...(s['keys'] as Map), '$epoch': b64u(key)};
     s['epoch'] = b['epoch'] as int;
@@ -319,6 +417,10 @@ class TeamClient {
       rethrow;
     }
     var s = _s;
+    final me = await myKey();
+    s['role'] = st.members.where((m) => m.key == me).firstOrNull?.role ?? s['role'];
+    s['owner'] = st.owner == me;
+    vault.settings[teamStateKey] = s;
     final admin = s['role'] == 'admin';
 
     if (admin) {
@@ -329,12 +431,16 @@ class TeamClient {
       final current = _keyFor(_s, st.epoch);
       final missing = st.members.where((m) => !m.hasKey).toList();
       if (current != null && missing.isNotEmpty) {
-        await _call('POST', '$_path/keys', [200], {
-          'epoch': st.epoch,
-          'keys': {for (final m in missing) m.key: await wrapTeamKey(current, m.boxKey)},
-        });
+        try {
+          await _call('POST', '$_path/keys', [200], {
+            'epoch': st.epoch,
+            'keys': {for (final m in missing) m.key: await wrapTeamKey(current, m.boxKey)},
+          });
+        } on RelayException catch (e) {
+          if (e.status != 409 && e.status != 400) rethrow; // another admin rotated or someone left meanwhile
+        }
       }
-      await _renewLicense(st);
+      if (s['owner'] == true) await _renewLicense(st);
       s = _s;
     }
 
@@ -391,9 +497,9 @@ class TeamClient {
       more = b['more'] == true;
     }
 
-    // Push: changes made here, plus entries still under an old key (same time, new epoch: PROTOCOL.md 4.4).
+    // Push: changes made here, plus entries still under an old key (same time, new epoch: PROTOCOL.md 4.6).
     final key = _keyFor(s, st.epoch);
-    if (key != null) {
+    if (key != null && s['role'] != 'viewer') { // view-only members never write entries
       for (var round = 0; round < 3; round++) {
         final out = entries.entries.where((x) => x.value['dirty'] == true || ((x.value['e'] as int? ?? 0) > 0 && x.value['e'] != st.epoch)).toList();
         if (out.isEmpty) break;
@@ -426,6 +532,20 @@ class TeamClient {
           }
         }
       }
+    }
+
+    // Activity log: everything logged here since the last sync, encrypted with the current key.
+    final log = (s['log'] as List? ?? const []).cast<Map>();
+    if (key != null && log.isNotEmpty) {
+      for (var at = 0; at < log.length; at += 100) {
+        await _call('POST', '$_path/activity', [201], {
+          'events': [
+            for (final e in log.skip(at).take(100))
+              {'epoch': st.epoch, 'ciphertext': await seal(key, {...e, 'd': thisDeviceName}, teamLogAad(teamId, st.epoch))},
+          ],
+        });
+      }
+      s['log'] = [];
     }
 
     s

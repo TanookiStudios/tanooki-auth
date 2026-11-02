@@ -106,6 +106,18 @@ Future<String?> refreshTeamLicense(String token) async {
   return null;
 }
 
+/// Emails a team invite (POST /team-invite-email). Throws [EmailNotSetUp] while the worker has no email key, or a
+/// [RelayException] with the worker's reason; either way the app shows the link to copy instead.
+Future<void> emailTeamInvite({required String email, required String teamId, required String invite, required Map<String, dynamic> proof}) async {
+  final r = await workerCall('POST', '/team-invite-email', body: {'email': email, 'teamId': teamId, 'invite': invite, 'proof': proof});
+  if (r.status == 201) return;
+  if (r.status == 503 && r.body['code'] == 'email-not-set-up') throw EmailNotSetUp();
+  throw RelayException(r.status, _err(r));
+}
+
+/// The worker can't send email yet (no Resend key).
+class EmailNotSetUp implements Exception {}
+
 /// App Store purchase -> license key (POST /iap/apple). Returns the key, or throws with the worker's reason.
 Future<({String key, int seats})> appleLicenseKey(String signedTransaction) async {
   final r = await workerCall('POST', '/iap/apple', body: {'signedTransaction': signedTransaction});

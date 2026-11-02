@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tanooki_auth/core/account.dart';
 import 'package:tanooki_auth/core/phone_link.dart';
+import 'package:tanooki_auth/core/sync/merge.dart';
 import 'package:tanooki_auth/core/vault.dart';
 import 'package:tanooki_auth/ui/phone_link_ui.dart';
 import 'package:tanooki_auth/ui/premium.dart';
@@ -62,4 +63,30 @@ void main() {
     await tester.pumpAndSettle();
     expect(answer, isNull);
   });
+
+  testWidgets('Sync clashes: both versions side by side; "Keep this one" under the other version puts it back', (tester) async {
+    await tester.runAsync(vault.load);
+    Account gh(String issuer, String folder, int t) =>
+        Account(id: 'a', issuer: issuer, label: 'me', secret: 'JBSWY3DPEHPK3PXP', folder: folder)..updatedAt = DateTime.now().toUtc().subtract(Duration(minutes: t));
+    vault.accounts.add(gh('GitHub (B)', 'Work', 2));
+    recordClash(vault, SyncClash(kept: gh('GitHub (B)', 'Work', 2), lost: gh('GitHub (A)', 'Home', 5), at: DateTime.now()));
+    tester.view.physicalSize = const Size(900, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(MaterialApp(home: SyncClashesScreen(vault: vault)));
+    expect(find.text('In use now'), findsOneWidget);
+    expect(find.text('Other version'), findsOneWidget);
+    expect(find.text('Name: GitHub (A)'), findsOneWidget);
+    expect(find.text('Folder: Home'), findsOneWidget);
+    expect(find.textContaining('JBSWY3DP'), findsNothing, reason: 'setup keys are never shown');
+    await tester.runAsync(() async {
+      await tester.tap(find.byKey(const ValueKey('clash-keep-other-a')));
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    });
+    await tester.pump();
+    expect([vault.accounts.single.issuer, vault.accounts.single.folder], ['GitHub (A)', 'Home']);
+    expect(syncClashes(vault), isEmpty);
+    expect(find.text('No clashes. Nothing to pick.'), findsOneWidget);
+  });
 }
+

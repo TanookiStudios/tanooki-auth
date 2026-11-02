@@ -35,11 +35,19 @@ Future<SyncItem?> openRecord(SyncKeys keys, String recordId, String ciphertext) 
   }
 }
 
-/// Merges pulled items into the vault and saves once if anything changed.
-Future<bool> _mergeAll(Vault vault, Iterable<SyncItem> items) async {
+/// Merges pulled items into the vault. With [base] (account id -> the time this device last saw on the server),
+/// edits made on both sides since then are kept as sync clashes. Returns true if anything changed.
+Future<bool> _mergeAll(Vault vault, Iterable<SyncItem> items, {Map<String, int>? base}) async {
   final tombs = _tombstones(vault);
   var changed = false;
   for (final item in items) {
+    if (base != null) {
+      final clash = findClash(localItem(vault.accounts, tombs, item.id), item, base[item.id], DateTime.now());
+      if (clash != null) {
+        recordClash(vault, clash);
+        changed = true;
+      }
+    }
     if (mergeRemote(vault.accounts, tombs, item)) changed = true;
   }
   if (changed) vault.settings[Vault.tombstonesKey] = tombs;
@@ -66,6 +74,8 @@ class RelaySync {
     final relay = SyncRelay(s['relay'] as String, keys.groupId, await DeviceKey.fromSeed(unb64u(s['device'] as String)));
     final versions = _intMap(s['versions']);
     final known = _intMap(s['known']);
+    // What the server held for each account before this pass: the base for spotting clashes.
+    final base = Map.of(known);
     final report = SyncReport();
     var cursor = s['cursor'] as int? ?? 0;
 
@@ -93,7 +103,7 @@ class RelaySync {
       cursor = page.cursor;
       more = page.more;
     }
-    var dirty = await _mergeAll(vault, pulled);
+    var dirty = await _mergeAll(vault, pulled, base: base);
 
     // 2. Push what the server doesn't have. A conflict means another device wrote first: merge theirs, retry.
     for (var round = 0; round < 5; round++) {
@@ -126,7 +136,7 @@ class RelaySync {
           }
         }
       }
-      if (await _mergeAll(vault, conflicts)) dirty = true;
+      if (await _mergeAll(vault, conflicts, base: base)) dirty = true;
     }
 
     s

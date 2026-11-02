@@ -3225,5 +3225,124 @@
     }
   },
   "healthRecoveryNoAccounts": "No accounts yet.",
-  "healthAddCodes": "Add codes"
+  "healthAddCodes": "Add codes",
+  "syncErrorWiped": "Another device erased Tanooki Auth on this device. Everything on it was deleted and it left sync.",
+  "syncUiEraseDevice": "Erase this device",
+  "syncUiEraseTitle": "Erase this device?",
+  "syncUiEraseBody": "The next time that device goes online, Tanooki Auth on it deletes everything: its accounts, settings, widgets and search entries. It also leaves sync for good. This can't be undone. Nothing changes on this device or your other devices.",
+  "syncUiEraseButton": "Erase it",
+  "syncUiErased": "Done. That device will erase itself the next time it goes online.",
+  "syncUiClashes": "Sync clashes ({count})",
+  "@syncUiClashes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncUiClashesHelp": "An account was changed on two devices before they synced. Pick which version to keep.",
+  "syncUiClashTitle": "Sync clashes",
+  "syncUiClashIntro": "Each account below was changed on two devices before they synced. Sync used the later change. If the other version is the one you want, tap Keep this one under it.",
+  "syncUiClashNone": "No clashes. Nothing to pick.",
+  "syncUiClashInUse": "In use now",
+  "syncUiClashOther": "Other version",
+  "syncUiClashKeep": "Keep this one",
+  "syncUiClashKept": "Done. Your other devices get this version on their next sync.",
+  "syncUiClashEdited": "Changed {when}",
+  "@syncUiClashEdited": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "syncUiClashName": "Name",
+  "syncUiClashAccount": "Account",
+  "syncUiClashFolder": "Folder",
+  "syncUiClashNotes": "Notes",
+  "syncUiClashInTrash": "In Trash",
+  "syncUiClashSecret": "Setup key",
+  "syncUiClashSecretDifferent": "different",
+  "syncUiClashYes": "Yes",
+  "syncUiClashNo": "No",
+  "syncUiClashOtherDiffers": "Other settings differ too, like the look, website or recovery codes.",
+  "teamRoleAdmin": "Admin",
+  "teamRoleMember": "Member",
+  "teamRoleViewer": "View-only",
+  "teamRoleOwner": "Owner",
+  "teamUiMakeAdmin": "Make admin",
+  "teamUiMakeMember": "Make member",
+  "teamUiMakeViewer": "Make view-only",
+  "teamUiRoleChanged": "Role changed.",
+  "teamUiInviteRole": "They join as",
+  "teamUiRoleHelp": "Admins invite and remove people and see the activity log. Members use and change team accounts. View-only people can use the accounts but not change them.",
+  "teamUiInviteEmailLabel": "Their email (optional)",
+  "teamUiInviteEmailHint": "name@example.com",
+  "teamUiInviteMake": "Make invite",
+  "teamUiInviteEmailed": "Invite sent to {email}.",
+  "@teamUiInviteEmailed": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "teamUiEmailNotSetUp": "Email sending isn't set up yet. Copy the link below and send it yourself.",
+  "teamUiEmailFailed": "The email didn't go out ({reason}). Copy the link below and send it yourself.",
+  "@teamUiEmailFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "teamUiYoureAdmin": "You're an admin of this team",
+  "teamUiYoureViewer": "You're in a team (view-only)",
+  "teamUiViewOnly": "You can use these accounts, but only admins and members can change them.",
+  "teamUiActivity": "Activity",
+  "teamUiActivityTitle": "Team activity",
+  "teamUiActivityHelp": "Who copied or changed team accounts, and when. Only admins see this. Kept for 90 days, up to the last 2,000 entries.",
+  "teamUiActivityEmpty": "Nothing yet. Copies and changes to team accounts show up here.",
+  "teamActCopy": "Copied a code for {name}",
+  "@teamActCopy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "teamActFill": "Filled a code for {name}",
+  "@teamActFill": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "teamActAdd": "Added {name}",
+  "@teamActAdd": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "teamActEdit": "Changed {name}",
+  "@teamActEdit": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "teamActDelete": "Removed {name}",
+  "@teamActDelete": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "teamUiBuyBusiness": "Business plan: $3 per person a year",
+  "teamUiBusinessSoon": "Business plan for teams of more than 10 people ($3 per person a year): coming soon."
 }

@@ -101,4 +101,29 @@ void main() {
     expect(teamAccounts(vault), isEmpty, reason: 'refused: nothing went to the team');
     await finish(t);
   });
+
+  testWidgets('home Team section: a copy is logged for the activity log', (t) async {
+    final ops = Account(id: 'ops', issuer: 'AWS', secret: 'JBSWY3DPEHPK3PXP');
+    putTeamAccount(vault, ops, log: false);
+    await pump(t, Scaffold(body: TeamHomeSection(vault: vault)));
+    await t.tap(find.text('AWS'));
+    await t.pump();
+    expect([for (final e in teamState(vault)!['log'] as List) (e as Map)['a']], ['copy']);
+    expect(((teamState(vault)!['log'] as List).single as Map)['n'], 'AWS');
+    await finish(t);
+  });
+
+  testWidgets('Team screen: a view-only member can see team accounts but has no way to change them', (t) async {
+    putTeamAccount(vault, Account(id: 'ops', issuer: 'AWS', secret: 'JBSWY3DPEHPK3PXP'), log: false);
+    vault.settings[teamStateKey] = {...teamState(vault)!, 'role': 'viewer'};
+    await pump(t, TeamScreen(vault: vault));
+    await t.pumpAndSettle();
+    expect(find.text('AWS'), findsOneWidget);
+    expect(find.text("You're in a team (view-only)"), findsOneWidget);
+    expect(find.byKey(const ValueKey('team-view-only')), findsOneWidget);
+    expect(find.text('Add one of mine'), findsNothing);
+    expect(find.byType(PopupMenuButton<String>), findsNothing);
+    await finish(t);
+  });
 }
+

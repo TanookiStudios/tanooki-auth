@@ -16,6 +16,12 @@ class RelayException implements Exception {
   String toString() => 'RelayException($status): $message';
 }
 
+/// Another device in the sync group erased this one (PROTOCOL.md 1.4, "Erase a device remotely"). The app erases
+/// all its Tanooki Auth data when it sees this.
+class RemoteWipeException extends RelayException {
+  RemoteWipeException(String message) : super(410, message);
+}
+
 class RelayResponse {
   RelayResponse(this.status, this.body);
   final int status;
@@ -85,6 +91,7 @@ class SyncRelay {
         'x-ta-nonce': nonce,
         'x-ta-signature': sig,
       });
+      if (r.status == 410 && r.body['wiped'] == true) throw RemoteWipeException(r.body['error'] as String? ?? '');
       final serverTime = r.body['serverTime'];
       if (r.status == 401 && serverTime is int && attempt == 0) {
         _clockOffset = serverTime - DateTime.now().millisecondsSinceEpoch;
@@ -120,6 +127,8 @@ class SyncRelay {
   }
 
   Future<void> removeDevice(String key) async => expectStatus(await call('DELETE', '$groupPath/devices/$key'), [200]);
+  /// Erases another device: it is out at once and erases itself the next time it goes online.
+  Future<void> wipeDevice(String key) async => expectStatus(await call('POST', '$groupPath/devices/$key/wipe', {}), [200]);
   Future<void> deleteGroup() async => expectStatus(await call('DELETE', groupPath), [200]);
 
   /// One page of changes after [since].
@@ -133,7 +142,8 @@ class SyncRelay {
           .cast<Map<String, dynamic>>();
 
   /// Change notifications (PROTOCOL.md 1.6). Calls [onChanged] with the group's new cursor.
-  Future<WebSocket> listen(void Function(int cursor) onChanged) async {
+  /// [onWiped] runs when the relay says another device erased this one.
+  Future<WebSocket> listen(void Function(int cursor) onChanged, {void Function()? onWiped}) async {
     final ts = '${DateTime.now().millisecondsSinceEpoch + _clockOffset}';
     final nonce = b64u(randomBytes(16));
     final sig = await device.sign('TA-RELAY-1\nGET\n$groupPath/ws\n$ts\n$nonce\n${sha256b64u(const [])}');
@@ -143,6 +153,7 @@ class SyncRelay {
     ws.listen((m) {
       if (m is! String || m == 'pong') return;
       final msg = jsonDecode(m) as Map<String, dynamic>;
+      if (msg['type'] == 'wiped') onWiped?.call();
       if (msg['cursor'] is int) onChanged(msg['cursor'] as int);
     }, onError: (_) {}, cancelOnError: true);
     return ws;

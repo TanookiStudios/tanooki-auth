@@ -1,11 +1,12 @@
-// One Team Durable Object per team vault (PROTOCOL.md section 4). Up to 10 member devices share a team key that
-// the admin wraps separately for each member; entries are ciphertext under that key. The relay sees only
-// public keys, wrapped-key blobs and ciphertext.
+// One Team Durable Object per team vault (PROTOCOL.md section 4). Member devices (10 on a team license, more on a
+// business license) share a team key that an admin wraps separately for each member; entries and the activity
+// log are ciphertext under that key. The relay sees only public keys, roles, wrapped-key blobs and ciphertext.
+// Roles: the owner (who made the team and holds the license) is an admin; admins invite, remove and change roles;
+// members read and write entries; viewers only read.
 import { DurableObject } from 'cloudflare:workers';
 import { B64U, Window, b64u, err, json, parseJson, randomId, readBody, sha256, signedParts, verifySigned } from './util.js';
-import { checkTeamLicense } from './license.js';
+import { TEAM_SEATS, checkTeamLicense } from './license.js';
 
-const MAX_MEMBERS = 10;
 const MAX_ENTRIES = 2000;
 const MAX_CIPHERTEXT = 65_536; // characters of base64url per entry
 const MAX_WRAPPED = 1024; // characters of base64url per wrapped team key
@@ -14,6 +15,11 @@ const INVITE_LIFE = 7 * 86400_000;
 const LICENSE_GRACE = 14 * 86400_000; // writes keep working this long after the subscription period ends
 const ENTRY_ID = /^[A-Za-z0-9_-]{1,64}$/;
 const BOX_KEY = /^[A-Za-z0-9_-]{43}$/; // member's X25519 public key, used by the admin to wrap the team key
+
+const ROLES = ['admin', 'member', 'viewer'];
+const MAX_EVENTS = 2000; // activity log entries kept per team
+const EVENT_LIFE = 90 * 86400_000; // and for at most this long
+const MAX_EVENT_CT = 4096;
 
 const LICENSE_TAKEN = 'this team license is already used by another team; delete that team first, or buy another team subscription';
 
@@ -26,6 +32,7 @@ export class TeamLicense extends DurableObject {
     if (!bound) await this.ctx.storage.put('team', team);
     return true;
   }
+  async team() { return (await this.ctx.storage.get('team')) ?? null; }
   async release(team) {
     if ((await this.ctx.storage.get('team')) === team) await this.ctx.storage.delete('team');
   }
@@ -38,6 +45,7 @@ export class Team extends DurableObject {
     super(ctx, env);
     this.sql = ctx.storage.sql;
     this.schema();
+    this.migrate();
     this.window = new Window(600, 60_000);
   }
 
@@ -50,8 +58,15 @@ export class Team extends DurableObject {
       CREATE TABLE IF NOT EXISTS entries(id TEXT PRIMARY KEY, updated_at INTEGER NOT NULL, deleted INTEGER NOT NULL,
         epoch INTEGER NOT NULL, ct TEXT NOT NULL, seq INTEGER NOT NULL);
       CREATE INDEX IF NOT EXISTS entries_seq ON entries(seq);
-      CREATE TABLE IF NOT EXISTS invites(hash TEXT PRIMARY KEY, exp INTEGER NOT NULL);
+      CREATE TABLE IF NOT EXISTS invites(hash TEXT PRIMARY KEY, exp INTEGER NOT NULL, role TEXT NOT NULL DEFAULT 'member');
+      CREATE TABLE IF NOT EXISTS activity(seq INTEGER PRIMARY KEY AUTOINCREMENT, at INTEGER NOT NULL, by TEXT NOT NULL,
+        epoch INTEGER NOT NULL, ct TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS nonces(nonce TEXT PRIMARY KEY, exp INTEGER NOT NULL);`);
+  }
+
+  // Teams made before roles had invites without a role column.
+  migrate() {
+    try { this.sql.exec("ALTER TABLE invites ADD COLUMN role TEXT NOT NULL DEFAULT 'member'"); } catch {}
   }
 
   one(q, ...args) { return this.sql.exec(q, ...args).toArray()[0]; }
@@ -63,11 +78,44 @@ export class Team extends DurableObject {
   memberCount() { return this.one('SELECT COUNT(*) AS n FROM members').n; }
   licenseFor(subscription) { return this.env.TEAM_LICENSE.get(this.env.TEAM_LICENSE.idFromName(subscription)); }
   licensed() { return Date.now() < Number(this.get('licenseEnd') || 0) + LICENSE_GRACE; }
+  seats() { return Number(this.get('seats') || TEAM_SEATS); }
+
+  // Keeps the newest MAX_EVENTS activity entries from the last EVENT_LIFE.
+  pruneActivity() {
+    this.sql.exec('DELETE FROM activity WHERE at < ?', Date.now() - EVENT_LIFE);
+    this.sql.exec('DELETE FROM activity WHERE seq <= (SELECT MAX(seq) FROM activity) - ?', MAX_EVENTS);
+  }
+
+  // Removes a member at once and flags the team key for rotation. The owner can't be removed.
+  removeMember(target) {
+    if (target === this.get('admin')) return err(409, 'the team owner cannot leave or be removed; delete the team instead');
+    if (!this.member(target)) return err(404, 'no such member in this team');
+    this.sql.exec('DELETE FROM members WHERE key=?', target);
+    this.sql.exec('DELETE FROM wrapped WHERE member=?', target);
+    this.set('needsRotation', 1);
+    return null;
+  }
+
+  // Business admin page (relay index.js /v1/business): the caller proved it holds this team's license.
+  async businessView(subscription) {
+    this.schema();
+    if (!this.get('admin') || this.get('subscription') !== subscription) return null;
+    const { admin, seats, licenseEnd, members } = this.status();
+    return { owner: admin, seats, used: members.length, licenseEnd, members: members.map(({ key, role, added }) => ({ key, role, added })) };
+  }
+  async businessRemove(subscription, key) {
+    this.schema();
+    if (!this.get('admin') || this.get('subscription') !== subscription) return { status: 404, error: 'no team uses this license' };
+    const refused = this.removeMember(key);
+    return refused ? { status: refused.status, error: (await refused.json()).error } : { status: 200, view: await this.businessView(subscription) };
+  }
 
   status() {
     const epoch = this.epoch();
     return {
       admin: this.get('admin'),
+      owner: this.get('admin'),
+      seats: this.seats(),
       epoch,
       needsRotation: this.get('needsRotation') === '1',
       licenseEnd: Number(this.get('licenseEnd')),
@@ -108,6 +156,7 @@ export class Team extends DurableObject {
       this.set('needsRotation', 0);
       this.set('licenseEnd', lic.periodEnd);
       this.set('subscription', lic.subscription);
+      this.set('seats', lic.seats);
       this.sql.exec("INSERT INTO members VALUES(?, 'admin', ?, ?)", dev, body.boxKey, now);
       return json(this.status(), 201);
     }
@@ -120,29 +169,32 @@ export class Team extends DurableObject {
       if (!this.licensed()) return err(402, 'the team subscription has lapsed; ask the admin to renew it');
       const hash = b64u(await sha256(body.invite));
       this.sql.exec('DELETE FROM invites WHERE exp < ?', Date.now());
-      if (!this.one('SELECT 1 AS x FROM invites WHERE hash=?', hash)) return err(403, 'invite is not valid, expired, or already used');
-      if (this.memberCount() >= MAX_MEMBERS) return err(507, `team is full (${MAX_MEMBERS} members)`);
+      const inv = this.one('SELECT role FROM invites WHERE hash=?', hash);
+      if (!inv) return err(403, 'invite is not valid, expired, or already used');
+      if (this.memberCount() >= this.seats()) return err(507, `team is full (${this.seats()} members)`);
       this.sql.exec('DELETE FROM invites WHERE hash=?', hash);
-      this.sql.exec("INSERT INTO members VALUES(?, 'member', ?, ?)", dev, body.boxKey, Date.now());
+      this.sql.exec('INSERT INTO members VALUES(?, ?, ?, ?)', dev, ROLES.includes(inv.role) ? inv.role : 'member', body.boxKey, Date.now());
       return json(this.status(), 201);
     }
 
     const me = this.member(dev);
     if (!me) return err(403, 'device is not in this team');
     const admin = me.role === 'admin';
-    const adminOnly = () => (admin ? null : err(403, 'only the team admin can do this'));
+    const owner = dev === this.get('admin');
+    const adminOnly = () => err(403, 'only a team admin can do this');
+    const ownerOnly = () => err(403, 'only the team owner (who made the team) can do this');
 
     if (req.method === 'GET' && route === '') return json(this.status());
 
     if (req.method === 'DELETE' && route === '') {
-      if (!admin) return adminOnly();
+      if (!owner) return ownerOnly();
       await this.licenseFor(this.get('subscription')).release(teamId); // the license can now make a new team
       await this.ctx.storage.deleteAll();
       return json({ ok: true });
     }
 
     if (req.method === 'POST' && route === 'license') {
-      if (!admin) return adminOnly();
+      if (!owner) return ownerOnly();
       const lic = await checkTeamLicense(body.license, this.env.LICENSE_PUBLIC);
       if (lic.error) return err(402, lic.error);
       // Claimed every time, so teams made before licenses were bound get bound on their next refresh.
@@ -151,6 +203,7 @@ export class Team extends DurableObject {
       if (old !== lic.subscription) await this.licenseFor(old).release(teamId);
       if (lic.periodEnd > Number(this.get('licenseEnd'))) this.set('licenseEnd', lic.periodEnd);
       this.set('subscription', lic.subscription);
+      this.set('seats', lic.seats); // members past the seat count stay; nobody new can join until there's room
       return json(this.status());
     }
 
@@ -160,21 +213,53 @@ export class Team extends DurableObject {
       const now = Date.now();
       this.sql.exec('DELETE FROM invites WHERE exp < ?', now);
       if (this.one('SELECT COUNT(*) AS n FROM invites').n >= 20) return err(429, 'too many unused invites; wait for some to expire');
+      const role = body.role ?? 'member';
+      if (!ROLES.includes(role)) return err(400, 'role must be admin, member or viewer');
       const invite = randomId();
-      this.sql.exec('INSERT INTO invites VALUES(?, ?)', b64u(await sha256(invite)), now + INVITE_LIFE);
-      return json({ invite, expiresAt: now + INVITE_LIFE }, 201);
+      this.sql.exec('INSERT INTO invites VALUES(?, ?, ?)', b64u(await sha256(invite)), now + INVITE_LIFE, role);
+      return json({ invite, expiresAt: now + INVITE_LIFE, role }, 201);
     }
 
     // Removing someone (or leaving) drops their access now and flags the team key for rotation.
     if (req.method === 'DELETE' && rest[0] === 'members' && rest.length === 2) {
       const target = rest[1];
       if (target !== dev && !admin) return adminOnly();
-      if (target === this.get('admin')) return err(409, 'the admin cannot leave; delete the team instead');
-      if (!this.member(target)) return err(404, 'no such member in this team');
-      this.sql.exec('DELETE FROM members WHERE key=?', target);
-      this.sql.exec('DELETE FROM wrapped WHERE member=?', target);
-      this.set('needsRotation', 1);
+      return this.removeMember(target) || json(this.status());
+    }
+
+    if (req.method === 'POST' && rest[0] === 'members' && rest[2] === 'role' && rest.length === 3) {
+      if (!admin) return adminOnly();
+      if (!ROLES.includes(body.role)) return err(400, 'role must be admin, member or viewer');
+      if (rest[1] === this.get('admin')) return err(409, 'the team owner is always an admin');
+      if (!this.member(rest[1])) return err(404, 'no such member in this team');
+      this.sql.exec('UPDATE members SET role=? WHERE key=?', body.role, rest[1]);
       return json(this.status());
+    }
+
+    // Activity log: any member appends (ciphertext under the team key); admins read it. The relay adds who
+    // (the signing device) and when (its own clock), so neither can be faked by the writer.
+    if (req.method === 'POST' && route === 'activity') {
+      const list = body.events;
+      if (!Array.isArray(list) || list.length < 1 || list.length > MAX_BATCH) return err(400, `events must be an array of 1 to ${MAX_BATCH}`);
+      const cur = this.epoch();
+      for (const e of list) {
+        if (!e || typeof e.ciphertext !== 'string' || !e.ciphertext || !B64U.test(e.ciphertext)) return err(400, 'event ciphertext must be a base64url string');
+        if (e.ciphertext.length > MAX_EVENT_CT) return err(413, `event ciphertext too large (max ${MAX_EVENT_CT} characters)`);
+        if (e.epoch !== cur) return err(409, 'the team key has changed; fetch the new key and encrypt with it', { epoch: cur });
+      }
+      const now = Date.now();
+      for (const e of list) this.sql.exec('INSERT INTO activity(at, by, epoch, ct) VALUES(?, ?, ?, ?)', now, dev, cur, e.ciphertext);
+      this.pruneActivity();
+      return json({ ok: true, count: list.length }, 201);
+    }
+    if (req.method === 'GET' && route === 'activity') {
+      if (!admin) return adminOnly();
+      const since = Number(url.searchParams.get('since') ?? 0);
+      if (!Number.isInteger(since) || since < 0) return err(400, 'since must be an integer >= 0');
+      this.pruneActivity();
+      const rows = this.sql.exec('SELECT * FROM activity WHERE seq > ? ORDER BY seq LIMIT 501', since).toArray();
+      const page = rows.slice(0, 500).map((r) => ({ seq: r.seq, at: r.at, by: r.by, epoch: r.epoch, ciphertext: r.ct }));
+      return json({ events: page, cursor: page.length ? page[page.length - 1].seq : since, more: rows.length > 500 });
     }
 
     // Wrapped team keys. Same epoch: add or replace keys for listed members. Next epoch: a rotation, which must
@@ -206,6 +291,7 @@ export class Team extends DurableObject {
 
     // Entries: last writer wins by updatedAt, like sync. Writes must use the current key epoch.
     if (req.method === 'POST' && route === 'entries') {
+      if (me.role === 'viewer') return err(403, 'view-only members cannot change team accounts');
       if (!this.licensed()) return err(402, 'the team subscription has lapsed; entries are read-only until it is renewed');
       const list = body.entries;
       if (!Array.isArray(list) || list.length < 1 || list.length > MAX_BATCH) return err(400, `entries must be an array of 1 to ${MAX_BATCH}`);

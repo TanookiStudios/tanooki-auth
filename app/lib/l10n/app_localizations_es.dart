@@ -5234,4 +5234,203 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get healthAddCodes => 'Añadir códigos';
+
+  @override
+  String get syncErrorWiped =>
+      'Otro dispositivo borró Tanooki Auth en este dispositivo. Se eliminó todo lo que había y salió de la sincronización.';
+
+  @override
+  String get syncUiEraseDevice => 'Borrar este dispositivo';
+
+  @override
+  String get syncUiEraseTitle => '¿Borrar este dispositivo?';
+
+  @override
+  String get syncUiEraseBody =>
+      'La próxima vez que ese dispositivo se conecte, Tanooki Auth borrará todo en él: sus cuentas, ajustes, widgets y resultados de búsqueda. También saldrá de la sincronización para siempre. No se puede deshacer. No cambia nada en este dispositivo ni en tus otros dispositivos.';
+
+  @override
+  String get syncUiEraseButton => 'Borrarlo';
+
+  @override
+  String get syncUiErased =>
+      'Listo. Ese dispositivo se borrará la próxima vez que se conecte.';
+
+  @override
+  String syncUiClashes(int count) {
+    return 'Conflictos de sincronización ($count)';
+  }
+
+  @override
+  String get syncUiClashesHelp =>
+      'Una cuenta se cambió en dos dispositivos antes de sincronizarse. Elige qué versión conservar.';
+
+  @override
+  String get syncUiClashTitle => 'Conflictos de sincronización';
+
+  @override
+  String get syncUiClashIntro =>
+      'Cada cuenta de abajo se cambió en dos dispositivos antes de sincronizarse. La sincronización usó el cambio más reciente. Si quieres la otra versión, toca Conservar esta debajo de ella.';
+
+  @override
+  String get syncUiClashNone => 'No hay conflictos. Nada que elegir.';
+
+  @override
+  String get syncUiClashInUse => 'En uso ahora';
+
+  @override
+  String get syncUiClashOther => 'Otra versión';
+
+  @override
+  String get syncUiClashKeep => 'Conservar esta';
+
+  @override
+  String get syncUiClashKept =>
+      'Listo. Tus otros dispositivos recibirán esta versión en la próxima sincronización.';
+
+  @override
+  String syncUiClashEdited(String when) {
+    return 'Cambiada $when';
+  }
+
+  @override
+  String get syncUiClashName => 'Nombre';
+
+  @override
+  String get syncUiClashAccount => 'Cuenta';
+
+  @override
+  String get syncUiClashFolder => 'Carpeta';
+
+  @override
+  String get syncUiClashNotes => 'Notas';
+
+  @override
+  String get syncUiClashInTrash => 'En la papelera';
+
+  @override
+  String get syncUiClashSecret => 'Clave de configuración';
+
+  @override
+  String get syncUiClashSecretDifferent => 'distinta';
+
+  @override
+  String get syncUiClashYes => 'Sí';
+
+  @override
+  String get syncUiClashNo => 'No';
+
+  @override
+  String get syncUiClashOtherDiffers =>
+      'También difieren otros ajustes, como el aspecto, el sitio web o los códigos de recuperación.';
+
+  @override
+  String get teamRoleAdmin => 'Administrador';
+
+  @override
+  String get teamRoleMember => 'Miembro';
+
+  @override
+  String get teamRoleViewer => 'Solo lectura';
+
+  @override
+  String get teamRoleOwner => 'Propietario';
+
+  @override
+  String get teamUiMakeAdmin => 'Hacer administrador';
+
+  @override
+  String get teamUiMakeMember => 'Hacer miembro';
+
+  @override
+  String get teamUiMakeViewer => 'Hacer solo lectura';
+
+  @override
+  String get teamUiRoleChanged => 'Rol cambiado.';
+
+  @override
+  String get teamUiInviteRole => 'Se une como';
+
+  @override
+  String get teamUiRoleHelp =>
+      'Los administradores invitan y quitan personas y ven el registro de actividad. Los miembros usan y cambian las cuentas del equipo. Las personas de solo lectura pueden usar las cuentas pero no cambiarlas.';
+
+  @override
+  String get teamUiInviteEmailLabel => 'Su correo (opcional)';
+
+  @override
+  String get teamUiInviteEmailHint => 'nombre@ejemplo.com';
+
+  @override
+  String get teamUiInviteMake => 'Crear invitación';
+
+  @override
+  String teamUiInviteEmailed(String email) {
+    return 'Invitación enviada a $email.';
+  }
+
+  @override
+  String get teamUiEmailNotSetUp =>
+      'El envío de correos aún no está configurado. Copia el enlace de abajo y envíalo tú.';
+
+  @override
+  String teamUiEmailFailed(String reason) {
+    return 'El correo no se envió ($reason). Copia el enlace de abajo y envíalo tú.';
+  }
+
+  @override
+  String get teamUiYoureAdmin => 'Eres administrador de este equipo';
+
+  @override
+  String get teamUiYoureViewer => 'Estás en un equipo (solo lectura)';
+
+  @override
+  String get teamUiViewOnly =>
+      'Puedes usar estas cuentas, pero solo los administradores y miembros pueden cambiarlas.';
+
+  @override
+  String get teamUiActivity => 'Actividad';
+
+  @override
+  String get teamUiActivityTitle => 'Actividad del equipo';
+
+  @override
+  String get teamUiActivityHelp =>
+      'Quién copió o cambió cuentas del equipo, y cuándo. Solo lo ven los administradores. Se guarda 90 días, hasta las últimas 2000 entradas.';
+
+  @override
+  String get teamUiActivityEmpty =>
+      'Nada todavía. Aquí aparecen las copias y los cambios en las cuentas del equipo.';
+
+  @override
+  String teamActCopy(String name) {
+    return 'Copió un código de $name';
+  }
+
+  @override
+  String teamActFill(String name) {
+    return 'Rellenó un código de $name';
+  }
+
+  @override
+  String teamActAdd(String name) {
+    return 'Añadió $name';
+  }
+
+  @override
+  String teamActEdit(String name) {
+    return 'Cambió $name';
+  }
+
+  @override
+  String teamActDelete(String name) {
+    return 'Quitó $name';
+  }
+
+  @override
+  String get teamUiBuyBusiness => 'Plan para empresas: 3 \$ por persona al año';
+
+  @override
+  String get teamUiBusinessSoon =>
+      'Plan para empresas, para equipos de más de 10 personas (3 \$ por persona al año): muy pronto.';
 }
