@@ -11,7 +11,8 @@ compatibility_date = "2026-09-01"
 # Public half of the signing key; must match lib/core/license.dart.
 LICENSE_PUBLIC = "JZ9iKjegJLat8xNt2L80HNWmHfXJc9at34lUBynULM8="
 
-# Invite codes -> number of paid friends (plus the checkout IDs already counted). Nothing else.
+# Invite counts: one key per paid friend's checkout, ref:<code>:<checkout ID> (older codes may also have one
+# ref:<code> record listing checkout IDs). Nothing else.
 [[kv_namespaces]]
 binding = "INVITES"
 id = "23797a842ef442a1bb3443b23f5d1094"

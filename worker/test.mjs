@@ -12,7 +12,8 @@ const pub = publicKey.export({ format: 'jwk' }).x;
 const std = (u) => Buffer.from(u, 'base64url').toString('base64');
 const fakeKV = () => {
   const m = new Map();
-  return { m, get: async (k) => m.get(k) ?? null, put: async (k, v) => { m.set(k, v); },
+  // get yields to the event loop like real KV, so a read-modify-write race shows up in tests.
+  return { m, get: async (k) => { const v = m.get(k) ?? null; await new Promise((r) => setTimeout(r, 1)); return v; }, put: async (k, v) => { m.set(k, v); },
     list: async ({ prefix }) => ({ keys: [...m.keys()].filter((k) => k.startsWith(prefix)).sort().map((name) => ({ name })), list_complete: true }) };
 };
 const env = { STRIPE_KEY: 'rk_test', LICENSE_SEED: std(seed), LICENSE_PUBLIC: std(pub), INVITES: fakeKV(), FEEDBACK: fakeKV(), FEEDBACK_ADMIN: 'admin-secret-for-tests' };
@@ -109,8 +110,29 @@ assert.equal(inv.count, 3);
 assert.equal(payloadOf(inv.familyKey), '1|cs_test_paid1234567890|20261028|5', 'family key for the same order');
 assert.ok(verifies(inv.familyKey), 'family key verifies');
 assert.equal((await invitesNow(inv.familyKey)).familyKey, undefined, 'a family key is not upgraded again');
-assert.deepEqual([...env.INVITES.m.keys()], [`ref:${myCode.code}`], 'KV holds only the code');
-assert.deepEqual(Object.keys(JSON.parse(env.INVITES.m.get(`ref:${myCode.code}`))).sort(), ['count', 'sessions']);
+assert.deepEqual([...env.INVITES.m.keys()].sort(), [1, 2, 3].map((i) => `ref:${myCode.code}:cs_test_referred${i}xxxxx`), 'KV holds only the code and counted checkout IDs');
+assert.ok([...env.INVITES.m.values()].every((v) => v === '1'), 'and nothing else');
+
+// Two referred purchases landing at the same instant both count.
+sessions.cs_test_raceowner12345 = { payment_status: 'paid', created: 1793145600, amount_subtotal: 500 };
+const raceKey = (await (await get('?session_id=cs_test_raceowner12345')).text()).match(KEY_RE)[0];
+const raceCode = await inviteCode('cs_test_raceowner12345', env.LICENSE_SEED);
+for (const i of [1, 2]) sessions[`cs_test_race${i}xxxxxxxxx`] = { payment_status: 'paid', created: 1793145600, amount_subtotal: 400, client_reference_id: `ref_${raceCode}` };
+await Promise.all([get('?session_id=cs_test_race1xxxxxxxxx'), get('?session_id=cs_test_race2xxxxxxxxx')]);
+assert.equal((await invitesNow(raceKey)).count, 2, 'simultaneous referrals both count');
+
+// Codes counted before per-checkout keys keep their old record; a checkout already in it is not counted twice.
+sessions.cs_test_oldowner123456 = { payment_status: 'paid', created: 1793145600, amount_subtotal: 500 };
+const oldKey = (await (await get('?session_id=cs_test_oldowner123456')).text()).match(KEY_RE)[0];
+const oldCode = await inviteCode('cs_test_oldowner123456', env.LICENSE_SEED);
+env.INVITES.m.set(`ref:${oldCode}`, JSON.stringify({ count: 2, sessions: ['cs_test_old1xxxxxxxxxx', 'cs_test_old2xxxxxxxxxx'] }));
+assert.equal((await invitesNow(oldKey)).count, 2, 'old record still counts');
+for (const i of [2, 3]) sessions[`cs_test_old${i}xxxxxxxxxx`] = { payment_status: 'paid', created: 1793145600, amount_subtotal: 400, client_reference_id: `ref_${oldCode}` };
+await get('?session_id=cs_test_old2xxxxxxxxxx');
+await get('?session_id=cs_test_old3xxxxxxxxxx');
+const oldInv = await invitesNow(oldKey);
+assert.equal(oldInv.count, 3, 'old + new, deduped');
+assert.ok(verifies(oldInv.familyKey), 'family key once old + new reach 3');
 
 // ---------- team license (#42 billing) ----------
 const periodEnd = Math.floor(Date.now() / 1000) + 365 * 86400;
