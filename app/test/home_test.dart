@@ -106,7 +106,9 @@ void main() {
     await pumpHome(t);
     for (var i = 0; i < 5; i++) {
       final before = left();
-      await t.pump();
+      // One tick of the card's 1-second timer: a plain pump() may not rebuild, leaving a frame drawn in an earlier
+      // second (the Windows CI flake: "Next" still on screen from the last second before the code rolled over).
+      await t.pump(const Duration(seconds: 1));
       if (left() != before) continue;
       expect(find.textContaining('Next '), before <= 5 ? findsOneWidget : findsNothing);
       break;
