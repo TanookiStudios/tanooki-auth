@@ -92,7 +92,11 @@ void main() {
         await Future<void>.delayed(const Duration(milliseconds: 10));
       }
       expect(r.written, 0, reason: 'still inside the debounce window');
-      await Future<void>.delayed(const Duration(milliseconds: 300));
+      // Wait for the backup itself (encrypting and writing is slow on CI's Windows machines), not a fixed time.
+      for (var i = 0; i < 100 && r.written == 0; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 100)); // a second, wrong backup would land by now
       expect(r.written, 1);
       // A change after today's backup (including the save that recorded it) does nothing more today.
       r.vaultChanged(vault);
