@@ -31,6 +31,11 @@ class_name = "EmergencyGrant"
 name = "TEAM"
 class_name = "Team"
 
+# One per team subscription: which team it pays for (internal, not routed).
+[[durable_objects.bindings]]
+name = "TEAM_LICENSE"
+class_name = "TeamLicense"
+
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["SyncGroup", "LinkRoom"]
@@ -38,6 +43,10 @@ new_sqlite_classes = ["SyncGroup", "LinkRoom"]
 [[migrations]]
 tag = "v2"
 new_sqlite_classes = ["EmergencyGrant", "Team"]
+
+[[migrations]]
+tag = "v3"
+new_sqlite_classes = ["TeamLicense"]
 
 # Per-IP cap on every request, checked before any Durable Object is touched.
 [[ratelimits]]

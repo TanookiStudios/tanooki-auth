@@ -68,6 +68,8 @@ void main() {
       return allow;
     };
     await pump(t, HomeScreen(vault: vault));
+    // The first build can take seconds; the next tick redraws with the clock the codes below are made from.
+    await t.pump(const Duration(seconds: 1));
     final code = groupCode(bank.codeAt(DateTime.now()));
     expect(find.text(code), findsNothing, reason: 'hidden until Face ID');
     expect(find.text('••• •••'), findsOneWidget);

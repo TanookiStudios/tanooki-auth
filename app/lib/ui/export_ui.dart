@@ -40,8 +40,8 @@ Future<void> exportToAppFlow(BuildContext context, Vault vault) async {
     ]),
   );
   if (choice == null || !context.mounted) return;
-  if (choice == 'links') return exportPlainFlow(context, vault);
   if (!await confirmItsYou(context, vault, l10n.exportUiConfirmReason) || !context.mounted) return;
+  if (choice == 'links') return exportPlainFlow(context, vault);
   final accounts = vault.visible;
   Future<void> save(String name, String text) => _save(context, vault, name, text, accounts.length);
   switch (choice) {

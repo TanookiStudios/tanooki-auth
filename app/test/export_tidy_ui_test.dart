@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tanooki_auth/core/account.dart';
 import 'package:tanooki_auth/core/vault.dart';
 import 'package:tanooki_auth/ui/export_ui.dart';
+import 'package:tanooki_auth/ui/security_ui.dart';
 import 'package:tanooki_auth/ui/theme.dart';
 import 'package:tanooki_auth/ui/tidy_ui.dart';
 
@@ -33,6 +34,26 @@ void main() {
     await t.pump();
     expect(find.text('Code 2 of 2'), findsOneWidget);
     expect(t.takeException(), isNull);
+  });
+
+  testWidgets('Move to another app: the plain setup-links file asks "is it you" like every other choice', (t) async {
+    final dir = Directory.systemTemp.createTempSync('export_ui');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final vault = Vault(File('${dir.path}/v.json'), MemoryKeyStore()..value = base64.encode(List.filled(32, 1)));
+    vault.accounts.add(Account(id: '1', issuer: 'GitHub', secret: 'JBSWY3DPEHPK3PXP'));
+    final reasons = <String>[];
+    confirmItsYouOverride = (_, _, reason) async {
+      reasons.add(reason);
+      return false;
+    };
+    addTearDown(() => confirmItsYouOverride = null);
+    await pump(t, Builder(builder: (c) => TextButton(onPressed: () => exportToAppFlow(c, vault), child: const Text('open'))));
+    await t.tap(find.text('open'));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Setup links (plain text)'));
+    await t.pumpAndSettle();
+    expect(reasons, ['Export your accounts'], reason: 'every secret in plain text: ask first');
+    expect(find.text('Export unencrypted?'), findsNothing, reason: 'refused: stops before the export');
   });
 
   testWidgets('Tidy names: shows each change first, applies only the ticked ones', (t) async {

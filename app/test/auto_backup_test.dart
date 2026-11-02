@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -86,18 +87,26 @@ void main() {
     });
 
     test('vault changes are debounced into one backup, and our own save does not retrigger', () async {
+      // The debounced backup runs from a timer nobody awaits, and its last step saves the vault. Wait for that
+      // save instead of sleeping a fixed time: a slow run still had vault.json.tmp open when tearDown deleted
+      // the folder, which Windows refuses ("file in use").
+      final saved = Completer<void>();
+      Vault.onSaved = (_) => saved.isCompleted ? null : saved.complete();
+      addTearDown(() => Vault.onSaved = null);
       final r = runner();
+      addTearDown(r.cancel);
       for (var i = 0; i < 5; i++) {
         r.vaultChanged(vault);
         await Future<void>.delayed(const Duration(milliseconds: 10));
       }
       expect(r.written, 0, reason: 'still inside the debounce window');
-      await Future<void>.delayed(const Duration(milliseconds: 300));
+      await saved.future.timeout(const Duration(seconds: 30));
       expect(r.written, 1);
       // A change after today's backup (including the save that recorded it) does nothing more today.
       r.vaultChanged(vault);
       await Future<void>.delayed(const Duration(milliseconds: 150));
       expect(r.written, 1);
+      expect(opener.opened, 1, reason: 'the second timer fired without touching the folder or the vault');
     });
 
     test('Back up now always runs and replaces today\'s file', () async {

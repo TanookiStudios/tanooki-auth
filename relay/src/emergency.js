@@ -6,6 +6,7 @@ import { B64U, ID, Window, err, json, parseJson, readBody, signedParts, verifySi
 import { EMERGENCY_REQUEST, pushConfigured, pushTokenError, sendPush } from './push.js';
 
 const DELAY = 7 * 86400_000; // contact waits 7 days after asking
+const DENY_COOLDOWN = 86400_000; // after a deny the contact cannot ask (or push the owner) again for 24 hours
 const MAX_BLOB = 786_432; // characters of base64url (about 576 KiB of ciphertext)
 const MAX_PUSH_TOKENS = 10; // owner devices that get the "someone asked" notification
 
@@ -31,12 +32,14 @@ export class EmergencyGrant extends DurableObject {
 
   status() {
     const releaseAt = Number(this.get('releaseAt') || 0);
+    const retryAt = Number(this.get('retryAt') || 0);
     return {
       owner: this.get('owner'),
       contactKey: this.get('contactKey'),
       state: !releaseAt ? 'idle' : Date.now() >= releaseAt ? 'released' : 'waiting',
       requestedAt: Number(this.get('requestedAt') || 0) || null,
       releaseAt: releaseAt || null,
+      retryAt: retryAt > Date.now() ? retryAt : null,
       updatedAt: Number(this.get('updatedAt')),
       blobLength: this.get('blob').length,
     };
@@ -63,7 +66,10 @@ export class EmergencyGrant extends DurableObject {
       if (body.contactKey === dev) return err(400, 'the contact must be a different device from the owner');
       if (typeof body.blob !== 'string' || !body.blob || !B64U.test(body.blob)) return err(400, 'blob must be a base64url string');
       if (body.blob.length > MAX_BLOB) return err(413, `blob too large (max ${MAX_BLOB} characters)`);
-      if (owner && body.contactKey !== this.get('contactKey')) this.clearRequest(); // a new contact starts from scratch
+      if (owner && body.contactKey !== this.get('contactKey')) { // a new contact starts from scratch
+        this.clearRequest();
+        this.sql.exec("DELETE FROM meta WHERE k='retryAt'");
+      }
       this.set('owner', dev);
       this.set('contactKey', body.contactKey);
       this.set('blob', body.blob);
@@ -83,6 +89,9 @@ export class EmergencyGrant extends DurableObject {
       if (req.method === 'POST' && route === 'deny') {
         if (!this.get('releaseAt')) return err(409, 'there is no request to deny');
         this.clearRequest();
+        // Tests on a local relay (TEST_MODE set) may shorten the cooldown; the deployed relay ignores cooldownSeconds.
+        const cooldown = this.env.TEST_MODE && Number.isInteger(body.cooldownSeconds) && body.cooldownSeconds >= 0 ? body.cooldownSeconds * 1000 : DENY_COOLDOWN;
+        this.set('retryAt', Date.now() + cooldown);
         return json(this.status());
       }
       if (req.method === 'POST' && route === 'push') {
@@ -98,6 +107,8 @@ export class EmergencyGrant extends DurableObject {
     // role === 'contact'
     if (req.method === 'POST' && route === 'request') {
       if (this.get('releaseAt')) return json(this.status()); // already asked: no second push
+      const retryAt = Number(this.get('retryAt') || 0);
+      if (Date.now() < retryAt) return err(429, 'the owner denied the last request; you can ask again after retryAt', { retryAt });
       // Tests on a local relay (TEST_MODE set) may shorten the wait; the deployed relay ignores delaySeconds.
       const delay = this.env.TEST_MODE && Number.isInteger(body.delaySeconds) && body.delaySeconds >= 0 ? body.delaySeconds * 1000 : DELAY;
       const now = Date.now();

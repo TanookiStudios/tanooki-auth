@@ -12,6 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;650&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="site.css">
+<link rel="stylesheet" href="newsletter/form.css">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -196,6 +197,13 @@
 <footer class="foot">
   <div class="container">
     <p class="mast">Tanooki Auth</p>
+    <form class="mailform" data-endpoint="/subscribe">
+      <label for="foot-email">Get occasional news by email. Unsubscribe in one click.</label>
+      <input id="foot-email" type="email" name="email" autocomplete="email" required placeholder="you@example.com">
+      <button class="btn" type="submit">Sign up</button>
+      <output aria-live="polite"></output>
+    </form>
+    <script src="newsletter/signup.js" defer></script>
     <nav aria-label="Footer">
       <ul>
         <li><a href="guides/">2FA guides</a></li>
@@ -203,6 +211,8 @@
         <li><a href="compare/">Compare</a></li>
         <li><a href="status/">Status</a></li>
         <li><a href="press/">Press kit</a></li>
+        <li><a href="newsletter/">Newsletter</a></li>
+        <li><a href="students/">Student discount</a></li>
         <li><a href="https://tanooki-auth-premium.kirbymail.workers.dev/privacy">Privacy policy</a></li>
         <li><a href="https://github.com/TanookiStudios/tanooki-auth">Source code</a></li>
         <li><a href="https://tanookistudios.com">Tanooki Studios</a></li>
