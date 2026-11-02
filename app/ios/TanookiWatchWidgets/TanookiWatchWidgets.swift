@@ -4,16 +4,19 @@ import WidgetKit
 /// Watch face complication (Premium): the code of the one favorite picked on the iPhone (Settings > Watch
 /// face favorite), with a countdown. Codes are worked out here on the watch from the favorites copy the
 /// watch app keeps in the keychain it shares with this extension; one timeline entry per code, made ahead.
+/// Plus a Smart Stack widget (see FavoriteSmartStack) built from the same pieces.
 @main
 struct TanookiWatchWidgets: WidgetBundle {
   var body: some Widget {
     FavoriteComplication()
+    FavoriteSmartStack()
   }
 }
 
 struct ComplicationEntry: TimelineEntry {
   let date: Date
   let favorite: Favorite?
+  var relevance: TimelineEntryRelevance? = nil
 }
 
 struct ComplicationProvider: TimelineProvider {
@@ -55,6 +58,49 @@ struct FavoriteComplication: Widget {
     .configurationDisplayName("Favorite code")
     .description("One favorite's code. Pick it on your iPhone in Tanooki Auth: Settings > Watch face favorite.")
     .supportedFamilies([.accessoryCircular, .accessoryRectangular, .accessoryInline, .accessoryCorner])
+  }
+}
+
+/// Smart Stack widget: a favorite's code and countdown (see SmartStack in Shared/FavoriteStore.swift for
+/// which one). Right after the iPhone copies a favorite's code it asks to go on top of the stack. It shows
+/// only what the watch already has: no ask-first or travel-hidden accounts, and nothing while the decoy is open.
+struct SmartStackProvider: TimelineProvider {
+  func placeholder(in context: Context) -> ComplicationEntry { ComplicationProvider().placeholder(in: context) }
+
+  func getSnapshot(in context: Context, completion: @escaping (ComplicationEntry) -> Void) {
+    completion(context.isPreview ? placeholder(in: context) : current().entries[0])
+  }
+
+  func getTimeline(in context: Context, completion: @escaping (Timeline<ComplicationEntry>) -> Void) {
+    completion(current())
+  }
+
+  private func current() -> Timeline<ComplicationEntry> {
+    let group = FavoriteStore.sharedGroup
+    return Self.timeline(FavoriteStore.load(group: group), copied: FavoriteStore.loadCopied(group: group), now: Date())
+  }
+
+  static func timeline(_ list: [Favorite], copied: FavoriteStore.Copied?, now: Date) -> Timeline<ComplicationEntry> {
+    let pick = SmartStack.pick(list, copied: copied, now: now)
+    let base = ComplicationProvider.timeline(pick.favorite, now: now)
+    let entries = base.entries.map { e in
+      let s = SmartStack.score(pick.favorite, boostedUntil: pick.boostedUntil, at: e.date)
+      return ComplicationEntry(date: e.date, favorite: e.favorite, relevance: TimelineEntryRelevance(score: s.score, duration: s.duration))
+    }
+    // When the boost ends, look again, so the watch face favorite comes back.
+    return Timeline(entries: entries, policy: pick.boostedUntil.map { .after($0) } ?? base.policy)
+  }
+}
+
+struct FavoriteSmartStack: Widget {
+  var body: some WidgetConfiguration {
+    StaticConfiguration(kind: "FavoriteSmartStack", provider: SmartStackProvider()) { entry in
+      ComplicationView(entry: entry)
+        .containerBackground(.fill.tertiary, for: .widget)
+    }
+    .configurationDisplayName("Favorite code")
+    .description("A favorite's code in the Smart Stack. It comes to the top right after you copy that code on your iPhone.")
+    .supportedFamilies([.accessoryRectangular])
   }
 }
 

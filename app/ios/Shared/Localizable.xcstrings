@@ -30,6 +30,35 @@
         }
       }
     },
+    "A favorite's code in the Smart Stack. It comes to the top right after you copy that code on your iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Code eines Favoriten im Smart Stack. Er rückt nach oben, sobald du diesen Code auf deinem iPhone kopierst."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El código de un favorito en el Smart Stack. Sube arriba justo después de copiar ese código en tu iPhone."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le code d'un favori dans la pile intelligente. Il passe en haut juste après que vous copiez ce code sur votre iPhone."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "お気に入りのコードをスマートスタックに表示します。iPhoneでそのコードをコピーすると、すぐ一番上に表示されます。"
+          }
+        }
+      }
+    },
     "Asks first": {
       "extractionState": "manual",
       "localizations": {

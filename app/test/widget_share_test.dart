@@ -6,6 +6,7 @@ import 'package:tanooki_auth/core/vault.dart';
 import 'package:tanooki_auth/core/widget_share.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized(); // the decoy test goes through a platform channel
   Vault vault() {
     final v = Vault(File('unused'), _NoKeys());
     v.accounts.addAll([
@@ -36,6 +37,21 @@ void main() {
       'digits': 6,
       'period': 30,
     });
+  });
+
+  test('the watch hears about a copy only for a favorite it already has, and never in the decoy', () async {
+    final v = vault();
+    final github = v.accounts.first, plain = v.accounts[1];
+    expect(watchMayHearCopied(v, github), isFalse); // sharing off: the watch has nothing
+    v.settings[shareCodesKey] = true;
+    expect(watchMayHearCopied(v, github), isTrue);
+    expect(watchMayHearCopied(v, plain), isFalse); // not a favorite
+    github.requireAuth = true;
+    expect(watchMayHearCopied(v, github), isFalse); // ask-first accounts never reach the watch
+    github.requireAuth = false;
+    await sharesVaultOpened(v, decoy: true);
+    addTearDown(() => sharesVaultOpened(v, decoy: false));
+    expect(watchMayHearCopied(v, github), isFalse);
   });
 
   group('AutoFill', () {
