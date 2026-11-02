@@ -2,10 +2,10 @@
 import { SyncGroup } from './sync.js';
 import { LinkRoom } from './link.js';
 import { EmergencyGrant } from './emergency.js';
-import { Team } from './team.js';
+import { Team, TeamLicense } from './team.js';
 import { CORS, ID, MAX_BODY, err, json } from './util.js';
 
-export { SyncGroup, LinkRoom, EmergencyGrant, Team };
+export { SyncGroup, LinkRoom, EmergencyGrant, Team, TeamLicense };
 
 export default {
   async fetch(req, env) {
