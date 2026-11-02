@@ -24,4 +24,5 @@ pack() { # pack <name> <node expression that edits manifest m>
 chromium='delete m.browser_specific_settings; delete m.background.scripts'
 pack chrome "$chromium"
 pack edge "$chromium"
-pack firefox 'delete m.background.service_worker'
+# data_collection_permissions needs Firefox 140 (desktop) / 142 (Android); web-ext lint warns on anything lower.
+pack firefox 'delete m.background.service_worker; m.browser_specific_settings.gecko.strict_min_version="142.0"'

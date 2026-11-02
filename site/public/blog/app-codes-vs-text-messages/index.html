@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Authenticator app codes vs text message codes | Tanooki Auth</title>
+<meta name="description" content="Text message codes are better than nothing, but authenticator app codes avoid SIM swaps and phone-network attacks. Here’s what the experts say.">
+<link rel="canonical" href="https://auth.tanookistudios.com/blog/app-codes-vs-text-messages/">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/favicon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;650&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<link rel="stylesheet" href="/pages.css">
+<link rel="alternate" type="application/rss+xml" title="Tanooki Auth blog" href="/blog/feed.xml">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="container">
+    <nav class="pill" aria-label="Main">
+      <a class="brand" href="/" aria-label="Tanooki Auth home"><img src="/icon.png" alt="" width="28" height="28">Tanooki Auth</a>
+      <ul>
+        <li><a href="/#promise">Privacy</a></li>
+        <li><a href="/#how">How it works</a></li>
+        <li><a href="/#themes">Premium</a></li>
+        <li><a href="/guides/">Guides</a></li>
+        <li><a href="/compare/">Compare</a></li>
+        <li><a href="/blog/">Blog</a></li>
+        <li><a href="https://tanookistudios.com/SupportMe">Donate</a></li>
+      </ul>
+      <a class="btn" href="/#download">Download</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="page">
+    <div class="container">
+      <p class="crumb"><a href="/blog/">All posts</a></p>
+      <h1>Authenticator app codes vs text message codes</h1>
+      <p class="muted block"><time datetime="2026-11-02">November 2, 2026</time></p>
+      <article class="article">
+<p>Lots of websites offer to text you a six-digit code when you sign in. Many also let you use an authenticator app instead. Both give you a short code to type in, so what’s the difference?</p>
+<h2>Text messages travel through your phone number</h2>
+<p>A texted code is only as safe as your phone number. The FTC <a href="https://consumer.ftc.gov/articles/use-two-factor-authentication-protect-your-accounts">warns</a> that in a SIM swap, a scammer talks your carrier into moving your number to their phone, and then your codes go to them. CISA’s <a href="https://www.cisa.gov/sites/default/files/publications/fact-sheet-implementing-phishing-resistant-mfa-508c.pdf">fact sheet on phishing-resistant MFA</a> goes further: it says text and voice codes are open to phishing, SIM swaps and attacks on the phone network itself, and should only be a last resort.</p>
+<p>The National Institute of Standards and Technology (NIST), which writes the federal government’s identity rules, <a href="https://pages.nist.gov/800-63-4/sp800-63b.html">labels codes sent over the phone network as “restricted”</a>: allowed, but with extra conditions, because of these risks.</p>
+<h2>App codes never leave your device</h2>
+<p>An authenticator app makes the code on your phone or computer from a secret it saved when you scanned the setup QR code. Nothing is sent to you, so there’s nothing to intercept, and a SIM swap doesn’t touch it. It also works with no signal, on a plane or abroad.</p>
+<h2>Neither one stops a fake website</h2>
+<p>Be honest about the limit: CISA points out that if you type an app code into a convincing fake login page, the scammer can use it too. That’s why passkeys and security keys are rated higher (see <a href="/blog/passkeys-vs-codes/">Passkeys vs codes</a>). Tanooki Auth’s browser extension helps here by filling a code only on the exact website an account belongs to.</p>
+<h2>What to do</h2>
+<ul>
+<li>Where a site offers an authenticator app, switch from text messages to the app.</li>
+<li>Once the app works, remove your phone number as a sign-in option if the site lets you, so it can’t be used as a back door.</li>
+<li>Save the site’s recovery codes (see <a href="/blog/recovery-codes/">Recovery codes</a>).</li>
+</ul>
+<p>Our guides show how to switch on sites like <a href="/guides/google/">Google</a> and <a href="/guides/paypal/">PayPal</a>.</p>
+</article>
+      <div class="block">
+        <h2>Related guides</h2>
+        <ul class="features">
+          <li><a class="text" href="/guides/google/">Turn on two-factor for Google</a></li>
+          <li><a class="text" href="/guides/paypal/">Turn on two-factor for PayPal</a></li>
+        </ul>
+      </div>
+      <div class="block">
+        <h2>Sources</h2>
+        <ol class="sources">
+          <li><a class="text" href="https://consumer.ftc.gov/articles/use-two-factor-authentication-protect-your-accounts">Use Two-Factor Authentication To Protect Your Accounts (FTC)</a></li>
+          <li><a class="text" href="https://www.cisa.gov/sites/default/files/publications/fact-sheet-implementing-phishing-resistant-mfa-508c.pdf">Implementing Phishing-Resistant MFA, fact sheet (CISA)</a></li>
+          <li><a class="text" href="https://pages.nist.gov/800-63-4/sp800-63b.html">Digital Identity Guidelines: Authentication, SP 800-63B (NIST)</a></li>
+        </ol>
+        <p class="muted block">Sources checked November 2, 2026. This post is general advice, not a substitute for each company’s own help pages.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="support" aria-labelledby="cta-h">
+    <div class="container">
+      <div>
+        <h2 id="cta-h">Get Tanooki Auth</h2>
+        <p>A free authenticator for Mac, Windows and Android. No account, no cloud.</p>
+      </div>
+      <a class="btn" href="/">Get Tanooki Auth</a>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="container">
+    <p class="mast">Tanooki Auth</p>
+    <nav aria-label="Footer">
+      <ul>
+        <li><a href="/guides/">2FA guides</a></li>
+        <li><a href="/blog/">Blog</a></li>
+        <li><a href="/compare/">Compare</a></li>
+        <li><a href="/status/">Status</a></li>
+        <li><a href="/press/">Press kit</a></li>
+        <li><a href="/newsletter/">Newsletter</a></li>
+        <li><a href="/students/">Student discount</a></li>
+        <li><a href="https://tanooki-auth-premium.kirbymail.workers.dev/privacy">Privacy policy</a></li>
+        <li><a href="https://github.com/TanookiStudios/tanooki-auth">Source code</a></li>
+        <li><a href="https://tanookistudios.com">Tanooki Studios</a></li>
+        <li><a href="https://tanookistudios.com/SupportMe">Donate</a></li>
+      </ul>
+    </nav>
+    <small>© 2026 Maddie</small>
+  </div>
+</footer>
+</body>
+</html>
