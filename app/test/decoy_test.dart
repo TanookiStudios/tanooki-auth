@@ -9,6 +9,7 @@ import 'package:tanooki_auth/core/account.dart';
 import 'package:tanooki_auth/core/spotlight.dart';
 import 'package:tanooki_auth/core/store.dart';
 import 'package:tanooki_auth/core/vault.dart';
+import 'package:tanooki_auth/core/widget_share.dart';
 import 'package:tanooki_auth/main.dart' show decoyLookAlikeKeys;
 
 import 'vault_test.dart' show MemoryKeyStore;
@@ -57,5 +58,34 @@ void main() {
     real.settings[spotlightKey] = false;
     await spotlightVaultOpened(real, decoy: false);
     expect(sent.last, isEmpty, reason: 'setting off: the real vault does not re-index');
+  });
+
+  test('AutoFill and widgets: opening the decoy empties them; the real vault fills them again', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    final autofill = <int>[];
+    const channel = MethodChannel('tanooki/extras');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, (call) async {
+      if (call.method == 'setAutofill') autofill.add((jsonDecode(call.arguments as String) as List).length);
+      return null;
+    });
+    addTearDown(() {
+      debugDefaultTargetPlatformOverride = null;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
+    });
+    final dir = Directory.systemTemp.createTempSync('decoy_autofill');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final real = Vault(File('${dir.path}/real.json'), MemoryKeyStore()..value = base64.encode(List.filled(32, 1)))
+      ..accounts.add(Account(id: '1', issuer: 'Bank', secret: 'JBSWY3DPEHPK3PXP', domains: ['bank.com']));
+    real.settings[autofillKey] = true;
+
+    await sharesVaultOpened(real, decoy: false);
+    expect(autofill.last, 1);
+    await sharesVaultOpened(real, decoy: true);
+    expect(autofill.last, 0, reason: 'the decoy is open: AutoFill must not offer the real codes');
+    await publishAutofill(real); // a background save of the real vault while the decoy is open
+    expect(autofill.last, 0);
+    await sharesVaultOpened(real, decoy: false);
+    expect(autofill.last, 1);
   });
 }

@@ -5,4 +5,5 @@
     <string name="widget_locked">Déverrouillez pour voir les codes</string>
     <string name="widget_empty">Aucun favori à afficher. Dans Tanooki Auth, mettez un compte en favori et activez Réglages &gt; Afficher les codes sur les widgets et la montre.</string>
     <string name="backup_folder">Dossier de sauvegarde</string>
+    <string name="autofill_auth_title">Remplir un code pour un compte qui demande d\'abord une confirmation</string>
 </resources>

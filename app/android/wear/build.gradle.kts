@@ -59,4 +59,6 @@ kotlin {
 dependencies {
     implementation("com.google.android.gms:play-services-wearable:19.0.0")
     testImplementation("junit:junit:4.13.2")
+    // The real org.json, so AutofillTest can parse the app's JSON (Android's copy is a stub in unit tests).
+    testImplementation("org.json:json:20180813")
 }

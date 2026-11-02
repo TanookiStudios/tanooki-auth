@@ -94,6 +94,7 @@ void main() {
   Vault.onSaved = (v) {
     if (!isDecoyVault(v)) {
       publishSharedFavorites(v);
+      publishAutofill(v);
       // Test and screenshot stores never reach the real Spotlight index.
       if (storageName.isEmpty) publishSpotlight(v);
       autoBackup.vaultChanged(v);
@@ -353,6 +354,7 @@ class _GateState extends State<Gate> implements BridgeHost {
       return;
     }
     await publishSharedFavorites(vault);
+    await publishAutofill(vault);
     _pendingAction = await takePendingAction() ?? _pendingAction;
     final spotlightId = await takeSpotlightOpen();
     if (spotlightId != null) _pendingAction = 'account:$spotlightId';
@@ -394,6 +396,7 @@ class _GateState extends State<Gate> implements BridgeHost {
     if (mounted) startSyncAndLink(context, v, bringToFront);
     // Not at launch: the index waits for the real vault to be unlocked, so the decoy never sits beside real names.
     if (storageName.isEmpty) await spotlightVaultOpened(_real!, decoy: v != _real);
+    await sharesVaultOpened(_real!, decoy: v != _real);
     pasteOnce = v.settings[pasteOnceKey] == true;
     if (_pendingAction == null) await _copyOnOpen(v);
     if (v != _real) return _runPendingAction();

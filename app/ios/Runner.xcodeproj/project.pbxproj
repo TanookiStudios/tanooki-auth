@@ -7,15 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		69DF5EF71A029E6F6A080485 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E30B9D0F0D312B46553CE528 /* InfoPlist.xcstrings */; };
 		01BC40C89DB8E2360C7B3C49 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E47985A2E2C36EC86595D979 /* Localizable.xcstrings */; };
-		971084ABF3E3151B042501C7 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E47985A2E2C36EC86595D979 /* Localizable.xcstrings */; };
-		5030E4AA61906D1E616C94A5 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E47985A2E2C36EC86595D979 /* Localizable.xcstrings */; };
-		D7EF47EC2410D4B76DCBDF6D /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E47985A2E2C36EC86595D979 /* Localizable.xcstrings */; };
 		04331E99395376C2721D3AA7 /* CodeActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28FBBAAAFE167CA6B543A867 /* CodeActivity.swift */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		175633723910740A742B6233 /* TanookiWatchWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E802450283DFCE9DB3AF69F4 /* TanookiWatchWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		1CCAEEC5802C0BD5FB5AB87E /* ScanControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EB8AF3DCA07A076FE6E081B /* ScanControl.swift */; };
+		20B8527F9C5284B5B9F1672A /* TOTP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C1E9542AC587AD5C5DE59DE /* TOTP.swift */; };
 		28BFA2A3E36491F0FBAA808E /* TanookiWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EC661803FC5988889326312 /* TanookiWatchApp.swift */; };
 		3319706154FDCC6749F914F1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8B2174F76D2D4875ED04A9DA /* Foundation.framework */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
@@ -23,26 +20,36 @@
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
 		3E6BCBBB9020E3E7559CDCBD /* TOTP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C1E9542AC587AD5C5DE59DE /* TOTP.swift */; };
 		40CFEA1492380CDE24F1E277 /* TOTP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C1E9542AC587AD5C5DE59DE /* TOTP.swift */; };
+		432476DD30E90C4DB1C6914A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2FAEF7C53673A3012B15190B /* Foundation.framework */; };
 		444A25AB175160F0991176CC /* TanookiWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5932D046B2C1B194AB62B85C /* TanookiWidgets.swift */; };
+		5030E4AA61906D1E616C94A5 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E47985A2E2C36EC86595D979 /* Localizable.xcstrings */; };
 		5201BCAC1AC28199BD9C7BB3 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8B2174F76D2D4875ED04A9DA /* Foundation.framework */; };
 		592EE8C819D31B651380151B /* OpenScannerIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1B88C6CCED8AF24D4A8A90B /* OpenScannerIntent.swift */; };
 		5EEBFD8D3512366C3945F362 /* TanookiWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 79AF2ECEDBE75C0B1348ABC1 /* TanookiWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		6142C59BF9F8F3DFCADBE6AA /* TOTP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C1E9542AC587AD5C5DE59DE /* TOTP.swift */; };
 		65247923D5F98025355B13E1 /* TanookiWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 215318A018933636BBDF1A69 /* TanookiWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		69DF5EF71A029E6F6A080485 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E30B9D0F0D312B46553CE528 /* InfoPlist.xcstrings */; };
+		6AB27E056C25854DBA7B6006 /* CredentialProviderViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97E270A11CF022A0A4F2B5CE /* CredentialProviderViewController.swift */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */; };
 		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
+		8722F3740E7001BAB25B79ED /* AutoFill.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0F19CF91A7D6DD07D0B0A36 /* AutoFill.swift */; };
 		8DB4C795BE25FBBC8B5369C8 /* OpenScannerIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1B88C6CCED8AF24D4A8A90B /* OpenScannerIntent.swift */; };
+		8EA4D13C5E8C82A2FCA3B1A9 /* TanookiAutoFill.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5577D4AC91766B17D6DE7856 /* TanookiAutoFill.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		8F2A8DEC38C3CD20AE315C35 /* TOTP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C1E9542AC587AD5C5DE59DE /* TOTP.swift */; };
+		971084ABF3E3151B042501C7 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E47985A2E2C36EC86595D979 /* Localizable.xcstrings */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
+		98AF7B02A23E5BB4B3E2337D /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E47985A2E2C36EC86595D979 /* Localizable.xcstrings */; };
 		A5E1C4E696EFC489786FC7D0 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 28AC42FD88109D3201B6C767 /* Pods_RunnerTests.framework */; };
 		A9779D6602A64888DB0CAD96 /* FavoriteStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DFD1EA1BB62F12FF698FD54 /* FavoriteStore.swift */; };
 		B634AEA845FF9903BDA27CFF /* CodeActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28FBBAAAFE167CA6B543A867 /* CodeActivity.swift */; };
+		B694669CCA20601553BB973D /* AutoFill.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0F19CF91A7D6DD07D0B0A36 /* AutoFill.swift */; };
 		B8514F2708129650A67A9B78 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 223C134414C4393D40C281A3 /* Pods_Runner.framework */; };
 		BDAF20178B974FFFC224623A /* CodeActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A88C48C666DC855189603939 /* CodeActivityWidget.swift */; };
 		CC1EC0E26F68CA375E656DC0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B13818C69FB7766487DD358E /* Assets.xcassets */; };
+		D7EF47EC2410D4B76DCBDF6D /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = E47985A2E2C36EC86595D979 /* Localizable.xcstrings */; };
 		D91ABE7C1626F449F012738C /* FavoriteStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DFD1EA1BB62F12FF698FD54 /* FavoriteStore.swift */; };
 		E6C19F7E0D74DA98B67B08FA /* TanookiWatchWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84B69FFA8EA50DC13946E9C /* TanookiWatchWidgets.swift */; };
 		EC2DDDB4DE095BBFD30959A7 /* FavoriteStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DFD1EA1BB62F12FF698FD54 /* FavoriteStore.swift */; };
@@ -56,6 +63,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = C906216F73EDE054C47B8D31;
 			remoteInfo = TanookiWatch;
+		};
+		15F7F1287B533E7B74A97531 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9DEC9D741FFE20FBF6C49272;
+			remoteInfo = TanookiAutoFill;
 		};
 		331C8085294A63A400263BE5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -88,6 +102,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				5EEBFD8D3512366C3945F362 /* TanookiWidgets.appex in Embed Foundation Extensions */,
+				8EA4D13C5E8C82A2FCA3B1A9 /* TanookiAutoFill.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -127,8 +142,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		E30B9D0F0D312B46553CE528 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
-		E47985A2E2C36EC86595D979 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
 		1F7A9983296D67D1871FABA6 /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
@@ -145,6 +158,7 @@
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
 		41753C184FA41DA505B0636C /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
+		5577D4AC91766B17D6DE7856 /* TanookiAutoFill.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TanookiAutoFill.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		5932D046B2C1B194AB62B85C /* TanookiWidgets.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TanookiWidgets.swift; sourceTree = "<group>"; };
 		6DFD1EA1BB62F12FF698FD54 /* FavoriteStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FavoriteStore.swift; sourceTree = "<group>"; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -156,14 +170,15 @@
 		7EB8AF3DCA07A076FE6E081B /* ScanControl.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScanControl.swift; sourceTree = "<group>"; };
 		813E76A172E8F5A2FAF3AAA6 /* TanookiWatchWidgets.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = TanookiWatchWidgets.entitlements; sourceTree = "<group>"; };
 		8B2174F76D2D4875ED04A9DA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/WatchOS.platform/Developer/SDKs/WatchOS11.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		906A43B4CC50E54C41E6F8AA /* TanookiAutoFill.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = TanookiAutoFill.entitlements; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Flutter/Debug.xcconfig; sourceTree = "<group>"; };
-		E1A5D0000000000000000001 /* Extension.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Extension.xcconfig; path = Flutter/Extension.xcconfig; sourceTree = "<group>"; };
 		9740EEB31CF90195004384FC /* Generated.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Generated.xcconfig; path = Flutter/Generated.xcconfig; sourceTree = "<group>"; };
 		97C146EE1CF9000F007C117D /* Runner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Runner.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		97C146FB1CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		97E270A11CF022A0A4F2B5CE /* CredentialProviderViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CredentialProviderViewController.swift; sourceTree = "<group>"; };
 		9EC661803FC5988889326312 /* TanookiWatchApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TanookiWatchApp.swift; sourceTree = "<group>"; };
 		9FB1C022871F98CB58E6CB8F /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 		A88C48C666DC855189603939 /* CodeActivityWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CodeActivityWidget.swift; sourceTree = "<group>"; };
@@ -173,8 +188,13 @@
 		D84B69FFA8EA50DC13946E9C /* TanookiWatchWidgets.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TanookiWatchWidgets.swift; sourceTree = "<group>"; };
 		DA042C6C0BC0952657AD8BFD /* Runner.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
 		DE48850C4404B6BB64451C87 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
+		E0F19CF91A7D6DD07D0B0A36 /* AutoFill.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AutoFill.swift; sourceTree = "<group>"; };
+		E1A5D0000000000000000001 /* Extension.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Extension.xcconfig; path = Flutter/Extension.xcconfig; sourceTree = "<group>"; };
 		E1B88C6CCED8AF24D4A8A90B /* OpenScannerIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OpenScannerIntent.swift; sourceTree = "<group>"; };
+		E30B9D0F0D312B46553CE528 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		E47985A2E2C36EC86595D979 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		E802450283DFCE9DB3AF69F4 /* TanookiWatchWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TanookiWatchWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		E86EAB9154DB9A138CE5EA6F /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		EA82F4A99DA695033490188D /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FA8556B03FF6789B5181B589 /* TanookiWidgets.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = TanookiWidgets.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -210,6 +230,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				F9B236151CD5483ED078F086 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CD1E97CEC4668E5C8C34D942 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				432476DD30E90C4DB1C6914A /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -286,6 +314,17 @@
 			path = TanookiWidgets;
 			sourceTree = "<group>";
 		};
+		5E2C424BB56302C96D95923C /* TanookiAutoFill */ = {
+			isa = PBXGroup;
+			children = (
+				97E270A11CF022A0A4F2B5CE /* CredentialProviderViewController.swift */,
+				E86EAB9154DB9A138CE5EA6F /* Info.plist */,
+				906A43B4CC50E54C41E6F8AA /* TanookiAutoFill.entitlements */,
+			);
+			name = TanookiAutoFill;
+			path = TanookiAutoFill;
+			sourceTree = "<group>";
+		};
 		74FEDC097426594C39F13990 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
@@ -294,6 +333,7 @@
 				6DFD1EA1BB62F12FF698FD54 /* FavoriteStore.swift */,
 				E1B88C6CCED8AF24D4A8A90B /* OpenScannerIntent.swift */,
 				28FBBAAAFE167CA6B543A867 /* CodeActivity.swift */,
+				E0F19CF91A7D6DD07D0B0A36 /* AutoFill.swift */,
 			);
 			name = Shared;
 			path = Shared;
@@ -325,6 +365,7 @@
 				DF9088AA2DE4D30B668CB5FA /* TanookiWatch */,
 				F44D033A9B6157559F2B18E1 /* TanookiWatchWidgets */,
 				404456A104806033A1ADD5C2 /* Pods */,
+				5E2C424BB56302C96D95923C /* TanookiAutoFill */,
 			);
 			sourceTree = "<group>";
 		};
@@ -336,6 +377,7 @@
 				79AF2ECEDBE75C0B1348ABC1 /* TanookiWidgets.appex */,
 				215318A018933636BBDF1A69 /* TanookiWatch.app */,
 				E802450283DFCE9DB3AF69F4 /* TanookiWatchWidgets.appex */,
+				5577D4AC91766B17D6DE7856 /* TanookiAutoFill.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -439,6 +481,7 @@
 			dependencies = (
 				498048EB90104AB7ACEDF41B /* PBXTargetDependency */,
 				BA31F2285DE78EC2FFF04948 /* PBXTargetDependency */,
+				E346B075D0CE209A72E1EA1E /* PBXTargetDependency */,
 			);
 			name = Runner;
 			packageProductDependencies = (
@@ -447,6 +490,23 @@
 			productName = Runner;
 			productReference = 97C146EE1CF9000F007C117D /* Runner.app */;
 			productType = "com.apple.product-type.application";
+		};
+		9DEC9D741FFE20FBF6C49272 /* TanookiAutoFill */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AF785CE7E37C30C7973CB564 /* Build configuration list for PBXNativeTarget "TanookiAutoFill" */;
+			buildPhases = (
+				9EF6C45F33D49981979A6202 /* Sources */,
+				CD1E97CEC4668E5C8C34D942 /* Frameworks */,
+				2AC7754689F9590D0FA9AFB4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TanookiAutoFill;
+			productName = TanookiAutoFill;
+			productReference = 5577D4AC91766B17D6DE7856 /* TanookiAutoFill.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 		C906216F73EDE054C47B8D31 /* TanookiWatch */ = {
 			isa = PBXNativeTarget;
@@ -529,11 +589,20 @@
 				415712AA9232E96C517ECC4E /* TanookiWidgets */,
 				C906216F73EDE054C47B8D31 /* TanookiWatch */,
 				CBA5DB45AFA02EA8E489CD5E /* TanookiWatchWidgets */,
+				9DEC9D741FFE20FBF6C49272 /* TanookiAutoFill */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		2AC7754689F9590D0FA9AFB4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				98AF7B02A23E5BB4B3E2337D /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		331C807F294A63A400263BE5 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -713,6 +782,17 @@
 				D91ABE7C1626F449F012738C /* FavoriteStore.swift in Sources */,
 				592EE8C819D31B651380151B /* OpenScannerIntent.swift in Sources */,
 				B634AEA845FF9903BDA27CFF /* CodeActivity.swift in Sources */,
+				B694669CCA20601553BB973D /* AutoFill.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9EF6C45F33D49981979A6202 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6AB27E056C25854DBA7B6006 /* CredentialProviderViewController.swift in Sources */,
+				8722F3740E7001BAB25B79ED /* AutoFill.swift in Sources */,
+				20B8527F9C5284B5B9F1672A /* TOTP.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -741,6 +821,12 @@
 			name = TanookiWatch;
 			target = C906216F73EDE054C47B8D31 /* TanookiWatch */;
 			targetProxy = 0655926D43970128E7F16834 /* PBXContainerItemProxy */;
+		};
+		E346B075D0CE209A72E1EA1E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = TanookiAutoFill;
+			target = 9DEC9D741FFE20FBF6C49272 /* TanookiAutoFill */;
+			targetProxy = 15F7F1287B533E7B74A97531 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -824,6 +910,37 @@
 				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Profile;
+		};
+		1202F196E04F35C45C303FA4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E1A5D0000000000000000001 /* Extension.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = TanookiAutoFill/TanookiAutoFill.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = NPT8NXJ7C8;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TanookiAutoFill/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.tanookistudios.auth.autofill;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
 		};
 		249021D3217E4FDB00AE95B9 /* Profile */ = {
 			isa = XCBuildConfiguration;
@@ -1266,6 +1383,68 @@
 			};
 			name = Release;
 		};
+		C574AD415DD7BF1CFB9CA68B /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E1A5D0000000000000000001 /* Extension.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = TanookiAutoFill/TanookiAutoFill.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = NPT8NXJ7C8;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TanookiAutoFill/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.tanookistudios.auth.autofill;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		CB24078B735714A66CC37AAD /* Profile */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E1A5D0000000000000000001 /* Extension.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = TanookiAutoFill/TanookiAutoFill.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = NPT8NXJ7C8;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TanookiAutoFill/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.tanookistudios.auth.autofill;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Profile;
+		};
 		D5A518FD5645D7284776AD62 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = E1A5D0000000000000000001 /* Extension.xcconfig */;
@@ -1355,6 +1534,16 @@
 				97C147061CF9000F007C117D /* Debug */,
 				97C147071CF9000F007C117D /* Release */,
 				249021D4217E4FDB00AE95B9 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AF785CE7E37C30C7973CB564 /* Build configuration list for PBXNativeTarget "TanookiAutoFill" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C574AD415DD7BF1CFB9CA68B /* Release */,
+				1202F196E04F35C45C303FA4 /* Debug */,
+				CB24078B735714A66CC37AAD /* Profile */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

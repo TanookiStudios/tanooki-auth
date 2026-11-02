@@ -2774,6 +2774,48 @@ abstract class AppLocalizations {
   /// **'Your favorites\' codes show on your Home Screen, Lock Screen and watch without opening this app, so anyone holding your unlocked phone or your watch can read them. Star an account to make it a favorite.'**
   String get settingsShareCodesHelp;
 
+  /// No description provided for @settingsAutofill.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill codes with AutoFill'**
+  String get settingsAutofill;
+
+  /// No description provided for @settingsAutofillHelpIos.
+  ///
+  /// In en, this message translates to:
+  /// **'When a website or app asks for a 2FA code, your iPhone offers it above the keyboard, so you don\'t need to copy it. Accounts that ask first need Face ID before filling. Accounts hidden in travel mode are never offered.'**
+  String get settingsAutofillHelpIos;
+
+  /// No description provided for @settingsAutofillHelpAndroid.
+  ///
+  /// In en, this message translates to:
+  /// **'When an app or website asks for a 2FA code, your phone offers it in a small pop-up, so you don\'t need to copy it. Android lets only one app autofill at a time, so this replaces your password manager\'s autofill. If you rely on that, keep this off.'**
+  String get settingsAutofillHelpAndroid;
+
+  /// No description provided for @settingsAutofillStepsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch on AutoFill'**
+  String get settingsAutofillStepsTitle;
+
+  /// No description provided for @settingsAutofillStepsIos.
+  ///
+  /// In en, this message translates to:
+  /// **'This needs iOS 18 or later.\n\n1. Open the Settings app (the gray gear icon).\n2. Tap General, then AutoFill & Passwords.\n3. In the list of apps that can AutoFill, turn on the switch next to Tanooki Auth.\n\nIt worked if that switch is green. Next time a website or app asks for a code, tap the code box and tap the Tanooki Auth suggestion above the keyboard.'**
+  String get settingsAutofillStepsIos;
+
+  /// No description provided for @settingsAutofillStepsAndroid.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Tap Open Settings below. A list of autofill apps opens.\n2. Tap Tanooki Auth, then tap OK if your phone asks.\n\nIf no list opens: open the Settings app, search for \"Autofill service\", tap it, and pick Tanooki Auth.\n\nIt worked if Tanooki Auth now shows as the autofill service. Next time an app or website asks for a code, tap the code box and pick Tanooki Auth in the pop-up.\n\nAndroid lets only one app autofill at a time. Picking Tanooki Auth stops your password manager (like Google, Bitwarden or 1Password) from filling passwords. To switch back, pick it again in the same place.'**
+  String get settingsAutofillStepsAndroid;
+
+  /// No description provided for @settingsAutofillOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get settingsAutofillOpen;
+
   /// No description provided for @settingsTrash.
   ///
   /// In en, this message translates to:

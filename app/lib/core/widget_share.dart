@@ -44,13 +44,78 @@ List<Map<String, Object>> sharedFavorites(Vault v, {bool premium = false}) => v.
             },
       ];
 
-String? _lastSent;
+/// Settings key: let iPhone AutoFill / the Android autofill service offer codes. Off by default.
+const autofillKey = 'autofillCodes';
+
+/// What AutoFill gets: every live time-based account with its websites, and nothing unless [autofillKey]
+/// is on. Unlike widgets this is not only favorites: AutoFill offers the code for whichever site asks.
+/// Left out: counter-based (HOTP) accounts (AutoFill can't move the counter forward) and every account
+/// marked to hide in travel mode, whether or not travel mode is on right now. Ask-first accounts go with
+/// `requireAuth: true`: the phone asks for Face ID / fingerprint / passcode before filling them.
+List<Map<String, Object>> autofillAccounts(Vault v) => v.settings[autofillKey] != true
+    ? const []
+    : [
+        for (final a in v.visible)
+          if (a.timeBased && !a.travelHidden)
+            {
+              'id': a.id,
+              'type': a.type.name,
+              'issuer': a.issuer,
+              'label': a.label,
+              'secret': a.secret,
+              'algorithm': a.algorithm.name,
+              'digits': a.digits,
+              'period': a.period,
+              'domains': a.domains,
+              if (a.requireAuth) 'requireAuth': true,
+            },
+      ];
+
+String? _lastSent, _lastAutofill;
+bool _decoyOpen = false;
+
+/// Called on every unlock with the real vault. While the decoy is open, the widgets, watch and AutoFill are
+/// emptied (even if the real vault saves in the background), so nothing on the phone hints at the real accounts.
+Future<void> sharesVaultOpened(Vault real, {required bool decoy}) async {
+  _decoyOpen = decoy;
+  await publishSharedFavorites(real);
+  await publishAutofill(real);
+}
+
+/// Hands [autofillAccounts] (or an empty list, which erases them) to AutoFill. Called with
+/// [publishSharedFavorites], after every save of the real vault.
+Future<void> publishAutofill(Vault v) async {
+  if (defaultTargetPlatform != TargetPlatform.iOS && defaultTargetPlatform != TargetPlatform.android) return;
+  final json = jsonEncode(_decoyOpen ? const [] : autofillAccounts(v));
+  if (json == _lastAutofill) return;
+  try {
+    await _channel.invokeMethod<void>('setAutofill', json);
+    _lastAutofill = json;
+  } on MissingPluginException {
+    // Not wired (unit tests).
+  } on PlatformException catch (e) {
+    debugPrint('Updating AutoFill failed: ${e.code}'); // never the payload: it holds secrets
+  }
+}
+
+/// Opens the phone's own screen for picking Tanooki Auth for AutoFill (iPhone: a "turn on" prompt on
+/// iOS 18+; Android: the autofill service picker). False if that couldn't be opened or was declined,
+/// so the caller shows the steps to do it by hand.
+Future<bool> openAutofillSettings() async {
+  try {
+    return await _channel.invokeMethod<bool>('openAutofillSettings') ?? false;
+  } on MissingPluginException {
+    return false;
+  } on PlatformException {
+    return false;
+  }
+}
 
 /// Hands the current favorites (or an empty list, which erases them) to the widgets and watch.
 /// Called after every save of the real vault, so a deleted or unstarred account disappears right away.
 Future<void> publishSharedFavorites(Vault v) async {
   if (!Platform.isIOS && !Platform.isAndroid) return;
-  final json = jsonEncode(sharedFavorites(v, premium: widgetPremium()));
+  final json = jsonEncode(_decoyOpen ? const [] : sharedFavorites(v, premium: widgetPremium()));
   if (json == _lastSent) return;
   try {
     await _channel.invokeMethod<void>('setFavorites', json);

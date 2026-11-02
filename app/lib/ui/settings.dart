@@ -305,6 +305,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
         : l10n.settingsTravelOff);
   }
 
+  /// Turning AutoFill on also needs the phone's own setting. iPhone (iOS 18+) asks right away; if that
+  /// is declined or unavailable, and always on Android, the steps show.
+  Future<void> _autofill(bool on) async {
+    await _set(autofillKey, on);
+    if (!on || !mounted) return;
+    if (Platform.isIOS && await openAutofillSettings()) return;
+    if (!mounted) return;
+    final open = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text(l10n.settingsAutofillStepsTitle),
+        content: SingleChildScrollView(
+          child: Text(Platform.isIOS ? l10n.settingsAutofillStepsIos : l10n.settingsAutofillStepsAndroid),
+        ),
+        actions: [
+          if (Platform.isAndroid) TextButton(onPressed: () => Navigator.pop(c, true), child: Text(l10n.settingsAutofillOpen)),
+          TextButton(onPressed: () => Navigator.pop(c), child: Text(l10n.commonOk)),
+        ],
+      ),
+    );
+    if (open == true) await openAutofillSettings();
+  }
+
   Future<void> _monthlyNotify(bool on) async {
     if (on && !premium.value) {
       await _open(PremiumScreen(vault: widget.vault));
@@ -670,6 +693,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: Text(l10n.settingsShareCodesHelp),
               value: s[shareCodesKey] == true,
               onChanged: (on) => _set(shareCodesKey, on),
+            ),
+            const Divider(),
+            SwitchListTile(
+              title: Text(l10n.settingsAutofill),
+              subtitle: Text(Platform.isIOS ? l10n.settingsAutofillHelpIos : l10n.settingsAutofillHelpAndroid),
+              value: s[autofillKey] == true,
+              onChanged: _autofill,
             ),
           ],
           const Divider(),

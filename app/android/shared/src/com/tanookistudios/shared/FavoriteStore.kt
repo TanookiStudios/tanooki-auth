@@ -59,26 +59,31 @@ object FavoriteStore {
     }
 
     /** Replaces the stored list. An empty list (or bad JSON) erases it. */
-    fun save(context: Context, json: String) {
-        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        if (parse(json).isEmpty()) {
-            prefs.edit().remove("data").commit()
+    fun save(context: Context, json: String) = seal(context, PREFS, json.takeIf { parse(it).isNotEmpty() })
+
+    fun load(context: Context): List<Favorite> = unseal(context, PREFS)?.let(::parse) ?: emptyList()
+
+    /** Stores [json] encrypted in the [prefs] file, or erases it when null. Also used by AutofillStore. */
+    fun seal(context: Context, prefs: String, json: String?) {
+        val p = context.getSharedPreferences(prefs, Context.MODE_PRIVATE)
+        if (json == null) {
+            p.edit().remove("data").commit()
             return
         }
         val cipher = Cipher.getInstance("AES/GCM/NoPadding").apply { init(Cipher.ENCRYPT_MODE, key()) }
         val sealed = cipher.iv + cipher.doFinal(json.toByteArray())
-        prefs.edit().putString("data", Base64.encodeToString(sealed, Base64.NO_WRAP)).commit()
+        p.edit().putString("data", Base64.encodeToString(sealed, Base64.NO_WRAP)).commit()
     }
 
-    fun load(context: Context): List<Favorite> {
-        val stored = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString("data", null) ?: return emptyList()
+    fun unseal(context: Context, prefs: String): String? {
+        val stored = context.getSharedPreferences(prefs, Context.MODE_PRIVATE).getString("data", null) ?: return null
         return try {
             val sealed = Base64.decode(stored, Base64.NO_WRAP)
             val cipher = Cipher.getInstance("AES/GCM/NoPadding")
             cipher.init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(128, sealed, 0, 12))
-            parse(String(cipher.doFinal(sealed, 12, sealed.size - 12)))
+            String(cipher.doFinal(sealed, 12, sealed.size - 12))
         } catch (e: Exception) {
-            emptyList() // key gone (app data cleared) or damaged: show nothing rather than wrong codes
+            null // key gone (app data cleared) or damaged: show nothing rather than wrong codes
         }
     }
 

@@ -177,6 +177,25 @@
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
         </service>
+        <!-- Autofill (Settings > Fill codes with AutoFill): offers 2FA codes in other apps and websites. Only runs
+             if the person picks Tanooki Auth as their autofill service in Android's settings. -->
+        <service
+            android:name=".TanookiAutofillService"
+            android:exported="true"
+            android:label="Tanooki Auth"
+            android:permission="android.permission.BIND_AUTOFILL_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.autofill.AutofillService" />
+            </intent-filter>
+        </service>
+        <!-- Hands a picked code back to autofill (asking for the screen lock first for ask-first accounts).
+             Not exported: only the autofill service's own pending intents start it. -->
+        <activity
+            android:name=".AutofillAuthActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

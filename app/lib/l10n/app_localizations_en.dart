@@ -1675,6 +1675,31 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your favorites\' codes show on your Home Screen, Lock Screen and watch without opening this app, so anyone holding your unlocked phone or your watch can read them. Star an account to make it a favorite.';
 
   @override
+  String get settingsAutofill => 'Fill codes with AutoFill';
+
+  @override
+  String get settingsAutofillHelpIos =>
+      'When a website or app asks for a 2FA code, your iPhone offers it above the keyboard, so you don\'t need to copy it. Accounts that ask first need Face ID before filling. Accounts hidden in travel mode are never offered.';
+
+  @override
+  String get settingsAutofillHelpAndroid =>
+      'When an app or website asks for a 2FA code, your phone offers it in a small pop-up, so you don\'t need to copy it. Android lets only one app autofill at a time, so this replaces your password manager\'s autofill. If you rely on that, keep this off.';
+
+  @override
+  String get settingsAutofillStepsTitle => 'Switch on AutoFill';
+
+  @override
+  String get settingsAutofillStepsIos =>
+      'This needs iOS 18 or later.\n\n1. Open the Settings app (the gray gear icon).\n2. Tap General, then AutoFill & Passwords.\n3. In the list of apps that can AutoFill, turn on the switch next to Tanooki Auth.\n\nIt worked if that switch is green. Next time a website or app asks for a code, tap the code box and tap the Tanooki Auth suggestion above the keyboard.';
+
+  @override
+  String get settingsAutofillStepsAndroid =>
+      '1. Tap Open Settings below. A list of autofill apps opens.\n2. Tap Tanooki Auth, then tap OK if your phone asks.\n\nIf no list opens: open the Settings app, search for \"Autofill service\", tap it, and pick Tanooki Auth.\n\nIt worked if Tanooki Auth now shows as the autofill service. Next time an app or website asks for a code, tap the code box and pick Tanooki Auth in the pop-up.\n\nAndroid lets only one app autofill at a time. Picking Tanooki Auth stops your password manager (like Google, Bitwarden or 1Password) from filling passwords. To switch back, pick it again in the same place.';
+
+  @override
+  String get settingsAutofillOpen => 'Open Settings';
+
+  @override
   String get settingsTrash => 'Trash';
 
   @override

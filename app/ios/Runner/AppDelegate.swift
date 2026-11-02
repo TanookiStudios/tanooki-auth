@@ -1,4 +1,5 @@
 import ActivityKit
+import AuthenticationServices
 import Flutter
 import UIKit
 import WatchConnectivity
@@ -47,6 +48,20 @@ final class Extras: NSObject, FlutterSceneLifeCycleDelegate, WCSessionDelegate {
         status == errSecSuccess
           ? result(nil)
           : result(FlutterError(code: "keychain\(status)", message: nil, details: nil))
+      case "setAutofill":
+        // Every account AutoFill may offer (app/lib/core/widget_share.dart autofillAccounts), or [] to erase.
+        let saved = AutoFillStore.save(Data((call.arguments as? String ?? "[]").utf8), group: FavoriteStore.sharedGroup)
+        if #available(iOS 18.0, *) { AutoFillIdentities.publish(saved.accounts) }
+        saved.status == errSecSuccess
+          ? result(nil)
+          : result(FlutterError(code: "keychain\(saved.status)", message: nil, details: nil))
+      case "openAutofillSettings":
+        // iOS 18 asks "Allow Tanooki Auth to fill codes?" right here; true when the person said yes.
+        if #available(iOS 18.0, *) {
+          ASSettingsHelper.requestToTurnOnCredentialProviderExtension { on in DispatchQueue.main.async { result(on) } }
+        } else {
+          result(FlutterError(code: "unsupported", message: "Needs iOS 18", details: nil))
+        }
       case "startCodeActivity":
         guard #available(iOS 16.2, *) else {
           return result(FlutterError(code: "unsupported", message: "Needs iOS 16.2", details: nil))
