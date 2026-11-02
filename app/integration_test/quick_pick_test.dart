@@ -117,11 +117,17 @@ void main() {
       final target = await Process.start(
           'powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-STA', '-File', script.path, '-Out', out.path]);
       try {
-        for (var i = 0; i < 150 && !ready.existsSync(); i++) {
+        // A cold Windows PowerShell that compiles C# (Add-Type) and loads WinForms takes 3 to 17+ seconds on CI
+        // runners; the old 15-second wait lost that race about half the time. Wait in real time, generously.
+        // Read until non-empty: the file can exist a moment before PowerShell has written to it.
+        String readyText() => ready.existsSync() ? ready.readAsStringSync() : '';
+        final started = Stopwatch()..start();
+        while (readyText().isEmpty && started.elapsed < const Duration(seconds: 90)) {
           await t.pump(const Duration(milliseconds: 100));
         }
-        step('target window: ${ready.existsSync() ? ready.readAsStringSync() : 'not shown'}');
-        expect(ready.existsSync() ? ready.readAsStringSync() : 'not shown', contains('front=True'),
+        final shown = readyText().isEmpty ? 'not shown' : readyText();
+        step('target window after ${started.elapsed.inMilliseconds} ms: $shown');
+        expect(shown, contains('front=True'),
             reason: 'the target text box must be the window in front before Tanooki Auth comes up');
         await window.invokeMethod<void>('trayClick'); // like the user clicking the tray icon while in the text box
         await pumpFor(t, const Duration(seconds: 1));
