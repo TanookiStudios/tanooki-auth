@@ -149,7 +149,7 @@ class _HomeNoticesState extends State<HomeNotices> {
           sum.lastBackup == null ? l10n.homeCardsSummaryNoBackup : l10n.homeCardsSummaryLastBackup(dayText(sum.lastBackup!)),
           sum.noRecoveryCodes == 0 ? l10n.homeCardsSummaryAllCodes : l10n.homeCardsSummaryMissingCodes(sum.noRecoveryCodes),
           sum.checkupItems == 0 ? l10n.homeCardsSummaryCheckupGood : l10n.homeCardsSummaryCheckupFix(sum.checkupItems),
-        ].join(appLocale().languageCode == 'ja' ? '' : ' '), // whole sentences; Japanese doesn't put spaces between them
+        ].join(const {'ja', 'zh'}.contains(appLocale().languageCode) ? '' : ' '), // whole sentences; Japanese and Chinese don't put spaces between them
         actions: [
           TextButton(
             onPressed: () async {

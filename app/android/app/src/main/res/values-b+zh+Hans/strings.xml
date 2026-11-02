@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">收藏账号的验证码。请在 Tanooki Auth 中开启“设置”&gt;“在小组件和手表上显示验证码”。</string>
+    <string name="scan_tile">扫描 2FA 二维码</string>
+    <string name="widget_locked">解锁后查看验证码</string>
+    <string name="widget_empty">没有可显示的收藏账号。请在 Tanooki Auth 中给账号加星标，并开启“设置”&gt;“在小组件和手表上显示验证码”。</string>
+    <string name="backup_folder">备份文件夹</string>
+    <string name="autofill_auth_title">为需先验证的账号填写验证码</string>
+</resources>

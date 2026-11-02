@@ -22,7 +22,37 @@
             "value": "%lld s"
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld s"
+          }
+        },
         "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld秒"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld초"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld s"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld s"
+          }
+        },
+        "zh-Hans": {
           "stringUnit": {
             "state": "translated",
             "value": "%lld秒"
@@ -51,10 +81,40 @@
             "value": "Le code d'un favori dans la pile intelligente. Il passe en haut juste après que vous copiez ce code sur votre iPhone."
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il codice di un preferito nella Smart Stack. Sale in cima subito dopo che copi quel codice sull'iPhone."
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "お気に入りのコードをスマートスタックに表示します。iPhoneでそのコードをコピーすると、すぐ一番上に表示されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "스마트 스택에 표시되는 즐겨찾기 코드예요. iPhone에서 그 코드를 복사하면 바로 맨 위로 올라와요."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De code van een favoriet in de Slimme stapel. Hij komt bovenaan zodra je die code op je iPhone kopieert."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O código de um favorito na Pilha Inteligente. Ele sobe para o topo logo depois que você copia esse código no iPhone."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "智能叠放中显示一个收藏账号的验证码。你在 iPhone 上复制那个验证码后，它会立刻移到最上面。"
           }
         }
       }
@@ -80,10 +140,40 @@
             "value": "Demande d’abord"
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chiede prima"
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "確認が必要"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "먼저 확인"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vraagt eerst"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pergunta antes"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需先验证"
           }
         }
       }
@@ -109,10 +199,40 @@
             "value": "Annuler"
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annulla"
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "キャンセル"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "취소"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuleren"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消"
           }
         }
       }
@@ -138,10 +258,40 @@
             "value": "Les codes des comptes que vous avez mis en favoris. Activez Réglages > Afficher les codes sur les widgets et la montre dans Tanooki Auth."
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I codici degli account con la stella. Attiva Impostazioni > Mostra i codici su widget e orologio in Tanooki Auth."
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "星を付けたアカウントのコードです。Tanooki Auth の［設定］>［ウィジェットとウォッチにコードを表示］をオンにしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "별표한 계정의 코드예요. Tanooki Auth에서 설정 > 위젯과 워치에 코드 표시를 켜세요."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codes voor de accounts die je een ster gaf. Zet Instellingen > Codes tonen op widgets en horloge aan in Tanooki Auth."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Códigos das contas que você marcou com estrela. Ative Ajustes > Mostrar códigos nos widgets e no relógio no Tanooki Auth."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你加了星标的账号的验证码。请在 Tanooki Auth 中开启“设置”>“在小组件和手表上显示验证码”。"
           }
         }
       }
@@ -167,10 +317,40 @@
             "value": "Expiré"
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scaduto"
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "期限切れ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "만료됨"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlopen"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expirado"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已过期"
           }
         }
       }
@@ -196,10 +376,40 @@
             "value": "Code favori"
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codice preferito"
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "お気に入りのコード"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "즐겨찾기 코드"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favoriete code"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código favorito"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏的验证码"
           }
         }
       }
@@ -225,10 +435,40 @@
             "value": "Codes favoris"
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codici preferiti"
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "お気に入りのコード"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "즐겨찾기 코드"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favoriete codes"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Códigos favoritos"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏的验证码"
           }
         }
       }
@@ -254,10 +494,40 @@
             "value": "Remplir un code pour un compte qui demande d’abord une confirmation"
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inserisci un codice per un account che chiede prima"
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "確認が必要なアカウントのコードを入力"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "먼저 확인하는 계정의 코드 채우기"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul een code in voor een account dat eerst vraagt"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preencher um código de uma conta que pergunta antes"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "为需先验证的账号填写验证码"
           }
         }
       }
@@ -283,10 +553,40 @@
             "value": "Pour ce site ou cette app"
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per questo sito web o app"
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "このサイトまたはアプリ用"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 웹사이트 또는 앱용"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voor deze website of app"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para este site ou app"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用于这个网站或应用"
           }
         }
       }
@@ -312,10 +612,40 @@
             "value": "Aucun compte à remplir pour l’instant. Dans Tanooki Auth, ouvrez Réglages et activez Remplir les codes avec le remplissage automatique."
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ancora nessun account da inserire. In Tanooki Auth, apri Impostazioni e attiva Inserisci i codici con Riempimento automatico."
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "入力できるアカウントがまだありません。Tanooki Auth の設定で「自動入力でコードを入力」をオンにしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아직 채울 계정이 없어요. Tanooki Auth에서 설정을 열고 '자동 완성으로 코드 채우기'를 켜세요."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog geen accounts om in te vullen. Open in Tanooki Auth Instellingen en zet Codes automatisch invullen aan."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhuma conta para preencher ainda. No Tanooki Auth, abra Ajustes e ative Preencher códigos com o Preenchimento Automático."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有可填写的账号。请在 Tanooki Auth 中打开“设置”，开启“用自动填充填写验证码”。"
           }
         }
       }
@@ -341,10 +671,40 @@
             "value": "Pas encore de favoris.\n\nSur votre iPhone, ouvrez Tanooki Auth, ajoutez un compte aux favoris avec l'étoile et activez Réglages > Afficher les codes sur les widgets et la montre."
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ancora nessun preferito.\n\nSull'iPhone, apri Tanooki Auth, aggiungi una stella a un account e attiva Impostazioni > Mostra i codici su widget e orologio."
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "お気に入りはまだありません。\n\niPhone で Tanooki Auth を開き、アカウントに星を付けて、［設定］>［ウィジェットとウォッチにコードを表示］をオンにしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아직 즐겨찾기가 없어요.\n\niPhone에서 Tanooki Auth를 열고 계정에 별표를 한 다음, 설정 > 위젯과 워치에 코드 표시를 켜세요."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog geen favorieten.\n\nOpen Tanooki Auth op je iPhone, geef een account een ster en zet Instellingen > Codes tonen op widgets en horloge aan."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhum favorito ainda.\n\nNo seu iPhone, abra o Tanooki Auth, marque uma conta com estrela e ative Ajustes > Mostrar códigos nos widgets e no relógio."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有收藏的账号。\n\n在 iPhone 上打开 Tanooki Auth，给账号加星标，并开启“设置”>“在小组件和手表上显示验证码”。"
           }
         }
       }
@@ -370,10 +730,40 @@
             "value": "Le code d'un favori. Choisissez-le sur votre iPhone dans Tanooki Auth : Réglages > Favori du cadran."
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il codice di un preferito. Sceglilo sull'iPhone in Tanooki Auth: Impostazioni > Preferito sul quadrante."
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "お気に入り1件のコードです。iPhone の Tanooki Auth の［設定］>［文字盤のお気に入り］で選んでください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "즐겨찾기 하나의 코드예요. iPhone의 Tanooki Auth에서 고르세요: 설정 > 워치 페이스 즐겨찾기."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De code van één favoriet. Kies hem op je iPhone in Tanooki Auth: Instellingen > Favoriet op wijzerplaat."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O código de um favorito. Escolha no iPhone, no Tanooki Auth: Ajustes > Favorito no mostrador do relógio."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一个收藏账号的验证码。请在 iPhone 上的 Tanooki Auth 中选择：“设置”>“表盘收藏账号”。"
           }
         }
       }
@@ -399,10 +789,40 @@
             "value": "Ouvre l'appareil photo de Tanooki Auth pour ajouter un compte."
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apre la fotocamera di Tanooki Auth per aggiungere un account."
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "Tanooki Auth のカメラを開いてアカウントを追加します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanooki Auth의 카메라를 열어 계정을 추가해요."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opent de camera van Tanooki Auth om een account toe te voegen."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre a câmera do Tanooki Auth para adicionar uma conta."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开 Tanooki Auth 的相机来添加账号。"
           }
         }
       }
@@ -428,10 +848,40 @@
             "value": "Autres comptes"
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Altri account"
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "その他のアカウント"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다른 계정"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Andere accounts"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outras contas"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其他账号"
           }
         }
       }
@@ -457,10 +907,40 @@
             "value": "Choisissez un favori dans Tanooki Auth sur votre iPhone"
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli un preferito in Tanooki Auth sull'iPhone"
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "iPhone の Tanooki Auth でお気に入りを選んでください"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone의 Tanooki Auth에서 즐겨찾기를 고르세요"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies een favoriet in Tanooki Auth op je iPhone"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escolha um favorito no Tanooki Auth no seu iPhone"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请在 iPhone 上的 Tanooki Auth 中选择一个收藏账号"
           }
         }
       }
@@ -486,10 +966,40 @@
             "value": "Scanner un QR 2FA"
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scansiona QR 2FA"
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "2FA の QR を読み取る"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2FA QR 스캔"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2FA-QR scannen"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escanear QR 2FA"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "扫描 2FA 二维码"
           }
         }
       }
@@ -515,10 +1025,40 @@
             "value": "Scanner un code QR 2FA"
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scansiona codice QR 2FA"
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "2FA の QR コードを読み取る"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2FA QR 코드 스캔"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2FA-QR-code scannen"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escanear código QR 2FA"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "扫描 2FA 二维码"
           }
         }
       }
@@ -544,10 +1084,40 @@
             "value": "Ajoutez un favori dans Tanooki Auth"
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi un preferito in Tanooki Auth"
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "Tanooki Auth でお気に入りに星を"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanooki Auth에서 즐겨찾기에 별표를 하세요"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geef een favoriet een ster in Tanooki Auth"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marque um favorito com estrela no Tanooki Auth"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 Tanooki Auth 中给账号加星标"
           }
         }
       }
@@ -573,10 +1143,40 @@
             "value": "Mettez un compte en favori dans Tanooki Auth, puis activez Réglages > Afficher les codes sur les widgets et la montre."
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi una stella a un account in Tanooki Auth, poi attiva Impostazioni > Mostra i codici su widget e orologio."
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "Tanooki Auth でアカウントに星を付けてから、［設定］>［ウィジェットとウォッチにコードを表示］をオンにしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanooki Auth에서 계정에 별표를 한 다음, 설정 > 위젯과 워치에 코드 표시를 켜세요."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geef een account een ster in Tanooki Auth en zet dan Instellingen > Codes tonen op widgets en horloge aan."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marque uma conta com estrela no Tanooki Auth e ative Ajustes > Mostrar códigos nos widgets e no relógio."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 Tanooki Auth 中给账号加星标，然后开启“设置”>“在小组件和手表上显示验证码”。"
           }
         }
       }
@@ -602,7 +1202,37 @@
             "value": "Tanooki Auth"
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanooki Auth"
+          }
+        },
         "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanooki Auth"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanooki Auth"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanooki Auth"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanooki Auth"
+          }
+        },
+        "zh-Hans": {
           "stringUnit": {
             "state": "translated",
             "value": "Tanooki Auth"
@@ -631,10 +1261,40 @@
             "value": "Vos comptes"
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I tuoi account"
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "アカウント"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "내 계정"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je accounts"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suas contas"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你的账号"
           }
         }
       }
@@ -642,6 +1302,12 @@
     "share.failed": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Bild konnte nicht gelesen werden. Versuche ein Bildschirmfoto des QR-Codes."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -660,10 +1326,10 @@
             "value": "Impossible de lire cette image. Essayez une capture d'écran du code QR."
           }
         },
-        "de": {
+        "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dieses Bild konnte nicht gelesen werden. Versuche ein Bildschirmfoto des QR-Codes."
+            "value": "Impossibile leggere quell'immagine. Prova con uno screenshot del codice QR."
           }
         },
         "ja": {
@@ -671,12 +1337,42 @@
             "state": "translated",
             "value": "その画像を読み取れませんでした。QRコードのスクリーンショットで試してください。"
           }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "그 사진을 읽을 수 없어요. QR 코드의 스크린샷으로 시도해 보세요."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kon die afbeelding niet lezen. Probeer een screenshot van de QR-code."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível ler essa imagem. Tente uma captura de tela do código QR."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法读取这张图片。请试试二维码的截图。"
+          }
         }
       }
     },
     "share.opening": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanooki Auth wird geöffnet …"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -695,10 +1391,10 @@
             "value": "Ouverture de Tanooki Auth…"
           }
         },
-        "de": {
+        "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tanooki Auth wird geöffnet …"
+            "value": "Apertura di Tanooki Auth…"
           }
         },
         "ja": {
@@ -706,12 +1402,42 @@
             "state": "translated",
             "value": "Tanooki Auth を開いています…"
           }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanooki Auth를 여는 중…"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanooki Auth openen…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrindo o Tanooki Auth…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在打开 Tanooki Auth…"
+          }
         }
       }
     },
     "share.saved": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erledigt. Öffne Tanooki Auth, um das Konto hinzuzufügen."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -730,16 +1456,40 @@
             "value": "C’est noté. Ouvrez Tanooki Auth pour ajouter le compte."
           }
         },
-        "de": {
+        "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Erledigt. Öffne Tanooki Auth, um das Konto hinzuzufügen."
+            "value": "Fatto. Apri Tanooki Auth per aggiungere l'account."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "受け取りました。Tanooki Auth を開いてアカウントを追加してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "받았어요. Tanooki Auth를 열어 계정을 추가하세요."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gelukt. Open Tanooki Auth om het account toe te voegen."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pronto. Abra o Tanooki Auth para adicionar a conta."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收到了。打开 Tanooki Auth 即可添加这个账号。"
           }
         }
       }

@@ -22,14 +22,21 @@ UINT TaskbarCreatedMessage() {
   return message;
 }
 
-// Error text the app shows, in the Windows display language (English, Spanish, French, German, Japanese).
+// Error text the app shows, in the Windows display language (English, Spanish, French, German, Japanese,
+// Portuguese, Italian, Korean, Simplified Chinese, Dutch).
 // Non-ASCII letters are written as universal character escapes so the source compiles the same under any code page.
-std::string Say(const wchar_t* en, const wchar_t* es, const wchar_t* fr, const wchar_t* de, const wchar_t* ja) {
+std::string Say(const wchar_t* en, const wchar_t* es, const wchar_t* fr, const wchar_t* de, const wchar_t* ja,
+                const wchar_t* pt, const wchar_t* it, const wchar_t* ko, const wchar_t* zh, const wchar_t* nl) {
   switch (PRIMARYLANGID(GetUserDefaultUILanguage())) {
     case LANG_SPANISH: return Utf8FromUtf16(es);
     case LANG_FRENCH: return Utf8FromUtf16(fr);
     case LANG_GERMAN: return Utf8FromUtf16(de);
     case LANG_JAPANESE: return Utf8FromUtf16(ja);
+    case LANG_PORTUGUESE: return Utf8FromUtf16(pt);
+    case LANG_ITALIAN: return Utf8FromUtf16(it);
+    case LANG_KOREAN: return Utf8FromUtf16(ko);
+    case LANG_CHINESE: return Utf8FromUtf16(zh);
+    case LANG_DUTCH: return Utf8FromUtf16(nl);
     default: return Utf8FromUtf16(en);
   }
 }
@@ -104,7 +111,12 @@ bool FlutterWindow::OnCreate() {
       ReleaseDC(nullptr, screen);
       SetWindowDisplayAffinity(hwnd, secure_ ? WDA_EXCLUDEFROMCAPTURE : WDA_NONE);
       if (!ok) {
-        result->Error("failed", Say(L"Screen capture failed", L"No se pudo capturar la pantalla", L"La capture d'\u00e9cran a \u00e9chou\u00e9", L"Bildschirmaufnahme fehlgeschlagen", L"\u753b\u9762\u3092\u30ad\u30e3\u30d7\u30c1\u30e3\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f"));
+        result->Error("failed", Say(L"Screen capture failed", L"No se pudo capturar la pantalla", L"La capture d'\u00e9cran a \u00e9chou\u00e9", L"Bildschirmaufnahme fehlgeschlagen", L"\u753b\u9762\u3092\u30ad\u30e3\u30d7\u30c1\u30e3\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f",
+            L"A captura de tela falhou",
+            L"Cattura dello schermo non riuscita",
+            L"\ud654\uba74 \ucea1\ucc98 \uc2e4\ud328",
+            L"\u622a\u5c4f\u5931\u8d25",
+            L"Schermopname mislukt"));
         return;
       }
       flutter::EncodableMap shot{
@@ -117,7 +129,12 @@ bool FlutterWindow::OnCreate() {
       // Types the code into the window that was in front before ours, as if typed on the keyboard.
       const auto* text = std::get_if<std::string>(call.arguments());
       if (text == nullptr || text->empty()) {
-        result->Error("failed", Say(L"Nothing to type", L"No hay nada que escribir", L"Rien \u00e0 taper", L"Nichts zum Eingeben", L"\u5165\u529b\u3059\u308b\u3082\u306e\u304c\u3042\u308a\u307e\u305b\u3093"));
+        result->Error("failed", Say(L"Nothing to type", L"No hay nada que escribir", L"Rien \u00e0 taper", L"Nichts zum Eingeben", L"\u5165\u529b\u3059\u308b\u3082\u306e\u304c\u3042\u308a\u307e\u305b\u3093",
+            L"Nada para digitar",
+            L"Niente da digitare",
+            L"\uc785\ub825\ud560 \ub0b4\uc6a9 \uc5c6\uc74c",
+            L"\u6ca1\u6709\u53ef\u8f93\u5165\u7684\u5185\u5bb9",
+            L"Niets om te typen"));
         return;
       }
       ShowWindow(hwnd, SW_MINIMIZE);  // hands focus back to the window you were in
@@ -148,7 +165,12 @@ bool FlutterWindow::OnCreate() {
       }
       const UINT sent = SendInput(static_cast<UINT>(keys.size()), keys.data(), sizeof(INPUT));
       if (sent != keys.size()) {
-        result->Error("failed", Say(L"Windows blocked the key presses", L"Windows bloque\u00f3 las pulsaciones de teclas", L"Windows a bloqu\u00e9 les frappes de touches", L"Windows hat die Tastendr\u00fccke blockiert", L"Windows \u304c\u30ad\u30fc\u5165\u529b\u3092\u30d6\u30ed\u30c3\u30af\u3057\u307e\u3057\u305f"));
+        result->Error("failed", Say(L"Windows blocked the key presses", L"Windows bloque\u00f3 las pulsaciones de teclas", L"Windows a bloqu\u00e9 les frappes de touches", L"Windows hat die Tastendr\u00fccke blockiert", L"Windows \u304c\u30ad\u30fc\u5165\u529b\u3092\u30d6\u30ed\u30c3\u30af\u3057\u307e\u3057\u305f",
+            L"O Windows bloqueou o pressionamento de teclas",
+            L"Windows ha bloccato la pressione dei tasti",
+            L"Windows\uac00 \ud0a4 \uc785\ub825\uc744 \ucc28\ub2e8\ud588\uc5b4\uc694",
+            L"Windows \u963b\u6b62\u4e86\u6309\u952e\u8f93\u5165",
+            L"Windows heeft de toetsaanslagen geblokkeerd"));
         return;
       }
       result->Success();

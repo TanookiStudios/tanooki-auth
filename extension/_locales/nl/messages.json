@@ -1,0 +1,272 @@
+{
+  "extName": {
+    "message": "Tanooki Auth"
+  },
+  "extDescription": {
+    "message": "Vult tweestapscodes in vanuit de desktop-app van Tanooki Auth of vanaf je telefoon, alleen op de website waar elk account bij hoort."
+  },
+  "errNoApp": {
+    "message": "Tanooki Auth is niet actief. Open de Tanooki Auth-app op deze computer."
+  },
+  "errNotPaired": {
+    "message": "Deze browser is nog niet gekoppeld aan Tanooki Auth."
+  },
+  "errLocked": {
+    "message": "Tanooki Auth is vergrendeld. Ontgrendel hem en probeer het opnieuw."
+  },
+  "errTimeout": {
+    "message": "Tanooki Auth antwoordde niet op tijd."
+  },
+  "errLookalike": {
+    "message": "Deze site lijkt op $1, maar is het niet. Tanooki Auth vult hier geen codes in."
+  },
+  "menuAddQr": {
+    "message": "Toevoegen aan Tanooki Auth"
+  },
+  "errBadPage": {
+    "message": "Codes kunnen alleen op websites worden ingevuld."
+  },
+  "errFramed": {
+    "message": "Deze pagina zit in een andere website, dus Tanooki Auth vult hem niet in."
+  },
+  "errQuiet": {
+    "message": "Je telefoon is net al gevraagd."
+  },
+  "errWrongSitePhone": {
+    "message": "Je telefoon stuurde een code voor $1, en dat is niet deze pagina. Er is niets ingevuld."
+  },
+  "errWrongSitePhoneUnknown": {
+    "message": "Je telefoon stuurde een code voor een andere website, en dat is niet deze pagina. Er is niets ingevuld."
+  },
+  "errSetupPageFirst": {
+    "message": "Open eerst de pagina van de website om tweestapsverificatie in te stellen."
+  },
+  "errMigration": {
+    "message": "Dat is een overzetcode van Google Authenticator. Gebruik \"Account toevoegen…\" in de Tanooki Auth-app om hem te importeren."
+  },
+  "errNoQrVisible": {
+    "message": "Geen QR-code zichtbaar. Scrol zodat de hele QR-code op het scherm staat en probeer het opnieuw."
+  },
+  "errNotSavedHere": {
+    "message": "Dat account is niet bewaard voor deze website."
+  },
+  "errReload": {
+    "message": "Laad deze pagina opnieuw en probeer het nog eens."
+  },
+  "errNoField": {
+    "message": "Kon het codevak op deze pagina niet vinden. Klik in het vak en probeer het opnieuw, of gebruik Kopiëren en plak de code."
+  },
+  "errBadgeSeconds": {
+    "message": "De badge toont alleen seconden."
+  },
+  "noticeAdded": {
+    "message": "Toegevoegd aan Tanooki Auth."
+  },
+  "noticeDuplicate": {
+    "message": "Dat account staat al in Tanooki Auth."
+  },
+  "noticeNotAdded": {
+    "message": "Niet toegevoegd."
+  },
+  "errNoQrInImage": {
+    "message": "Kon geen QR-code vinden in die afbeelding."
+  },
+  "errNotSetupQr": {
+    "message": "Die QR-code is geen code om tweestapsverificatie in te stellen."
+  },
+  "noticeCheckApp": {
+    "message": "Kijk in Tanooki Auth om te bevestigen."
+  },
+  "errOldApp": {
+    "message": "Deze versie van Tanooki Auth kan nog geen overzetcodes van Google Authenticator toevoegen vanuit de browser. Werk Tanooki Auth bij, of gebruik \"Account toevoegen…\" in de app."
+  },
+  "noticeCheckPhone": {
+    "message": "Kijk in Tanooki Auth op je telefoon om te bevestigen."
+  },
+  "linkOffline": {
+    "message": "Kan de Tanooki Auth-server niet bereiken. Controleer je internetverbinding."
+  },
+  "linkUnpaired": {
+    "message": "Je telefoon is niet meer gekoppeld. Koppel hem opnieuw."
+  },
+  "linkServerSaidNo": {
+    "message": "De Tanooki Auth-server weigerde (HTTP $1)."
+  },
+  "linkNotLinked": {
+    "message": "Er is geen telefoon gekoppeld aan deze browser."
+  },
+  "linkDenied": {
+    "message": "Je hebt op je telefoon op Weigeren getikt."
+  },
+  "linkYourPhone": {
+    "message": "je telefoon"
+  },
+  "linkCodeTimeout": {
+    "message": "Je telefoon antwoordde niet op tijd. Open Tanooki Auth op je telefoon en probeer het opnieuw."
+  },
+  "linkAddTimeout": {
+    "message": "Je telefoon antwoordde niet. Open Tanooki Auth op je telefoon. Werd je nooit iets gevraagd, werk dan de app op je telefoon bij: oudere versies kunnen nog geen accounts toevoegen vanuit de browser."
+  },
+  "toastFilled": {
+    "message": "Code van $1 ingevuld vanuit Tanooki Auth"
+  },
+  "toastFilledNoName": {
+    "message": "Code ingevuld vanuit Tanooki Auth"
+  },
+  "dismiss": {
+    "message": "Sluiten"
+  },
+  "undo": {
+    "message": "Ongedaan maken"
+  },
+  "addButton": {
+    "message": "+ Toevoegen aan Tanooki Auth"
+  },
+  "checkTheApp": {
+    "message": "Kijk in de Tanooki Auth-app…"
+  },
+  "addedCheck": {
+    "message": "Toegevoegd aan Tanooki Auth ✓"
+  },
+  "alreadyIn": {
+    "message": "Staat al in Tanooki Auth"
+  },
+  "notAdded": {
+    "message": "Niet toegevoegd"
+  },
+  "connecting": {
+    "message": "Verbinden…"
+  },
+  "tryAgain": {
+    "message": "Opnieuw proberen"
+  },
+  "usePhoneInstead": {
+    "message": "Geen desktop-app hier? Gebruik mijn telefoon"
+  },
+  "pairingQrLabel": {
+    "message": "Koppel-QR-code. Scan hem met Tanooki Auth op je telefoon."
+  },
+  "makingPairingCode": {
+    "message": "Koppelcode maken…"
+  },
+  "waitingForPhone": {
+    "message": "Wachten op je telefoon…"
+  },
+  "phonePairSteps": {
+    "message": "Open op je telefoon Tanooki Auth, ga naar Instellingen, dan \"Gebruiken met een browser\", en tik op \"Browser koppelen\". Richt de camera op deze code."
+  },
+  "cancel": {
+    "message": "Annuleren"
+  },
+  "pairedPhoneHello": {
+    "message": "Gekoppeld. Je telefoon vraagt je om elke code goed te keuren."
+  },
+  "codeExpired": {
+    "message": "Deze code is verlopen."
+  },
+  "makeNewCode": {
+    "message": "Nieuwe code maken"
+  },
+  "usingYourPhone": {
+    "message": "Je telefoon wordt gebruikt"
+  },
+  "yourPhone": {
+    "message": "Je telefoon"
+  },
+  "codesFromPhoneNoApp": {
+    "message": "De desktop-app is niet actief, dus codes komen van je telefoon."
+  },
+  "codesFromPhone": {
+    "message": "Codes komen van je telefoon."
+  },
+  "getCodeFor": {
+    "message": "Code ophalen voor $1"
+  },
+  "checkPhoneApprove": {
+    "message": "Kijk op je telefoon en tik op Goedkeuren…"
+  },
+  "copy": {
+    "message": "Kopiëren"
+  },
+  "copied": {
+    "message": "Gekopieerd"
+  },
+  "filledCode": {
+    "message": "Code van $1 ingevuld ✓"
+  },
+  "noCodeBox": {
+    "message": "Kon het codevak op deze pagina niet vinden. Gebruik Kopiëren en plak de code."
+  },
+  "openSignInPage": {
+    "message": "Open de inlogpagina van een website en klik dan opnieuw op de extensie."
+  },
+  "tryDesktopAgain": {
+    "message": "Desktop-app opnieuw proberen"
+  },
+  "unpairPhone": {
+    "message": "Telefoon ontkoppelen"
+  },
+  "pairWithApp": {
+    "message": "Koppelen met Tanooki Auth"
+  },
+  "pairNote": {
+    "message": "Verbind deze browser met de Tanooki Auth-app op deze computer. Dit hoef je maar één keer te doen."
+  },
+  "pair": {
+    "message": "Koppelen"
+  },
+  "startAgain": {
+    "message": "Opnieuw beginnen"
+  },
+  "typeSixDigit": {
+    "message": "Tanooki Auth toont nu een code van 6 cijfers. Typ hem hier:"
+  },
+  "showCode": {
+    "message": "Code tonen"
+  },
+  "fill": {
+    "message": "Invullen"
+  },
+  "useHere": {
+    "message": "Hier gebruiken"
+  },
+  "fillTitle": {
+    "message": "De code op deze pagina invullen"
+  },
+  "useHereTitle": {
+    "message": "Op deze pagina invullen, en $1 onthouden voor dit account"
+  },
+  "scanPage": {
+    "message": "Pagina scannen op QR-code"
+  },
+  "scanPageTitle": {
+    "message": "Voegt de QR-code voor tweestapsverificatie toe die op deze pagina staat"
+  },
+  "scanning": {
+    "message": "Zoeken naar een QR-code… kijk daarna in de Tanooki Auth-app om te bevestigen."
+  },
+  "addAccountApp": {
+    "message": "Account toevoegen…"
+  },
+  "backupSettings": {
+    "message": "Back-up en instellingen…"
+  },
+  "forHost": {
+    "message": "Voor $1"
+  },
+  "noAccountHere": {
+    "message": "Geen account bewaard voor deze website. Kies er hieronder een en klik op \"Hier gebruiken\"; de volgende keer wordt hij automatisch ingevuld."
+  },
+  "otherAccounts": {
+    "message": "Andere accounts ($1)"
+  },
+  "allAccounts": {
+    "message": "Alle accounts ($1)"
+  },
+  "searchAccounts": {
+    "message": "Accounts zoeken…"
+  },
+  "noAccountsYet": {
+    "message": "Nog geen accounts. Open de pagina van een website om tweestapsverificatie in te stellen en klik op \"Pagina scannen op QR-code\"."
+  }
+}

@@ -61,7 +61,8 @@ static void tray_quit_cb(GtkMenuItem* item, gpointer user_data) {
   g_application_quit(G_APPLICATION(user_data));
 }
 
-// Tray menu words in the desktop's language (English, Spanish, French, German, Japanese).
+// Tray menu words in the desktop's language (English, Spanish, French, German, Japanese,
+// Portuguese, Italian, Korean, Simplified Chinese, Dutch).
 static const char* tray_text(int i) {
   static const char* words[][3] = {
       {"Quick pick", "Show Tanooki Auth", "Quit"},
@@ -69,6 +70,11 @@ static const char* tray_text(int i) {
       {"Choix rapide", "Afficher Tanooki Auth", "Quitter"},
       {"Schnellauswahl", "Tanooki Auth anzeigen", "Beenden"},
       {"クイックピック", "Tanooki Auth を表示", "終了"},
+      {"Escolha rápida", "Mostrar o Tanooki Auth", "Sair"},
+      {"Scelta rapida", "Mostra Tanooki Auth", "Esci"},
+      {"빠른 선택", "Tanooki Auth 보기", "종료"},
+      {"快速选取", "显示 Tanooki Auth", "退出"},
+      {"Snelkeuze", "Tanooki Auth tonen", "Stoppen"},
   };
   const char* lang = g_get_language_names()[0];
   int row = 0;
@@ -76,6 +82,11 @@ static const char* tray_text(int i) {
   else if (g_str_has_prefix(lang, "fr")) row = 2;
   else if (g_str_has_prefix(lang, "de")) row = 3;
   else if (g_str_has_prefix(lang, "ja")) row = 4;
+  else if (g_str_has_prefix(lang, "pt")) row = 5;
+  else if (g_str_has_prefix(lang, "it")) row = 6;
+  else if (g_str_has_prefix(lang, "ko")) row = 7;
+  else if (g_str_has_prefix(lang, "zh")) row = 8;
+  else if (g_str_has_prefix(lang, "nl")) row = 9;
   return words[row][i];
 }
 

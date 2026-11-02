@@ -8,12 +8,15 @@ import '../l10n/l10n.dart';
 import 'account.dart';
 import 'otpauth_uri.dart';
 
+// The PDF's built-in Helvetica has no Japanese, Korean or Chinese letters, so those paper backups are printed in English.
+AppLocalizations _paperWords() =>
+    const {'ja', 'ko', 'zh'}.contains(appLocale().languageCode) ? lookupAppLocalizations(const Locale('en')) : l10n;
+
 /// A printable PDF: one block per account with its setup QR code, name, and unused recovery codes.
 /// Anyone holding the paper can make the codes, which the confirmation before this says plainly.
 Future<Uint8List> buildPaperBackup(List<Account> accounts, {DateTime? now, bool compress = true}) {
   final date = (now ?? DateTime.now()).toIso8601String().substring(0, 10);
-  // The PDF's built-in Helvetica has no Japanese letters, so a Japanese paper backup is printed in English.
-  final t = appLocale().languageCode == 'ja' ? lookupAppLocalizations(const Locale('en')) : l10n;
+  final t = _paperWords();
   final doc = pw.Document(compress: compress, title: t.paperBackupTitle, author: 'Tanooki Auth');
   doc.addPage(pw.MultiPage(
     pageFormat: PdfPageFormat.letter,
@@ -61,7 +64,7 @@ Future<Uint8List> buildPaperBackup(List<Account> accounts, {DateTime? now, bool 
 /// which half it is and what it's for, then every code with its part number.
 Future<Uint8List> buildHalfPaper(String which, List<String> codes, {DateTime? now, bool compress = true}) {
   final date = (now ?? DateTime.now()).toIso8601String().substring(0, 10);
-  final t = appLocale().languageCode == 'ja' ? lookupAppLocalizations(const Locale('en')) : l10n;
+  final t = _paperWords();
   final title = which == 'A' ? t.halvesHalfA : t.halvesHalfB;
   final doc = pw.Document(compress: compress, title: title, author: 'Tanooki Auth');
   doc.addPage(pw.MultiPage(

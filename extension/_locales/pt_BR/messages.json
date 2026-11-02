@@ -1,0 +1,272 @@
+{
+  "extName": {
+    "message": "Tanooki Auth"
+  },
+  "extDescription": {
+    "message": "Preenche códigos de dois fatores do app Tanooki Auth para computador, ou do seu celular, só no site de cada conta."
+  },
+  "errNoApp": {
+    "message": "O Tanooki Auth não está rodando. Abra o app Tanooki Auth neste computador."
+  },
+  "errNotPaired": {
+    "message": "Este navegador ainda não está pareado com o Tanooki Auth."
+  },
+  "errLocked": {
+    "message": "O Tanooki Auth está bloqueado. Desbloqueie e tente de novo."
+  },
+  "errTimeout": {
+    "message": "O Tanooki Auth não respondeu a tempo."
+  },
+  "errLookalike": {
+    "message": "Este site parece $1, mas não é. O Tanooki Auth não vai preencher códigos aqui."
+  },
+  "menuAddQr": {
+    "message": "Adicionar ao Tanooki Auth"
+  },
+  "errBadPage": {
+    "message": "Os códigos só podem ser preenchidos em sites."
+  },
+  "errFramed": {
+    "message": "Esta página está dentro de outro site, então o Tanooki Auth não vai preenchê-la."
+  },
+  "errQuiet": {
+    "message": "Seu celular já foi consultado há pouco."
+  },
+  "errWrongSitePhone": {
+    "message": "Seu celular mandou um código para $1, que não é esta página. Nada foi preenchido."
+  },
+  "errWrongSitePhoneUnknown": {
+    "message": "Seu celular mandou um código para outro site, que não é esta página. Nada foi preenchido."
+  },
+  "errSetupPageFirst": {
+    "message": "Abra primeiro a página de configuração de dois fatores do site."
+  },
+  "errMigration": {
+    "message": "Isso é um código de transferência do Google Authenticator. Use \"Adicionar conta…\" no app Tanooki Auth para importar."
+  },
+  "errNoQrVisible": {
+    "message": "Nenhum código QR de configuração visível. Role a página até o código QR inteiro aparecer na tela e tente de novo."
+  },
+  "errNotSavedHere": {
+    "message": "Essa conta não está salva para este site."
+  },
+  "errReload": {
+    "message": "Recarregue esta página e tente de novo."
+  },
+  "errNoField": {
+    "message": "Não foi possível encontrar a caixa do código nesta página. Clique dentro da caixa e tente de novo, ou use Copiar e cole."
+  },
+  "errBadgeSeconds": {
+    "message": "O selo só mostra segundos."
+  },
+  "noticeAdded": {
+    "message": "Adicionado ao Tanooki Auth."
+  },
+  "noticeDuplicate": {
+    "message": "Essa conta já está no Tanooki Auth."
+  },
+  "noticeNotAdded": {
+    "message": "Não adicionado."
+  },
+  "errNoQrInImage": {
+    "message": "Não foi possível encontrar um código QR nessa imagem."
+  },
+  "errNotSetupQr": {
+    "message": "Esse código QR não é um código de configuração de dois fatores."
+  },
+  "noticeCheckApp": {
+    "message": "Confira o Tanooki Auth para confirmar."
+  },
+  "errOldApp": {
+    "message": "Esta versão do Tanooki Auth ainda não consegue adicionar códigos de transferência do Google Authenticator pelo navegador. Atualize o Tanooki Auth, ou use \"Adicionar conta…\" no app."
+  },
+  "noticeCheckPhone": {
+    "message": "Confira o Tanooki Auth no seu celular para confirmar."
+  },
+  "linkOffline": {
+    "message": "Não foi possível acessar o servidor do Tanooki Auth. Verifique sua conexão com a internet."
+  },
+  "linkUnpaired": {
+    "message": "Seu celular não está mais pareado. Pareie de novo."
+  },
+  "linkServerSaidNo": {
+    "message": "O servidor do Tanooki Auth recusou (HTTP $1)."
+  },
+  "linkNotLinked": {
+    "message": "Nenhum celular está pareado com este navegador."
+  },
+  "linkDenied": {
+    "message": "Você tocou em Negar no celular."
+  },
+  "linkYourPhone": {
+    "message": "seu celular"
+  },
+  "linkCodeTimeout": {
+    "message": "Seu celular não respondeu a tempo. Abra o Tanooki Auth no celular e tente de novo."
+  },
+  "linkAddTimeout": {
+    "message": "Seu celular não respondeu. Abra o Tanooki Auth no celular. Se ele nunca perguntou nada, atualize o app no celular: versões antigas ainda não conseguem adicionar contas pelo navegador."
+  },
+  "toastFilled": {
+    "message": "Código de $1 preenchido pelo Tanooki Auth"
+  },
+  "toastFilledNoName": {
+    "message": "Código preenchido pelo Tanooki Auth"
+  },
+  "dismiss": {
+    "message": "Fechar"
+  },
+  "undo": {
+    "message": "Desfazer"
+  },
+  "addButton": {
+    "message": "+ Adicionar ao Tanooki Auth"
+  },
+  "checkTheApp": {
+    "message": "Confira o app Tanooki Auth…"
+  },
+  "addedCheck": {
+    "message": "Adicionado ao Tanooki Auth ✓"
+  },
+  "alreadyIn": {
+    "message": "Já está no Tanooki Auth"
+  },
+  "notAdded": {
+    "message": "Não adicionado"
+  },
+  "connecting": {
+    "message": "Conectando…"
+  },
+  "tryAgain": {
+    "message": "Tentar de novo"
+  },
+  "usePhoneInstead": {
+    "message": "Sem o app para computador aqui? Usar meu celular"
+  },
+  "pairingQrLabel": {
+    "message": "Código QR de pareamento. Escaneie com o Tanooki Auth no seu celular."
+  },
+  "makingPairingCode": {
+    "message": "Criando um código de pareamento…"
+  },
+  "waitingForPhone": {
+    "message": "Aguardando seu celular…"
+  },
+  "phonePairSteps": {
+    "message": "No seu celular, abra o Tanooki Auth, vá em Ajustes, depois em \"Usar com um navegador\", e toque em \"Parear um navegador\". Aponte a câmera para este código."
+  },
+  "cancel": {
+    "message": "Cancelar"
+  },
+  "pairedPhoneHello": {
+    "message": "Pareado. Seu celular vai pedir para você aprovar cada código."
+  },
+  "codeExpired": {
+    "message": "Este código expirou."
+  },
+  "makeNewCode": {
+    "message": "Criar um novo código"
+  },
+  "usingYourPhone": {
+    "message": "Usando seu celular"
+  },
+  "yourPhone": {
+    "message": "Seu celular"
+  },
+  "codesFromPhoneNoApp": {
+    "message": "O app para computador não está rodando, então os códigos vêm do seu celular."
+  },
+  "codesFromPhone": {
+    "message": "Os códigos vêm do seu celular."
+  },
+  "getCodeFor": {
+    "message": "Pegar código de $1"
+  },
+  "checkPhoneApprove": {
+    "message": "Confira seu celular e toque em Aprovar…"
+  },
+  "copy": {
+    "message": "Copiar"
+  },
+  "copied": {
+    "message": "Copiado"
+  },
+  "filledCode": {
+    "message": "Código de $1 preenchido ✓"
+  },
+  "noCodeBox": {
+    "message": "Não foi possível encontrar a caixa do código nesta página. Use Copiar e cole."
+  },
+  "openSignInPage": {
+    "message": "Abra a página de login de um site e clique na extensão de novo."
+  },
+  "tryDesktopAgain": {
+    "message": "Tentar o app para computador de novo"
+  },
+  "unpairPhone": {
+    "message": "Desparear celular"
+  },
+  "pairWithApp": {
+    "message": "Parear com o Tanooki Auth"
+  },
+  "pairNote": {
+    "message": "Conecte este navegador ao app Tanooki Auth neste computador. Você só faz isso uma vez."
+  },
+  "pair": {
+    "message": "Parear"
+  },
+  "startAgain": {
+    "message": "Começar de novo"
+  },
+  "typeSixDigit": {
+    "message": "O Tanooki Auth está mostrando um código de 6 dígitos. Digite aqui:"
+  },
+  "showCode": {
+    "message": "Mostrar código"
+  },
+  "fill": {
+    "message": "Preencher"
+  },
+  "useHere": {
+    "message": "Usar aqui"
+  },
+  "fillTitle": {
+    "message": "Preencher o código nesta página"
+  },
+  "useHereTitle": {
+    "message": "Preencher nesta página e lembrar $1 para esta conta"
+  },
+  "scanPage": {
+    "message": "Procurar código QR na página"
+  },
+  "scanPageTitle": {
+    "message": "Adiciona o código QR de configuração de dois fatores que aparece nesta página"
+  },
+  "scanning": {
+    "message": "Procurando um código QR… depois confira o app Tanooki Auth para confirmar."
+  },
+  "addAccountApp": {
+    "message": "Adicionar conta…"
+  },
+  "backupSettings": {
+    "message": "Backup e ajustes…"
+  },
+  "forHost": {
+    "message": "Para $1"
+  },
+  "noAccountHere": {
+    "message": "Nenhuma conta salva para este site. Escolha uma abaixo e clique em \"Usar aqui\"; ela será preenchida automaticamente na próxima vez."
+  },
+  "otherAccounts": {
+    "message": "Outras contas ($1)"
+  },
+  "allAccounts": {
+    "message": "Todas as contas ($1)"
+  },
+  "searchAccounts": {
+    "message": "Buscar contas…"
+  },
+  "noAccountsYet": {
+    "message": "Nenhuma conta ainda. Abra a página de configuração de dois fatores de um site e clique em \"Procurar código QR na página\"."
+  }
+}

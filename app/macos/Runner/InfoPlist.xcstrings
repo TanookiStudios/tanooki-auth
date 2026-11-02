@@ -28,10 +28,40 @@
             "value": "Tanooki Auth utilise l'appareil photo pour scanner les codes QR de configuration de la double authentification."
           }
         },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanooki Auth usa la fotocamera per scansionare i codici QR di configurazione a due fattori."
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "Tanooki Auth は2段階認証の設定用 QR コードを読み取るためにカメラを使います。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanooki Auth는 2단계 인증 설정 QR 코드를 스캔하기 위해 카메라를 사용해요."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanooki Auth gebruikt de camera om QR-codes voor tweestapsverificatie te scannen."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Tanooki Auth usa a câmera para escanear códigos QR de configuração de dois fatores."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tanooki Auth 使用相机扫描两步验证设置二维码。"
           }
         }
       }

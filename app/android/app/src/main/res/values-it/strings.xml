@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">I codici dei tuoi preferiti. Attiva Impostazioni &gt; Mostra i codici su widget e orologio in Tanooki Auth.</string>
+    <string name="scan_tile">Scansiona QR 2FA</string>
+    <string name="widget_locked">Sblocca per vedere i codici</string>
+    <string name="widget_empty">Nessun preferito da mostrare. In Tanooki Auth, aggiungi una stella a un account e attiva Impostazioni &gt; Mostra i codici su widget e orologio.</string>
+    <string name="backup_folder">Cartella di backup</string>
+    <string name="autofill_auth_title">Inserisci un codice per un account che chiede prima</string>
+</resources>

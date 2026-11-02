@@ -1,0 +1,272 @@
+{
+  "extName": {
+    "message": "Tanooki Auth"
+  },
+  "extDescription": {
+    "message": "从 Tanooki Auth 桌面应用或你的手机填写两步验证码，并且只在每个账号所属的网站上填写。"
+  },
+  "errNoApp": {
+    "message": "Tanooki Auth 没有运行。请在这台电脑上打开 Tanooki Auth 应用。"
+  },
+  "errNotPaired": {
+    "message": "这个浏览器还没有与 Tanooki Auth 配对。"
+  },
+  "errLocked": {
+    "message": "Tanooki Auth 已锁定。请解锁后重试。"
+  },
+  "errTimeout": {
+    "message": "Tanooki Auth 没有及时回应。"
+  },
+  "errLookalike": {
+    "message": "这个网站看起来像 $1，但其实不是。Tanooki Auth 不会在这里填写验证码。"
+  },
+  "menuAddQr": {
+    "message": "添加到 Tanooki Auth"
+  },
+  "errBadPage": {
+    "message": "只能在网站上填写验证码。"
+  },
+  "errFramed": {
+    "message": "这个页面嵌在另一个网站里，所以 Tanooki Auth 不会填写。"
+  },
+  "errQuiet": {
+    "message": "刚刚已经询问过你的手机。"
+  },
+  "errWrongSitePhone": {
+    "message": "你的手机发来的是 $1 的验证码，不是这个页面的。没有填写任何内容。"
+  },
+  "errWrongSitePhoneUnknown": {
+    "message": "你的手机发来的是另一个网站的验证码，不是这个页面的。没有填写任何内容。"
+  },
+  "errSetupPageFirst": {
+    "message": "请先打开网站的两步验证设置页面。"
+  },
+  "errMigration": {
+    "message": "这是 Google Authenticator 迁移码。请在 Tanooki Auth 应用中用“添加账号…”导入。"
+  },
+  "errNoQrVisible": {
+    "message": "看不到设置二维码。请滚动页面让整个二维码显示在屏幕上，然后重试。"
+  },
+  "errNotSavedHere": {
+    "message": "这个账号没有保存为这个网站使用。"
+  },
+  "errReload": {
+    "message": "请重新加载这个页面，然后重试。"
+  },
+  "errNoField": {
+    "message": "在这个页面上找不到验证码输入框。请点击输入框后重试，或者使用复制粘贴。"
+  },
+  "errBadgeSeconds": {
+    "message": "徽标只能显示秒数。"
+  },
+  "noticeAdded": {
+    "message": "已添加到 Tanooki Auth。"
+  },
+  "noticeDuplicate": {
+    "message": "这个账号已经在 Tanooki Auth 中了。"
+  },
+  "noticeNotAdded": {
+    "message": "未添加。"
+  },
+  "errNoQrInImage": {
+    "message": "在这张图片里找不到二维码。"
+  },
+  "errNotSetupQr": {
+    "message": "这个二维码不是两步验证设置码。"
+  },
+  "noticeCheckApp": {
+    "message": "请在 Tanooki Auth 中确认。"
+  },
+  "errOldApp": {
+    "message": "这个版本的 Tanooki Auth 还不能从浏览器添加 Google Authenticator 迁移码。请更新 Tanooki Auth，或在应用中使用“添加账号…”。"
+  },
+  "noticeCheckPhone": {
+    "message": "请在手机上的 Tanooki Auth 中确认。"
+  },
+  "linkOffline": {
+    "message": "无法连接 Tanooki Auth 服务器。请检查网络连接。"
+  },
+  "linkUnpaired": {
+    "message": "你的手机已不再配对。请重新配对。"
+  },
+  "linkServerSaidNo": {
+    "message": "Tanooki Auth 服务器拒绝了请求（HTTP $1）。"
+  },
+  "linkNotLinked": {
+    "message": "没有手机与这个浏览器配对。"
+  },
+  "linkDenied": {
+    "message": "你在手机上点按了“拒绝”。"
+  },
+  "linkYourPhone": {
+    "message": "你的手机"
+  },
+  "linkCodeTimeout": {
+    "message": "你的手机没有及时回应。请在手机上打开 Tanooki Auth 后重试。"
+  },
+  "linkAddTimeout": {
+    "message": "你的手机没有回应。请在手机上打开 Tanooki Auth。如果它一直没有询问你，请更新手机上的应用：旧版本还不能从浏览器添加账号。"
+  },
+  "toastFilled": {
+    "message": "已从 Tanooki Auth 填写 $1 的验证码"
+  },
+  "toastFilledNoName": {
+    "message": "已从 Tanooki Auth 填写验证码"
+  },
+  "dismiss": {
+    "message": "关闭"
+  },
+  "undo": {
+    "message": "撤销"
+  },
+  "addButton": {
+    "message": "+ 添加到 Tanooki Auth"
+  },
+  "checkTheApp": {
+    "message": "请查看 Tanooki Auth 应用…"
+  },
+  "addedCheck": {
+    "message": "已添加到 Tanooki Auth ✓"
+  },
+  "alreadyIn": {
+    "message": "已在 Tanooki Auth 中"
+  },
+  "notAdded": {
+    "message": "未添加"
+  },
+  "connecting": {
+    "message": "正在连接…"
+  },
+  "tryAgain": {
+    "message": "重试"
+  },
+  "usePhoneInstead": {
+    "message": "这里没有桌面应用？改用我的手机"
+  },
+  "pairingQrLabel": {
+    "message": "配对二维码。请用手机上的 Tanooki Auth 扫描。"
+  },
+  "makingPairingCode": {
+    "message": "正在生成配对码…"
+  },
+  "waitingForPhone": {
+    "message": "正在等待你的手机…"
+  },
+  "phonePairSteps": {
+    "message": "在手机上打开 Tanooki Auth，进入“设置”>“配合浏览器使用”，点按“配对浏览器”。把摄像头对准这个码。"
+  },
+  "cancel": {
+    "message": "取消"
+  },
+  "pairedPhoneHello": {
+    "message": "已配对。每个验证码都会先在你的手机上请你批准。"
+  },
+  "codeExpired": {
+    "message": "这个码已过期。"
+  },
+  "makeNewCode": {
+    "message": "生成新码"
+  },
+  "usingYourPhone": {
+    "message": "正在使用你的手机"
+  },
+  "yourPhone": {
+    "message": "你的手机"
+  },
+  "codesFromPhoneNoApp": {
+    "message": "桌面应用没有运行，所以验证码来自你的手机。"
+  },
+  "codesFromPhone": {
+    "message": "验证码来自你的手机。"
+  },
+  "getCodeFor": {
+    "message": "获取 $1 的验证码"
+  },
+  "checkPhoneApprove": {
+    "message": "请查看手机并点按“批准”…"
+  },
+  "copy": {
+    "message": "复制"
+  },
+  "copied": {
+    "message": "已复制"
+  },
+  "filledCode": {
+    "message": "已填写 $1 的验证码 ✓"
+  },
+  "noCodeBox": {
+    "message": "在这个页面上找不到验证码输入框。请点“复制”后粘贴。"
+  },
+  "openSignInPage": {
+    "message": "请打开网站的登录页面，然后再次点击扩展。"
+  },
+  "tryDesktopAgain": {
+    "message": "再次尝试桌面应用"
+  },
+  "unpairPhone": {
+    "message": "取消配对手机"
+  },
+  "pairWithApp": {
+    "message": "与 Tanooki Auth 配对"
+  },
+  "pairNote": {
+    "message": "把这个浏览器连接到这台电脑上的 Tanooki Auth 应用。只需要做一次。"
+  },
+  "pair": {
+    "message": "配对"
+  },
+  "startAgain": {
+    "message": "重新开始"
+  },
+  "typeSixDigit": {
+    "message": "Tanooki Auth 现在显示了一个 6 位数字码。请在这里输入："
+  },
+  "showCode": {
+    "message": "显示验证码"
+  },
+  "fill": {
+    "message": "填写"
+  },
+  "useHere": {
+    "message": "在此使用"
+  },
+  "fillTitle": {
+    "message": "在这个页面上填写验证码"
+  },
+  "useHereTitle": {
+    "message": "在这个页面上填写，并为这个账号记住 $1"
+  },
+  "scanPage": {
+    "message": "扫描页面上的二维码"
+  },
+  "scanPageTitle": {
+    "message": "添加这个页面上显示的两步验证设置二维码"
+  },
+  "scanning": {
+    "message": "正在查找二维码…然后请在 Tanooki Auth 应用中确认。"
+  },
+  "addAccountApp": {
+    "message": "添加账号…"
+  },
+  "backupSettings": {
+    "message": "备份和设置…"
+  },
+  "forHost": {
+    "message": "用于 $1"
+  },
+  "noAccountHere": {
+    "message": "这个网站没有保存账号。请在下方选择一个并点击“在此使用”；下次会自动填写。"
+  },
+  "otherAccounts": {
+    "message": "其他账号（$1）"
+  },
+  "allAccounts": {
+    "message": "所有账号（$1）"
+  },
+  "searchAccounts": {
+    "message": "搜索账号…"
+  },
+  "noAccountsYet": {
+    "message": "还没有账号。请打开网站的两步验证设置页面，然后点击“扫描页面上的二维码”。"
+  }
+}

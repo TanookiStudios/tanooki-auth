@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">De codes van je favorieten. Zet Instellingen &gt; Codes tonen op widgets en horloge aan in Tanooki Auth.</string>
+    <string name="scan_tile">2FA-QR scannen</string>
+    <string name="widget_locked">Ontgrendel om codes te zien</string>
+    <string name="widget_empty">Geen favorieten om te tonen. Geef in Tanooki Auth een account een ster en zet Instellingen &gt; Codes tonen op widgets en horloge aan.</string>
+    <string name="backup_folder">Back-upmap</string>
+    <string name="autofill_auth_title">Vul een code in voor een account dat eerst vraagt</string>
+</resources>

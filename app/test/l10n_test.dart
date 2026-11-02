@@ -24,7 +24,7 @@ import 'package:tanooki_auth/ui/trash.dart';
 
 import 'vault_test.dart' show MemoryKeyStore;
 
-const locales = ['en', 'es', 'fr', 'de', 'ja'];
+const locales = ['en', 'es', 'fr', 'de', 'ja', 'pt', 'it', 'ko', 'zh', 'nl'];
 
 Map<String, dynamic> readArb(String locale) =>
     jsonDecode(File('lib/l10n/app_$locale.arb').readAsStringSync()) as Map<String, dynamic>;

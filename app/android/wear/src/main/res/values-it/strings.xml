@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wear_empty">Ancora nessun preferito.\n\nSul telefono, apri Tanooki Auth, aggiungi una stella a un account e attiva Impostazioni &gt; Mostra i codici su widget e orologio.</string>
+    <string name="wear_seconds">%1$ds</string>
+</resources>

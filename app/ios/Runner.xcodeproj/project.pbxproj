@@ -634,6 +634,11 @@
 				fr,
 				de,
 				ja,
+				"pt-BR",
+				it,
+				ko,
+				"zh-Hans",
+				nl,
 			);
 			mainGroup = 97C146E51CF9000F007C117D;
 			packageReferences = (

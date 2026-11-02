@@ -49,8 +49,9 @@ to you, please consider buying Premium or [donating to Tanooki Studios](https://
 
 ## Languages
 
-The app and the browser extension come in English, Spanish, French, German and Japanese. They follow
-your device's language, and you can pick one in Settings > Language.
+The app and the browser extension come in English, Spanish, French, German, Japanese, Portuguese
+(Brazil), Italian, Korean, Simplified Chinese and Dutch. They follow your device's language, and you
+can pick one in Settings > Language.
 
 The translations were machine-written, so some wording may sound off. If you're a native speaker and
 spot something, a fix is very welcome: the app's words live in `app/lib/l10n/app_<language>.arb` and the

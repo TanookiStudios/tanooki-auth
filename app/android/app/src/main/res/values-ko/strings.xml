@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">즐겨찾기한 계정의 코드예요. Tanooki Auth에서 설정 &gt; 위젯과 워치에 코드 표시를 켜세요.</string>
+    <string name="scan_tile">2FA QR 스캔</string>
+    <string name="widget_locked">코드를 보려면 잠금 해제하세요</string>
+    <string name="widget_empty">표시할 즐겨찾기가 없어요. Tanooki Auth에서 계정에 별표를 하고 설정 &gt; 위젯과 워치에 코드 표시를 켜세요.</string>
+    <string name="backup_folder">백업 폴더</string>
+    <string name="autofill_auth_title">먼저 확인하는 계정의 코드 채우기</string>
+</resources>

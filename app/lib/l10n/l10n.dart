@@ -6,11 +6,22 @@ import 'app_localizations.dart';
 
 export 'app_localizations.dart';
 
-/// Vault setting for Settings > Language: 'en', 'es', 'fr', 'de', 'ja', or missing to follow the device.
+/// Vault setting for Settings > Language: a key of [languageNames], or missing to follow the device.
 const languageKey = 'language';
 
 /// The Language choices, each in its own language (so anyone can find theirs). The empty key is "System".
-const languageNames = {'en': 'English', 'es': 'Español', 'fr': 'Français', 'de': 'Deutsch', 'ja': '日本語'};
+const languageNames = {
+  'en': 'English',
+  'es': 'Español',
+  'fr': 'Français',
+  'de': 'Deutsch',
+  'ja': '日本語',
+  'pt': 'Português',
+  'it': 'Italiano',
+  'ko': '한국어',
+  'zh': '简体中文', // Simplified Chinese
+  'nl': 'Nederlands',
+};
 
 /// The Settings > Language choice; null follows the device.
 final appLanguage = ValueNotifier<String?>(null);
