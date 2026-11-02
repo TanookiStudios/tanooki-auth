@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Passkeys vs two-factor codes: what’s the difference? | Tanooki Auth</title>
+<meta name="description" content="Passkeys can’t be typed into a fake website, which makes them stronger than six-digit codes. When to use each, according to FIDO, Google and Apple.">
+<link rel="canonical" href="https://auth.tanookistudios.com/blog/passkeys-vs-codes/">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/favicon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;650&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<link rel="stylesheet" href="/pages.css">
+<link rel="alternate" type="application/rss+xml" title="Tanooki Auth blog" href="/blog/feed.xml">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="container">
+    <nav class="pill" aria-label="Main">
+      <a class="brand" href="/" aria-label="Tanooki Auth home"><img src="/icon.png" alt="" width="28" height="28">Tanooki Auth</a>
+      <ul>
+        <li><a href="/#promise">Privacy</a></li>
+        <li><a href="/#how">How it works</a></li>
+        <li><a href="/#themes">Premium</a></li>
+        <li><a href="/guides/">Guides</a></li>
+        <li><a href="/compare/">Compare</a></li>
+        <li><a href="/blog/">Blog</a></li>
+        <li><a href="https://tanookistudios.com/SupportMe">Donate</a></li>
+      </ul>
+      <a class="btn" href="/#download">Download</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="page">
+    <div class="container">
+      <p class="crumb"><a href="/blog/">All posts</a></p>
+      <h1>Passkeys vs two-factor codes: what’s the difference?</h1>
+      <p class="muted block"><time datetime="2026-11-02">November 2, 2026</time></p>
+      <article class="article">
+<p>More and more sites offer passkeys. You may wonder whether that makes your authenticator app pointless. It doesn’t, but passkeys are worth using where you can.</p>
+<h2>What a passkey is</h2>
+<p>A passkey lets you sign in with the same face, fingerprint or PIN you use to unlock your phone or computer. The FIDO Alliance, the industry group behind the standard, <a href="https://fidoalliance.org/passkeys/">explains</a> that there’s nothing to type, so there’s nothing to type into the wrong place.</p>
+<p>Apple <a href="https://support.apple.com/en-us/102195">describes why that matters</a>: the website only stores a public key, and the private key never leaves your devices. Google <a href="https://support.google.com/accounts/answer/13548313">adds</a> that passkeys can’t be written down, shared or accidentally given away, which makes them much harder to phish.</p>
+<h2>Why that beats a code</h2>
+<p>A six-digit code is something you can read and type, so a scammer can trick you into typing it into a fake page (see <a href="/blog/phishing-fake-login-pages/">Phishing and fake login pages</a>). A passkey is tied to the real website’s address and simply won’t work on a fake one. That’s why CISA <a href="https://www.cisa.gov/sites/default/files/publications/fact-sheet-implementing-phishing-resistant-mfa-508c.pdf">ranks</a> phishing-resistant methods like passkeys and security keys at the top.</p>
+<h2>So why keep an authenticator app?</h2>
+<ul>
+<li><strong>Not every site offers passkeys yet.</strong> Many still only offer codes.</li>
+<li><strong>Some sites ask for a code as a backup</strong> or for certain actions.</li>
+<li><strong>Shared or borrowed computers.</strong> Google advises only creating passkeys on devices you personally own and use.</li>
+</ul>
+<h2>What to do</h2>
+<p>Use a passkey where a site offers one, starting with your email and your Apple or Google account. Keep an authenticator app for everything else, and keep recovery codes for both. Our <a href="/guides/google/">Google guide</a> covers turning on two-step verification, and Google’s help page above covers passkeys.</p>
+</article>
+      <div class="block">
+        <h2>Related guides</h2>
+        <ul class="features">
+          <li><a class="text" href="/guides/google/">Turn on two-factor for Google</a></li>
+        </ul>
+      </div>
+      <div class="block">
+        <h2>Sources</h2>
+        <ol class="sources">
+          <li><a class="text" href="https://fidoalliance.org/passkeys/">Passkeys (FIDO Alliance)</a></li>
+          <li><a class="text" href="https://support.google.com/accounts/answer/13548313">Sign in with a passkey instead of a password (Google Account Help)</a></li>
+          <li><a class="text" href="https://support.apple.com/en-us/102195">About the security of passkeys (Apple Support)</a></li>
+          <li><a class="text" href="https://www.cisa.gov/sites/default/files/publications/fact-sheet-implementing-phishing-resistant-mfa-508c.pdf">Implementing Phishing-Resistant MFA, fact sheet (CISA)</a></li>
+        </ol>
+        <p class="muted block">Sources checked November 2, 2026. This post is general advice, not a substitute for each company’s own help pages.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="support" aria-labelledby="cta-h">
+    <div class="container">
+      <div>
+        <h2 id="cta-h">Get Tanooki Auth</h2>
+        <p>A free authenticator for Mac, Windows and Android. No account, no cloud.</p>
+      </div>
+      <a class="btn" href="/">Get Tanooki Auth</a>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="container">
+    <p class="mast">Tanooki Auth</p>
+    <nav aria-label="Footer">
+      <ul>
+        <li><a href="/guides/">2FA guides</a></li>
+        <li><a href="/blog/">Blog</a></li>
+        <li><a href="/compare/">Compare</a></li>
+        <li><a href="/status/">Status</a></li>
+        <li><a href="/press/">Press kit</a></li>
+        <li><a href="https://tanooki-auth-premium.kirbymail.workers.dev/privacy">Privacy policy</a></li>
+        <li><a href="https://github.com/TanookiStudios/tanooki-auth">Source code</a></li>
+        <li><a href="https://tanookistudios.com">Tanooki Studios</a></li>
+        <li><a href="https://tanookistudios.com/SupportMe">Donate</a></li>
+      </ul>
+    </nav>
+    <small>© 2026 Maddie</small>
+  </div>
+</footer>
+</body>
+</html>

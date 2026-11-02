@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compare authenticator apps | Tanooki Auth</title>
+<meta name="description" content="A fair, sourced comparison of Tanooki Auth with Authy, Google Authenticator, Microsoft Authenticator, 2FAS and Aegis: platforms, backup, export, extensions and price.">
+<link rel="canonical" href="https://auth.tanookistudios.com/compare/">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/favicon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;650&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<link rel="stylesheet" href="/pages.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="container">
+    <nav class="pill" aria-label="Main">
+      <a class="brand" href="/" aria-label="Tanooki Auth home"><img src="/icon.png" alt="" width="28" height="28">Tanooki Auth</a>
+      <ul>
+        <li><a href="/#promise">Privacy</a></li>
+        <li><a href="/#how">How it works</a></li>
+        <li><a href="/#themes">Premium</a></li>
+        <li><a href="/guides/">Guides</a></li>
+        <li><a href="/compare/" aria-current="page">Compare</a></li>
+        <li><a href="/blog/">Blog</a></li>
+        <li><a href="https://tanookistudios.com/SupportMe">Donate</a></li>
+      </ul>
+      <a class="btn" href="/#download">Download</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="page">
+    <div class="container">
+      <h1>Compare authenticator apps</h1>
+      <p class="lead">Every one of these apps makes the same standard six-digit codes, so any of them is far better than no two-factor at all. They differ in where they run, how they back up, and whether you can take your accounts with you.</p>
+      <ul class="cards">
+        <li><a href="/compare/authy/">Tanooki Auth vs Authy</a></li>
+        <li><a href="/compare/google-authenticator/">Tanooki Auth vs Google Authenticator</a></li>
+        <li><a href="/compare/microsoft-authenticator/">Tanooki Auth vs Microsoft Authenticator</a></li>
+        <li><a href="/compare/2fas/">Tanooki Auth vs 2FAS</a></li>
+        <li><a href="/compare/aegis/">Tanooki Auth vs Aegis</a></li>
+      </ul>
+      <section class="scroll" aria-label="Six authenticator apps compared" tabindex="0">
+        <table class="compare">
+          <caption>Six authenticator apps compared</caption>
+          <thead><tr><th scope="col"><span class="visually-hidden">Feature</span></th><th scope="col">Tanooki Auth</th><th scope="col">Authy</th><th scope="col">Google Authenticator</th><th scope="col">Microsoft Authenticator</th><th scope="col">2FAS</th><th scope="col">Aegis</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Platforms</th><td>Mac, Windows, Android. iPhone and iPad are coming to the App Store. <a class="src" href="/press/">Source</a></td><td>iPhone, iPad, Apple Watch and Android. The Mac, Windows and Linux apps were shut down on March 19, 2024. <a class="src" href="https://www.twilio.com/en-us/changelog/end-of-life--eol--of-twilio-authy-desktop-apps">Source</a></td><td>Android, iPhone and iPad <a class="src" href="https://support.google.com/accounts/answer/1066447?hl=en">Source</a></td><td>iPhone, iPad and Android. Microsoft says it isn’t available for PC or Mac. <a class="src" href="https://support.microsoft.com/en-us/account-billing/download-microsoft-authenticator-351498fc-850a-45da-b7b6-27e523b8702a">Source</a></td><td>iPhone and Android, plus Apple Watch <a class="src" href="https://2fas.com/">Source</a></td><td>Android only. Its FAQ says there are no plans for iPhone, Windows or Mac versions. <a class="src" href="https://github.com/beemdevelopment/Aegis/blob/master/FAQ.md">Source</a></td></tr>
+            <tr><th scope="row">Open source</th><td>Yes, GPL-3.0 <a class="src" href="https://github.com/TanookiStudios/tanooki-auth">Source</a></td><td>Not sure <span class="muted">We found no official statement either way.</span> <a class="src" href="https://www.authy.com/">Source</a></td><td>No. Google’s old open-source version is archived and says the store app is not open source. <a class="src" href="https://github.com/google/google-authenticator-android">Source</a></td><td>Not sure <span class="muted">We found no official statement either way.</span> <a class="src" href="https://support.microsoft.com/en-us/account-billing/about-microsoft-authenticator-9783c865-0308-42fb-a519-8cf666fe0acc">Source</a></td><td>Yes, GPL-3.0 <a class="src" href="https://github.com/twofas/2fas-android">Source</a></td><td>Yes, GPL-3.0 <a class="src" href="https://github.com/beemdevelopment/Aegis">Source</a></td></tr>
+            <tr><th scope="row">Encrypted backup</th><td>Yes. A backup file encrypted with a password only you know. Optional end-to-end encrypted sync with Premium. <a class="src" href="/press/">Source</a></td><td>Yes. Cloud backup encrypted on your device with a password you set; Twilio never gets the password. <a class="src" href="https://www.twilio.com/en-us/blog/how-the-authy-two-factor-backups-work">Source</a></td><td>Yes. Optional sync to your Google Account, encrypted in transit and at rest. Google doesn’t describe a separate password you set. <a class="src" href="https://support.google.com/accounts/answer/1066447?hl=en">Source</a></td><td>Cloud backup: iCloud on iPhone; a personal Microsoft account on Android, moving to Google One starting January 2027. Microsoft’s page doesn’t say how it’s encrypted. Restores only to the same kind of phone. <a class="src" href="https://support.microsoft.com/en-us/authenticator/back-up-your-accounts-in-microsoft-authenticator">Source</a></td><td>Yes. Optional iCloud or Google Drive backup, end-to-end encrypted, with an optional extra password you set. <a class="src" href="https://2fas.com/support/2fas-auth-security-privacy/is-2fas-backup-safe/">Source</a></td><td>Yes. Automatic backups to a folder you choose, encrypted with your vault password. No built-in cloud. <a class="src" href="https://github.com/beemdevelopment/Aegis/blob/master/FAQ.md">Source</a></td></tr>
+            <tr><th scope="row">Export your accounts</th><td>Yes: Google Authenticator transfer QR codes, Aegis and 2FAS files, or otpauth:// links <a class="src" href="https://github.com/TanookiStudios/tanooki-auth">Source</a></td><td>Not sure <span class="muted">Authy’s own pages we could read don’t mention an export option.</span> <a class="src" href="https://www.authy.com/features/">Source</a></td><td>Yes, as transfer QR codes for another phone <a class="src" href="https://support.google.com/accounts/answer/1066447?hl=en&amp;co=GENIE.Platform%3DiOS">Source</a></td><td>Not sure <span class="muted">Microsoft’s backup page describes no way to export codes.</span> <a class="src" href="https://support.microsoft.com/en-us/authenticator/back-up-your-accounts-in-microsoft-authenticator">Source</a></td><td>Yes, a .2fas file, encrypted if you give it a password <a class="src" href="https://2fas.com/support/2fas-auth-mobile-app/2fas-auth-app-tutorial/">Source</a></td><td>Yes, a JSON file, encrypted or plain <a class="src" href="https://github.com/beemdevelopment/Aegis">Source</a></td></tr>
+            <tr><th scope="row">Desktop app</th><td>Yes, Mac and Windows <a class="src" href="/press/">Source</a></td><td>No (shut down March 19, 2024) <a class="src" href="https://www.twilio.com/en-us/changelog/end-of-life--eol--of-twilio-authy-desktop-apps">Source</a></td><td>No <a class="src" href="https://apps.apple.com/us/app/google-authenticator/id388497605">Source</a></td><td>No <a class="src" href="https://support.microsoft.com/en-us/account-billing/download-microsoft-authenticator-351498fc-850a-45da-b7b6-27e523b8702a">Source</a></td><td>No <a class="src" href="https://2fas.com/auth/">Source</a></td><td>No <a class="src" href="https://github.com/beemdevelopment/Aegis/blob/master/FAQ.md">Source</a></td></tr>
+            <tr><th scope="row">Browser extension</th><td>Yes, for Chrome, Brave and Edge. It fills a code only on the site the account belongs to. <a class="src" href="/press/">Source</a></td><td>No. The Chrome app and extension were retired in 2020. <a class="src" href="https://www.twilio.com/en-us/blog/products/authy-chrome-app-extension-end-life">Source</a></td><td>Not sure <span class="muted">Google’s help page doesn’t mention one, and we found no official extension.</span> <a class="src" href="https://support.google.com/accounts/answer/1066447?hl=en">Source</a></td><td>Not sure <span class="muted">None of Microsoft’s Authenticator pages we read mention one.</span> <a class="src" href="https://support.microsoft.com/en-us/account-billing/about-microsoft-authenticator-9783c865-0308-42fb-a519-8cf666fe0acc">Source</a></td><td>Yes: Chrome, Brave, Firefox, Edge, Opera and Safari. You approve each code on your phone. <a class="src" href="https://2fas.com/auth/browser-extension/">Source</a></td><td>No <a class="src" href="https://github.com/beemdevelopment/Aegis/blob/master/FAQ.md">Source</a></td></tr>
+            <tr><th scope="row">Price</th><td>Free. Optional Premium is $5 once (no subscription). <a class="src" href="/press/">Source</a></td><td>Free <a class="src" href="https://apps.apple.com/us/app/twilio-authy/id494168017">Source</a></td><td>Free <a class="src" href="https://apps.apple.com/us/app/google-authenticator/id388497605">Source</a></td><td>Free <a class="src" href="https://support.microsoft.com/en-us/account-billing/about-microsoft-authenticator-9783c865-0308-42fb-a519-8cf666fe0acc">Source</a></td><td>Free <a class="src" href="https://2fas.com/auth/">Source</a></td><td>Free, no ads <a class="src" href="https://getaegis.app/">Source</a></td></tr>
+          </tbody>
+        </table>
+      </section>
+      <p class="muted block">Checked November 2, 2026 against each app’s official website, help pages, app store listing or source code, linked beside every fact. Apps change; if something here is out of date, <a class="text" href="https://tanookistudios.com/support">tell us</a> and we’ll fix it. “Not sure” means we couldn’t confirm it from an official source.</p>
+    </div>
+  </section>
+
+  <section class="support" aria-labelledby="cta-h">
+    <div class="container">
+      <div>
+        <h2 id="cta-h">Get Tanooki Auth</h2>
+        <p>A free authenticator for Mac, Windows and Android. No account, no cloud.</p>
+      </div>
+      <a class="btn" href="/">Get Tanooki Auth</a>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="container">
+    <p class="mast">Tanooki Auth</p>
+    <nav aria-label="Footer">
+      <ul>
+        <li><a href="/guides/">2FA guides</a></li>
+        <li><a href="/blog/">Blog</a></li>
+        <li><a href="/compare/">Compare</a></li>
+        <li><a href="/status/">Status</a></li>
+        <li><a href="/press/">Press kit</a></li>
+        <li><a href="https://tanooki-auth-premium.kirbymail.workers.dev/privacy">Privacy policy</a></li>
+        <li><a href="https://github.com/TanookiStudios/tanooki-auth">Source code</a></li>
+        <li><a href="https://tanookistudios.com">Tanooki Studios</a></li>
+        <li><a href="https://tanookistudios.com/SupportMe">Donate</a></li>
+      </ul>
+    </nav>
+    <small>© 2026 Maddie</small>
+  </div>
+</footer>
+</body>
+</html>

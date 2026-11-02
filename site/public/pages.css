@@ -1,4 +1,4 @@
-/* Inner pages (guides, status, press). Loaded after site.css and reuses its tokens, nav, rows, support band and footer. */
+/* Inner pages (guides, status, press, compare, blog). Loaded after site.css and reuses its tokens, nav, rows, support band and footer. */
 .page { padding-block: var(--section-gap-s) 0; }
 .page h1 { font-size: var(--text-display-s); max-width: 22ch; }
 .page .lead { margin-top: var(--space-lg); color: var(--color-ink-2); }
@@ -47,6 +47,38 @@
 .gallery .icon img { object-fit: contain; padding: var(--space-xl); }
 .gallery figcaption { margin-top: var(--space-sm); font-size: var(--text-sm); color: var(--color-ink-2); }
 .gallery figcaption a { display: inline-block; margin-top: var(--space-2xs); }
+
+/* Compare: a fact table that scrolls sideways on small screens, every cell with its source */
+.scroll { margin-top: var(--space-xl); overflow-x: auto; }
+.scroll:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.compare { width: 100%; min-width: 44rem; border-collapse: collapse; border-top: 1px solid var(--color-ink); }
+.compare caption { text-align: left; padding-bottom: var(--space-sm); color: var(--color-muted); font-size: var(--text-sm); }
+.compare th, .compare td { text-align: left; vertical-align: top; padding: var(--space-md) var(--space-md) var(--space-md) 0; border-bottom: 1px solid var(--color-rule); }
+.compare thead th { font-weight: 650; color: var(--color-ink); }
+.compare tbody th { font-weight: 600; color: var(--color-ink); white-space: nowrap; }
+.compare td { color: var(--color-ink-2); font-size: var(--text-sm); line-height: 1.45; min-width: 9rem; }
+.compare td .muted { display: block; margin-top: var(--space-2xs); }
+.src { display: inline-block; margin-top: var(--space-2xs); font-size: var(--text-xs); color: var(--color-accent-text); text-decoration-color: var(--color-rule-2); }
+.features .src { margin-top: 0; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: var(--space-sm); margin: var(--space-xl) 0 0; padding: 0; list-style: none; }
+.cards a { display: block; padding: var(--space-md) var(--space-lg); background: var(--color-paper-2); border: 1px solid var(--color-rule); border-radius: var(--radius-card); font-weight: 600; text-decoration: none; }
+.cards a:hover { border-color: var(--color-muted); color: var(--color-accent-text); }
+
+/* Blog: a list of posts, then readable article text */
+.posts { margin: var(--space-xl) 0 0; padding: 0; list-style: none; max-width: 60rem; border-top: 1px solid var(--color-ink); }
+.posts li { padding-block: var(--space-lg); border-bottom: 1px solid var(--color-rule); }
+.posts a { font-size: var(--text-title); font-weight: 650; letter-spacing: -0.01em; text-decoration-color: var(--color-rule-2); }
+.posts a:hover { color: var(--color-accent-text); }
+.posts p { margin-top: var(--space-xs); color: var(--color-ink-2); max-width: 65ch; }
+.article { max-width: 68ch; margin-top: var(--space-xl); color: var(--color-ink-2); font-size: var(--text-lead); line-height: 1.6; }
+.article h2 { margin-top: var(--space-2xl); color: var(--color-ink); font-size: var(--text-xl); }
+.article p, .article ul, .article ol { margin-top: var(--space-md); }
+.article li { margin-top: var(--space-2xs); }
+.article strong { color: var(--color-ink); }
+.article a { color: var(--color-ink); text-decoration-color: var(--color-rule-2); }
+.article a:hover { color: var(--color-accent-text); }
+.sources { max-width: 68ch; margin: var(--space-md) 0 0; padding-left: 1.2em; color: var(--color-ink-2); font-size: var(--text-sm); }
+.sources li { margin-top: var(--space-xs); }
 
 @media (max-width: 40rem) {
   .letter { grid-template-columns: minmax(0, 1fr); gap: var(--space-sm); }

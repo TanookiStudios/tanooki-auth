@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+<title>Tanooki Auth blog</title>
+<link>https://auth.tanookistudios.com/blog/</link>
+<atom:link href="https://auth.tanookistudios.com/blog/feed.xml" rel="self" type="application/rss+xml"/>
+<description>Plain-English security tips from Tanooki Auth.</description>
+<language>en-us</language>
+<lastBuildDate>Mon, 02 Nov 2026 12:00:00 GMT</lastBuildDate>
+<item>
+<title>What two-factor authentication is, in plain English</title>
+<link>https://auth.tanookistudios.com/blog/what-is-two-factor-authentication/</link>
+<guid isPermaLink="true">https://auth.tanookistudios.com/blog/what-is-two-factor-authentication/</guid>
+<pubDate>Mon, 02 Nov 2026 12:00:00 GMT</pubDate>
+<description>Two-factor authentication means a stolen password alone can’t get someone into your account. Here’s how it works and which kind to pick.</description>
+</item>
+<item>
+<title>Authenticator app codes vs text message codes</title>
+<link>https://auth.tanookistudios.com/blog/app-codes-vs-text-messages/</link>
+<guid isPermaLink="true">https://auth.tanookistudios.com/blog/app-codes-vs-text-messages/</guid>
+<pubDate>Mon, 02 Nov 2026 12:00:00 GMT</pubDate>
+<description>Text message codes are better than nothing, but authenticator app codes avoid SIM swaps and phone-network attacks. Here’s what the experts say.</description>
+</item>
+<item>
+<title>What to do if you lose your phone</title>
+<link>https://auth.tanookistudios.com/blog/lost-your-phone/</link>
+<guid isPermaLink="true">https://auth.tanookistudios.com/blog/lost-your-phone/</guid>
+<pubDate>Mon, 02 Nov 2026 12:00:00 GMT</pubDate>
+<description>Lost or stolen phone? Lock it, protect your accounts, and get your two-factor codes back. A calm checklist with links to Apple and Google’s own steps.</description>
+</item>
+<item>
+<title>Recovery codes: the spare key you’ll be glad you kept</title>
+<link>https://auth.tanookistudios.com/blog/recovery-codes/</link>
+<guid isPermaLink="true">https://auth.tanookistudios.com/blog/recovery-codes/</guid>
+<pubDate>Mon, 02 Nov 2026 12:00:00 GMT</pubDate>
+<description>Recovery codes get you back into an account when you lose your two-factor device. What they are, where to keep them, and what not to do.</description>
+</item>
+<item>
+<title>Back up your authenticator before you need to</title>
+<link>https://auth.tanookistudios.com/blog/backups/</link>
+<guid isPermaLink="true">https://auth.tanookistudios.com/blog/backups/</guid>
+<pubDate>Mon, 02 Nov 2026 12:00:00 GMT</pubDate>
+<description>If your authenticator lives only on one phone, losing that phone locks you out. How to back up your two-factor codes safely.</description>
+</item>
+<item>
+<title>Phishing and fake login pages: how to spot them</title>
+<link>https://auth.tanookistudios.com/blog/phishing-fake-login-pages/</link>
+<guid isPermaLink="true">https://auth.tanookistudios.com/blog/phishing-fake-login-pages/</guid>
+<pubDate>Mon, 02 Nov 2026 12:00:00 GMT</pubDate>
+<description>Phishing messages push you to a fake login page that steals your password and code. Warning signs, what to do instead, and where to report it.</description>
+</item>
+<item>
+<title>Passkeys vs two-factor codes: what’s the difference?</title>
+<link>https://auth.tanookistudios.com/blog/passkeys-vs-codes/</link>
+<guid isPermaLink="true">https://auth.tanookistudios.com/blog/passkeys-vs-codes/</guid>
+<pubDate>Mon, 02 Nov 2026 12:00:00 GMT</pubDate>
+<description>Passkeys can’t be typed into a fake website, which makes them stronger than six-digit codes. When to use each, according to FIDO, Google and Apple.</description>
+</item>
+<item>
+<title>SIM swapping: how scammers steal your phone number</title>
+<link>https://auth.tanookistudios.com/blog/sim-swapping/</link>
+<guid isPermaLink="true">https://auth.tanookistudios.com/blog/sim-swapping/</guid>
+<pubDate>Mon, 02 Nov 2026 12:00:00 GMT</pubDate>
+<description>In a SIM swap, a scammer moves your phone number to their phone and gets your text message codes. How it works and how to protect yourself.</description>
+</item>
+<item>
+<title>Moving to a new phone without losing your codes</title>
+<link>https://auth.tanookistudios.com/blog/moving-to-a-new-phone/</link>
+<guid isPermaLink="true">https://auth.tanookistudios.com/blog/moving-to-a-new-phone/</guid>
+<pubDate>Mon, 02 Nov 2026 12:00:00 GMT</pubDate>
+<description>Getting a new phone? Move your two-factor codes over first and keep the old phone until every account works. A step-by-step plan.</description>
+</item>
+<item>
+<title>Protect your email first</title>
+<link>https://auth.tanookistudios.com/blog/protect-your-email-first/</link>
+<guid isPermaLink="true">https://auth.tanookistudios.com/blog/protect-your-email-first/</guid>
+<pubDate>Mon, 02 Nov 2026 12:00:00 GMT</pubDate>
+<description>Whoever controls your email can reset most of your other passwords. Why your email account deserves your strongest protection, and how.</description>
+</item>
+<item>
+<title>Helping your family stay safe online</title>
+<link>https://auth.tanookistudios.com/blog/family-accounts/</link>
+<guid isPermaLink="true">https://auth.tanookistudios.com/blog/family-accounts/</guid>
+<pubDate>Mon, 02 Nov 2026 12:00:00 GMT</pubDate>
+<description>Practical ways to help parents, kids and other family members with two-factor login and scams, without taking over their accounts.</description>
+</item>
+<item>
+<title>Security tips for travel</title>
+<link>https://auth.tanookistudios.com/blog/travel-tips/</link>
+<guid isPermaLink="true">https://auth.tanookistudios.com/blog/travel-tips/</guid>
+<pubDate>Mon, 02 Nov 2026 12:00:00 GMT</pubDate>
+<description>Traveling with your phone and laptop? Keep your two-factor codes working abroad and your accounts safe on public Wi-Fi and charging stations.</description>
+</item>
+</channel>
+</rss>

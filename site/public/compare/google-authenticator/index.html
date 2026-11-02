@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tanooki Auth vs Google Authenticator: a fair comparison</title>
+<meta name="description" content="Tanooki Auth and Google Authenticator side by side: platforms, open source, encrypted backup, export, desktop app, browser extension and price, each fact linked to its source.">
+<link rel="canonical" href="https://auth.tanookistudios.com/compare/google-authenticator/">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/favicon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;650&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<link rel="stylesheet" href="/pages.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="container">
+    <nav class="pill" aria-label="Main">
+      <a class="brand" href="/" aria-label="Tanooki Auth home"><img src="/icon.png" alt="" width="28" height="28">Tanooki Auth</a>
+      <ul>
+        <li><a href="/#promise">Privacy</a></li>
+        <li><a href="/#how">How it works</a></li>
+        <li><a href="/#themes">Premium</a></li>
+        <li><a href="/guides/">Guides</a></li>
+        <li><a href="/compare/">Compare</a></li>
+        <li><a href="/blog/">Blog</a></li>
+        <li><a href="https://tanookistudios.com/SupportMe">Donate</a></li>
+      </ul>
+      <a class="btn" href="/#download">Download</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="page">
+    <div class="container">
+      <p class="crumb"><a href="/compare/">All comparisons</a></p>
+      <h1>Tanooki Auth vs Google Authenticator</h1>
+      <p class="lead">Google Authenticator, made by Google, is a two-factor authenticator app. Here is how the two compare on facts you can check yourself.</p>
+      <section class="scroll" aria-label="Tanooki Auth compared with Google Authenticator" tabindex="0">
+        <table class="compare">
+          <caption>Tanooki Auth compared with Google Authenticator</caption>
+          <thead><tr><th scope="col"><span class="visually-hidden">Feature</span></th><th scope="col">Tanooki Auth</th><th scope="col">Google Authenticator</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Platforms</th><td>Mac, Windows, Android. iPhone and iPad are coming to the App Store. <a class="src" href="/press/">Source</a></td><td>Android, iPhone and iPad <a class="src" href="https://support.google.com/accounts/answer/1066447?hl=en">Source</a></td></tr>
+            <tr><th scope="row">Open source</th><td>Yes, GPL-3.0 <a class="src" href="https://github.com/TanookiStudios/tanooki-auth">Source</a></td><td>No. Google’s old open-source version is archived and says the store app is not open source. <a class="src" href="https://github.com/google/google-authenticator-android">Source</a></td></tr>
+            <tr><th scope="row">Encrypted backup</th><td>Yes. A backup file encrypted with a password only you know. Optional end-to-end encrypted sync with Premium. <a class="src" href="/press/">Source</a></td><td>Yes. Optional sync to your Google Account, encrypted in transit and at rest. Google doesn’t describe a separate password you set. <a class="src" href="https://support.google.com/accounts/answer/1066447?hl=en">Source</a></td></tr>
+            <tr><th scope="row">Export your accounts</th><td>Yes: Google Authenticator transfer QR codes, Aegis and 2FAS files, or otpauth:// links <a class="src" href="https://github.com/TanookiStudios/tanooki-auth">Source</a></td><td>Yes, as transfer QR codes for another phone <a class="src" href="https://support.google.com/accounts/answer/1066447?hl=en&amp;co=GENIE.Platform%3DiOS">Source</a></td></tr>
+            <tr><th scope="row">Desktop app</th><td>Yes, Mac and Windows <a class="src" href="/press/">Source</a></td><td>No <a class="src" href="https://apps.apple.com/us/app/google-authenticator/id388497605">Source</a></td></tr>
+            <tr><th scope="row">Browser extension</th><td>Yes, for Chrome, Brave and Edge. It fills a code only on the site the account belongs to. <a class="src" href="/press/">Source</a></td><td>Not sure <span class="muted">Google’s help page doesn’t mention one, and we found no official extension.</span> <a class="src" href="https://support.google.com/accounts/answer/1066447?hl=en">Source</a></td></tr>
+            <tr><th scope="row">Price</th><td>Free. Optional Premium is $5 once (no subscription). <a class="src" href="/press/">Source</a></td><td>Free <a class="src" href="https://apps.apple.com/us/app/google-authenticator/id388497605">Source</a></td></tr>
+          </tbody>
+        </table>
+      </section>
+      <div class="block">
+        <h2>What Google Authenticator does well</h2>
+        <ul class="features">
+          <li>If you sign in, your codes sync to your Google Account, so a lost phone doesn’t mean lost codes. <a class="src" href="https://support.google.com/accounts/answer/1066447?hl=en">Source</a></li>
+          <li>Moving to a new phone is simple: the old phone shows QR codes and the new one scans them, with or without a Google Account. <a class="src" href="https://support.google.com/accounts/answer/1066447?hl=en&amp;co=GENIE.Platform%3DiOS">Source</a></li>
+        </ul>
+      </div>
+      <div class="block">
+        <h2>Moving from Google Authenticator to Tanooki Auth</h2>
+        <p>Tanooki Auth reads Google Authenticator’s transfer QR codes. In Google Authenticator, open the menu, then Transfer accounts, then Export accounts, and in Tanooki Auth tap Add account, then Move from Google Authenticator, and scan each QR code it shows.</p>
+        <p>For step-by-step help on a particular website, see the <a class="text" href="/guides/">two-factor guides</a>.</p>
+      </div>
+      <p class="muted block">Checked November 2, 2026 against each app’s official website, help pages, app store listing or source code, linked beside every fact. Apps change; if something here is out of date, <a class="text" href="https://tanookistudios.com/support">tell us</a> and we’ll fix it. “Not sure” means we couldn’t confirm it from an official source.</p>
+    </div>
+  </section>
+
+  <section class="support" aria-labelledby="cta-h">
+    <div class="container">
+      <div>
+        <h2 id="cta-h">Get Tanooki Auth</h2>
+        <p>A free authenticator for Mac, Windows and Android. No account, no cloud.</p>
+      </div>
+      <a class="btn" href="/">Get Tanooki Auth</a>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="container">
+    <p class="mast">Tanooki Auth</p>
+    <nav aria-label="Footer">
+      <ul>
+        <li><a href="/guides/">2FA guides</a></li>
+        <li><a href="/blog/">Blog</a></li>
+        <li><a href="/compare/">Compare</a></li>
+        <li><a href="/status/">Status</a></li>
+        <li><a href="/press/">Press kit</a></li>
+        <li><a href="https://tanooki-auth-premium.kirbymail.workers.dev/privacy">Privacy policy</a></li>
+        <li><a href="https://github.com/TanookiStudios/tanooki-auth">Source code</a></li>
+        <li><a href="https://tanookistudios.com">Tanooki Studios</a></li>
+        <li><a href="https://tanookistudios.com/SupportMe">Donate</a></li>
+      </ul>
+    </nav>
+    <small>© 2026 Maddie</small>
+  </div>
+</footer>
+</body>
+</html>
