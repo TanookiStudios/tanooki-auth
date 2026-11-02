@@ -6,6 +6,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:tanooki_auth/ui/about_maddie.dart' show appVersion;
 import 'package:tanooki_auth/ui/help.dart' show tourShownKey, whatsNewSeenKey;
 import 'package:tanooki_auth/core/otpauth_uri.dart';
+import 'package:tanooki_auth/core/security.dart' show dismissMonthlySummary, snoozeBackupNudge;
 import 'package:tanooki_auth/main.dart';
 import 'package:tanooki_auth/ui/premium.dart';
 
@@ -46,7 +47,9 @@ void main() {
     vault.settings['lock'] = false;
     vault.settings['kitShown'] = true;
     vault.settings.addAll({tourShownKey: true, whatsNewSeenKey: appVersion});
-    await vault.save();
+    // Store shots show the list, not the backup reminder or monthly summary cards.
+    await snoozeBackupNudge(vault, DateTime.now());
+    await dismissMonthlySummary(vault, DateTime.now());
 
     if (Platform.isAndroid) await binding.convertFlutterSurfaceToImage();
     await t.pumpWidget(const TanookiAuthApp());
@@ -74,7 +77,7 @@ void main() {
     await t.pageBack();
 
     await pumpFor(t, find.text('GitHub'));
-    await t.tap(find.text('GitHub'));
+    await t.tap(find.text('GitHub').first); // wide layouts also show it in the detail pane
     await pumpFor(t, find.byType(SnackBar));
     await binding.takeScreenshot('4-copied');
 
