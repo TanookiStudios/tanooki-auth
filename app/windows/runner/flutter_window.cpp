@@ -16,6 +16,12 @@
 namespace {
 constexpr UINT kTrayMessage = WM_APP + 1;
 
+// Explorer broadcasts this after it restarts; every tray icon is gone by then and must be added again.
+UINT TaskbarCreatedMessage() {
+  static const UINT message = RegisterWindowMessage(L"TaskbarCreated");
+  return message;
+}
+
 // Error text the app shows, in the Windows display language (English, Spanish, French, German, Japanese).
 // Non-ASCII letters are written as universal character escapes so the source compiles the same under any code page.
 std::string Say(const wchar_t* en, const wchar_t* es, const wchar_t* fr, const wchar_t* de, const wchar_t* ja) {
@@ -149,6 +155,12 @@ bool FlutterWindow::OnCreate() {
     } else if (call.method_name() == "trayStatus") {
       // NIM_MODIFY only succeeds while our icon is really in the notification area.
       result->Success(flutter::EncodableValue(Shell_NotifyIcon(NIM_MODIFY, &tray_) != FALSE));
+    } else if (call.method_name() == "trayExplorerRestart") {
+      // Test hook: what an Explorer restart does to us. The icon vanishes, then TaskbarCreated arrives.
+      Shell_NotifyIcon(NIM_DELETE, &tray_);
+      const bool gone = Shell_NotifyIcon(NIM_MODIFY, &tray_) == FALSE;
+      SendMessage(hwnd, TaskbarCreatedMessage(), 0, 0);
+      result->Success(flutter::EncodableValue(gone));
     } else if (call.method_name() == "trayClick") {
       // Same path as a real click on the tray icon.
       PostMessage(hwnd, kTrayMessage, tray_.uID, WM_LBUTTONUP);
@@ -179,6 +191,8 @@ bool FlutterWindow::OnCreate() {
   tray_.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_APP_ICON));
   wcscpy_s(tray_.szTip, L"Tanooki Auth");
   Shell_NotifyIcon(NIM_ADD, &tray_);
+  // Let Explorer's TaskbarCreated broadcast through even if the app runs elevated.
+  ChangeWindowMessageFilterEx(GetHandle(), TaskbarCreatedMessage(), MSGFLT_ALLOW, nullptr);
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
@@ -217,6 +231,11 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
     if (result) {
       return *result;
     }
+  }
+
+  if (message == TaskbarCreatedMessage() && tray_.cbSize != 0) {
+    Shell_NotifyIcon(NIM_ADD, &tray_);
+    return 0;
   }
 
   switch (message) {
