@@ -6218,6 +6218,12 @@ abstract class AppLocalizations {
   /// **'Share {name}'**
   String homeProveShare(String name);
 
+  /// No description provided for @homeProveRecoveryCodes.
+  ///
+  /// In en, this message translates to:
+  /// **'See the recovery codes for {name}'**
+  String homeProveRecoveryCodes(String name);
+
   /// No description provided for @homeCopied.
   ///
   /// In en, this message translates to:

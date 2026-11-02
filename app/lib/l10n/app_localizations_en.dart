@@ -3902,6 +3902,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String homeProveRecoveryCodes(String name) {
+    return 'See the recovery codes for $name';
+  }
+
+  @override
   String homeCopied(String name) {
     return 'Copied $name code. The clipboard clears in 30 seconds.';
   }

@@ -3952,6 +3952,11 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String homeProveRecoveryCodes(String name) {
+    return 'Ver los códigos de recuperación de $name';
+  }
+
+  @override
   String homeCopied(String name) {
     return 'Código de $name copiado. El portapapeles se borra en 30 segundos.';
   }

@@ -1019,6 +1019,7 @@
   "homeProveReadAloud": "Code für {name} vorlesen",
   "homeProveEdit": "{name} bearbeiten",
   "homeProveShare": "{name} teilen",
+  "homeProveRecoveryCodes": "Wiederherstellungscodes für {name} anzeigen",
   "homeCopied": "Code für {name} kopiert. Die Zwischenablage wird in 30 Sekunden geleert.",
   "homeEditAccount": "Konto bearbeiten",
   "homeShowQrFor": "QR-Code für {name} anzeigen",

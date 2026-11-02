@@ -2355,6 +2355,14 @@
       }
     }
   },
+  "homeProveRecoveryCodes": "See the recovery codes for {name}",
+  "@homeProveRecoveryCodes": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "homeCopied": "Copied {name} code. The clipboard clears in 30 seconds.",
   "@homeCopied": {
     "placeholders": {

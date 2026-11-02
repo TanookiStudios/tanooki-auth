@@ -1019,6 +1019,7 @@
   "homeProveReadAloud": "Leer en voz alta el código de {name}",
   "homeProveEdit": "Editar {name}",
   "homeProveShare": "Compartir {name}",
+  "homeProveRecoveryCodes": "Ver los códigos de recuperación de {name}",
   "homeCopied": "Código de {name} copiado. El portapapeles se borra en 30 segundos.",
   "homeEditAccount": "Editar cuenta",
   "homeShowQrFor": "Mostrar el código QR de {name}",

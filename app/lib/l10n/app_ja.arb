@@ -1019,6 +1019,7 @@
   "homeProveReadAloud": "{name} のコードを読み上げ",
   "homeProveEdit": "{name} を編集",
   "homeProveShare": "{name} を共有",
+  "homeProveRecoveryCodes": "{name} の復旧コードを表示",
   "homeCopied": "{name} のコードをコピーしました。クリップボードは30秒後に消去されます。",
   "homeEditAccount": "アカウントを編集",
   "homeShowQrFor": "{name} の QR コードを表示",

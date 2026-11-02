@@ -3954,6 +3954,11 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String homeProveRecoveryCodes(String name) {
+    return 'Wiederherstellungscodes für $name anzeigen';
+  }
+
+  @override
   String homeCopied(String name) {
     return 'Code für $name kopiert. Die Zwischenablage wird in 30 Sekunden geleert.';
   }

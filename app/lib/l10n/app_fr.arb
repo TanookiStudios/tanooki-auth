@@ -1019,6 +1019,7 @@
   "homeProveReadAloud": "Lire à voix haute le code de {name}",
   "homeProveEdit": "Modifier {name}",
   "homeProveShare": "Partager {name}",
+  "homeProveRecoveryCodes": "Voir les codes de récupération de {name}",
   "homeCopied": "Code {name} copié. Le presse-papiers s'efface dans 30 secondes.",
   "homeEditAccount": "Modifier le compte",
   "homeShowQrFor": "Afficher le code QR de {name}",

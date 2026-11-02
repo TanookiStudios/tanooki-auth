@@ -3967,6 +3967,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String homeProveRecoveryCodes(String name) {
+    return 'Voir les codes de récupération de $name';
+  }
+
+  @override
   String homeCopied(String name) {
     return 'Code $name copié. Le presse-papiers s\'efface dans 30 secondes.';
   }

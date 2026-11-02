@@ -3745,6 +3745,11 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String homeProveRecoveryCodes(String name) {
+    return '$name の復旧コードを表示';
+  }
+
+  @override
   String homeCopied(String name) {
     return '$name のコードをコピーしました。クリップボードは30秒後に消去されます。';
   }

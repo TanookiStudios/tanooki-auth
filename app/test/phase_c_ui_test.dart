@@ -87,6 +87,35 @@ void main() {
     await finish(t);
   });
 
+  testWidgets('home: an ask-first account asks before showing its recovery codes', (t) async {
+    final bank = acct('Bank', 'JBSWY3DPEHPK3PXP')..requireAuth = true;
+    bank.recoveryCodes.addAll(RecoveryCode.parseList('aaaa-1111\nbbbb-2222'));
+    vault.accounts.add(bank);
+    var allow = false;
+    final reasons = <String>[];
+    confirmItsYouOverride = (_, _, reason) async {
+      reasons.add(reason);
+      return allow;
+    };
+    await pump(t, HomeScreen(vault: vault));
+    Future<void> openRecovery() async {
+      await t.tap(find.byTooltip('More'));
+      await t.pumpAndSettle();
+      await t.tap(find.text('Recovery codes (2 left)'));
+      await t.pumpAndSettle();
+    }
+
+    await openRecovery();
+    expect(reasons, ['See the recovery codes for Bank']);
+    expect(find.text('aaaa-1111'), findsNothing, reason: 'refused: the codes stay hidden');
+
+    allow = true;
+    await openRecovery();
+    expect(reasons, hasLength(2));
+    expect(find.text('aaaa-1111'), findsOneWidget);
+    await finish(t);
+  });
+
   testWidgets('home: travel mode takes hidden accounts off the list, the count and search', (t) async {
     vault.accounts.addAll([acct('Bank', 'JBSWY3DPEHPK3PXP')..travelHidden = true, acct('Game', 'GEZDGNBVGY3TQOJQ')]);
     for (var i = 0; i < 3; i++) {

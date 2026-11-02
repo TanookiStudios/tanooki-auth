@@ -222,6 +222,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _recoveryCodes(Account a) async {
+    // Recovery codes get you in without the code at all, so "ask first" covers them too.
+    if (!await _prove(a, l10n.homeProveRecoveryCodes) || !mounted) return;
     await Navigator.push(
         context, MaterialPageRoute(builder: (_) => RecoveryCodesScreen(vault: widget.vault, account: a)));
     setState(() {});
