@@ -244,7 +244,7 @@ assert.equal(letter.from, 'Tanooki Auth <noreply@tanookistudios.com>');
 const joinUrl = letter.text.match(/https:\/\/x\.dev\/join-team#\S+/)[0];
 assert.equal(decodeURIComponent(joinUrl.split('#')[1]), `tanookiauth://team?v=1&relay=${encodeURIComponent('https://tanooki-auth-relay.kirbymail.workers.dev')}&team=${TEAM}&invite=${'I'.repeat(43)}`);
 assert.match(letter.html, /Join the team/);
-await mail(goodMail, { ...mailEnv, EMAIL_FROM: 'Team <team@example.com>' });
+await mail(goodMail, { ...mailEnv, TEAM_EMAIL_FROM: 'Team <team@example.com>' });
 assert.equal(sentMail.at(-1).from, 'Team <team@example.com>', 'the from address is a setting');
 resendStatus = 422;
 m = await mail(goodMail);
@@ -354,3 +354,5 @@ assert.equal(entries.filter((e) => e.contact === 'me@example.com').length, 4);
 assert.equal((await worker.fetch(new Request('https://x.dev/feedback/list'), { ...env, FEEDBACK_ADMIN: undefined })).status, 503);
 
 console.log('worker tests passed; sample key', key.slice(0, 24) + '…');
+
+await import('./test-growth.mjs'); // newsletter, student discount and affiliates (#40, #42, #43)

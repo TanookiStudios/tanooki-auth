@@ -1,0 +1,9 @@
+/* Email forms (newsletter, student discount, and the signup box in the home page footer). */
+.mailform { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-top: var(--space-xl); max-width: 36rem; }
+.mailform label { flex-basis: 100%; font-size: var(--text-sm); color: var(--color-ink-2); }
+.mailform input { flex: 1 1 16rem; min-width: 0; min-height: 48px; padding: 0 var(--space-md); background: var(--color-paper-2); color: var(--color-ink); border: 1px solid var(--color-rule-2); border-radius: var(--radius-control); font: inherit; }
+.mailform input:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.mailform output { flex-basis: 100%; min-height: 1.5em; color: var(--color-ink-2); }
+.mailform output[data-state="error"] { color: oklch(78% 0.13 40); }
+.mailform output[data-state="ok"] { color: oklch(80% 0.14 150); }
+.foot .mailform { margin: 0 0 var(--space-xl); }

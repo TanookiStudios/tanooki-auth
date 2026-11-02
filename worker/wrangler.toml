@@ -3,6 +3,9 @@
 #   STRIPE_KEY    Stripe restricted key with read access to Checkout Sessions
 #   LICENSE_SEED  base64 Ed25519 seed from ~/.tanooki-auth-signing/license_ed25519.json
 #   FEEDBACK_ADMIN  token for GET /feedback/list (copy in ~/.tanooki-auth-signing/feedback-admin.txt)
+#   RESEND_API_KEY  Resend key for signup, student and team invite emails; until it is set those endpoints answer 503
+#   SUBSCRIBERS_ADMIN  token for GET /subscribers/export (copy in ~/.tanooki-auth-signing/subscribers-admin.txt)
+#   AFFILIATES_ADMIN   token for POST /affiliates and GET /affiliates/report (copy in ~/.tanooki-auth-signing/affiliates-admin.txt)
 name = "tanooki-auth-premium"
 main = "src/index.js"
 compatibility_date = "2026-09-01"
@@ -10,9 +13,16 @@ compatibility_date = "2026-09-01"
 [vars]
 # Public half of the signing key; must match lib/core/license.dart.
 LICENSE_PUBLIC = "JZ9iKjegJLat8xNt2L80HNWmHfXJc9at34lUBynULM8="
+# Sender for signup and student emails; the domain must be verified in Resend.
+EMAIL_FROM = "Tanooki Auth <hello@tanookistudios.com>"
+# Set to "yes" once the STUDENT50 promotion code exists in Stripe; until then student links say it isn't on yet.
+STUDENT_COUPON_READY = "no"
+# Sender for team invite emails (POST /team-invite-email). Optional, also: STRIPE_PORTAL_URL (Stripe customer portal
+# login link, shown on /business) and RELAY_URL (defaults to the live relay).
+TEAM_EMAIL_FROM = "Tanooki Auth <noreply@tanookistudios.com>"
 
 # Invite counts: one key per paid friend's checkout, ref:<code>:<checkout ID> (older codes may also have one
-# ref:<code> record listing checkout IDs). Nothing else.
+# ref:<code> record listing checkout IDs). Also teammail:<teamId>:<day> counters for team invite emails (20 a day).
 [[kv_namespaces]]
 binding = "INVITES"
 id = "23797a842ef442a1bb3443b23f5d1094"
@@ -21,3 +31,19 @@ id = "23797a842ef442a1bb3443b23f5d1094"
 [[kv_namespaces]]
 binding = "FEEDBACK"
 id = "0cf7d827548149b58acd5c2ff32c9f28"
+
+# Newsletter: sub:<email> (pending or confirmed), subtok:<token> -> email, and hourly/daily counters keyed by salted hashes.
+[[kv_namespaces]]
+binding = "SUBSCRIBERS"
+id = "ca91539ac7254718afd9cfea27aed872"
+
+# Student links (stu:<token>, 7 days), affiliates (aff:<code>), affiliate sales (affsale:<code>:<checkout ID>), rate counters.
+[[kv_namespaces]]
+binding = "GROWTH"
+id = "de0d937f0b3a4e3aa54be8fa56bdaccd"
+
+# Team invite emails ask the relay whether the sender is a team admin. A service binding, because a worker
+# can't reliably fetch another workers.dev worker directly.
+[[services]]
+binding = "RELAY"
+service = "tanooki-auth-relay"

@@ -61,7 +61,7 @@ The invite works once and runs out in 7 days. If you weren't expecting it, you c
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ from: env.EMAIL_FROM || EMAIL_FROM, to: [email], subject: "You're invited to a team in Tanooki Auth", text, html }),
+    body: JSON.stringify({ from: env.TEAM_EMAIL_FROM || EMAIL_FROM, to: [email], subject: "You're invited to a team in Tanooki Auth", text, html }),
   });
   if (!res.ok) {
     console.error('resend refused a team invite', res.status, await res.text().catch(() => ''));
