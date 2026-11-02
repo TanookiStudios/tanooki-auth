@@ -1195,7 +1195,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String premiumPerkThemesBody(int count) {
-    return 'Pastellrosa, Pastellblau und $count weitere, plus jedes Design, das später dazukommt.';
+    return 'Pastellrosa, Pastellblau und $count weitere, saisonale Designs, die von selbst wechseln, bis zu 3 eigene, plus jedes Design, das später dazukommt.';
   }
 
   @override
@@ -4885,4 +4885,79 @@ class AppLocalizationsDe extends AppLocalizations {
   String exportUiLeftOutLine(String account, String reason) {
     return '• $account: $reason';
   }
+
+  @override
+  String themeCustom(int n) {
+    return 'Mein Design $n';
+  }
+
+  @override
+  String get themeMakeOwn => 'Eigenes erstellen';
+
+  @override
+  String get themeMakeOwnPremium => 'Eigenes Design erstellen, Premium';
+
+  @override
+  String get themeEditOwn => 'Dieses Design bearbeiten';
+
+  @override
+  String get themeEditorTitle => 'Dein Design';
+
+  @override
+  String get themeEditorAccent => 'Akzent';
+
+  @override
+  String get themeEditorBackground => 'Hintergrund';
+
+  @override
+  String get themeEditorCard => 'Karten';
+
+  @override
+  String get themeEditorText => 'Text';
+
+  @override
+  String get themeEditorHue => 'Farbton';
+
+  @override
+  String themeEditorSwatch(String hex) {
+    return 'Farbe $hex';
+  }
+
+  @override
+  String get themeEditorPreview => 'Vorschau';
+
+  @override
+  String get themeEditorSample => 'Beispielkonto';
+
+  @override
+  String get themeEditorSampleHint => 'Zum Kopieren tippen';
+
+  @override
+  String get themeEditorSave => 'Design speichern';
+
+  @override
+  String get themeEditorDelete => 'Design löschen';
+
+  @override
+  String get themeEditorAdjusted =>
+      'Einige Farben wurden angepasst, damit Text und Tasten gut lesbar bleiben.';
+
+  @override
+  String get themeEditorUnreadable =>
+      'Mit diesen Farben lässt sich nichts gut lesbar machen. Wähle eine Kartenfarbe, die näher am Hintergrund liegt.';
+
+  @override
+  String get themeEditorFull =>
+      'Du hast schon 3 Designs. Lösche eins, um ein neues zu erstellen.';
+
+  @override
+  String get settingsSeasonal => 'Mit den Jahreszeiten wechseln';
+
+  @override
+  String get settingsSeasonalPremium =>
+      'Mit den Jahreszeiten wechseln (Premium)';
+
+  @override
+  String get settingsSeasonalHelp =>
+      'Gruselig im Herbst, Gemütlich im Winter, Frühling im Frühling; im Sommer deine Wahl. Ein saisonales App-Symbol wechselt mit.';
 }

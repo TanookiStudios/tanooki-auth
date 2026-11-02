@@ -1195,7 +1195,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String premiumPerkThemesBody(int count) {
-    return 'Rosa pastel, Azul pastel y $count más, además de todos los temas que lleguen después.';
+    return 'Rosa pastel, Azul pastel y $count más, temas de temporada que cambian solos, hasta 3 propios, además de todos los temas que lleguen después.';
   }
 
   @override
@@ -4879,4 +4879,78 @@ class AppLocalizationsEs extends AppLocalizations {
   String exportUiLeftOutLine(String account, String reason) {
     return '• $account: $reason';
   }
+
+  @override
+  String themeCustom(int n) {
+    return 'Mi tema $n';
+  }
+
+  @override
+  String get themeMakeOwn => 'Crea el tuyo';
+
+  @override
+  String get themeMakeOwnPremium => 'Crea tu propio tema, Premium';
+
+  @override
+  String get themeEditOwn => 'Editar este tema';
+
+  @override
+  String get themeEditorTitle => 'Tu tema';
+
+  @override
+  String get themeEditorAccent => 'Acento';
+
+  @override
+  String get themeEditorBackground => 'Fondo';
+
+  @override
+  String get themeEditorCard => 'Tarjetas';
+
+  @override
+  String get themeEditorText => 'Texto';
+
+  @override
+  String get themeEditorHue => 'Tono';
+
+  @override
+  String themeEditorSwatch(String hex) {
+    return 'Color $hex';
+  }
+
+  @override
+  String get themeEditorPreview => 'Vista previa';
+
+  @override
+  String get themeEditorSample => 'Cuenta de ejemplo';
+
+  @override
+  String get themeEditorSampleHint => 'Toca para copiar';
+
+  @override
+  String get themeEditorSave => 'Guardar tema';
+
+  @override
+  String get themeEditorDelete => 'Eliminar tema';
+
+  @override
+  String get themeEditorAdjusted =>
+      'Algunos colores se ajustaron para que el texto y los botones se lean bien.';
+
+  @override
+  String get themeEditorUnreadable =>
+      'Estos colores no se pueden hacer fáciles de leer. Prueba un color de tarjeta más parecido al fondo.';
+
+  @override
+  String get themeEditorFull =>
+      'Ya tienes 3 temas. Elimina uno para crear otro.';
+
+  @override
+  String get settingsSeasonal => 'Cambiar con las estaciones';
+
+  @override
+  String get settingsSeasonalPremium => 'Cambiar con las estaciones (Premium)';
+
+  @override
+  String get settingsSeasonalHelp =>
+      'Terrorífico en otoño, Acogedor en invierno y Primavera en primavera; en verano, el que elijas. Si usas un ícono de temporada, también cambia.';
 }

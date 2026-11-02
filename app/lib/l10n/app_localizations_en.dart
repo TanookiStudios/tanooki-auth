@@ -1177,7 +1177,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String premiumPerkThemesBody(int count) {
-    return 'Pastel Pink, Pastel Blue and $count more, plus every theme added later.';
+    return 'Pastel Pink, Pastel Blue and $count more, seasonal ones that change by themselves, up to 3 of your own, plus every theme added later.';
   }
 
   @override
@@ -4822,4 +4822,78 @@ class AppLocalizationsEn extends AppLocalizations {
   String exportUiLeftOutLine(String account, String reason) {
     return '• $account: $reason';
   }
+
+  @override
+  String themeCustom(int n) {
+    return 'My theme $n';
+  }
+
+  @override
+  String get themeMakeOwn => 'Make your own';
+
+  @override
+  String get themeMakeOwnPremium => 'Make your own theme, Premium';
+
+  @override
+  String get themeEditOwn => 'Edit this theme';
+
+  @override
+  String get themeEditorTitle => 'Your theme';
+
+  @override
+  String get themeEditorAccent => 'Accent';
+
+  @override
+  String get themeEditorBackground => 'Background';
+
+  @override
+  String get themeEditorCard => 'Cards';
+
+  @override
+  String get themeEditorText => 'Text';
+
+  @override
+  String get themeEditorHue => 'Hue';
+
+  @override
+  String themeEditorSwatch(String hex) {
+    return 'Color $hex';
+  }
+
+  @override
+  String get themeEditorPreview => 'Preview';
+
+  @override
+  String get themeEditorSample => 'Example account';
+
+  @override
+  String get themeEditorSampleHint => 'Tap to copy';
+
+  @override
+  String get themeEditorSave => 'Save theme';
+
+  @override
+  String get themeEditorDelete => 'Delete theme';
+
+  @override
+  String get themeEditorAdjusted =>
+      'Some colors were adjusted so text and buttons stay easy to read.';
+
+  @override
+  String get themeEditorUnreadable =>
+      'These colors can\'t be made easy to read. Try a card color closer to the background.';
+
+  @override
+  String get themeEditorFull =>
+      'You have 3 themes already. Delete one to make another.';
+
+  @override
+  String get settingsSeasonal => 'Change with the seasons';
+
+  @override
+  String get settingsSeasonalPremium => 'Change with the seasons (Premium)';
+
+  @override
+  String get settingsSeasonalHelp =>
+      'Spooky in fall, Cozy in winter and Spring in spring; your own pick in summer. A seasonal app icon changes along with it.';
 }

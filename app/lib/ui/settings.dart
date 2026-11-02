@@ -31,6 +31,7 @@ import 'security_extras.dart';
 import 'security_ui.dart';
 import 'sync_ui.dart' show syncAndLinkSection;
 import 'theme.dart';
+import 'theme_editor.dart';
 import 'tidy_ui.dart';
 import 'trash.dart';
 import '../l10n/l10n.dart';
@@ -82,6 +83,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         selected: selected,
         label: locked ? l10n.settingsIconSemanticPremium(name) : l10n.settingsIconSemantic(name),
         excludeSemantics: true,
+        onTap: () => _pickAppIcon(id), // excludeSemantics drops the InkWell's tap
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
           onTap: () => _pickAppIcon(id),
@@ -503,9 +505,63 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (!premium.value) return;
     }
     widget.vault.settings['theme'] = id;
+    widget.vault.settings.remove(seasonalThemeKey); // picking a theme by hand stops the seasonal switching
     await widget.vault.save();
     themeChoice.value = id;
+    setState(() {});
   }
+
+  /// Premium only; without it, the Premium screen first.
+  Future<bool> _premiumFirst() async {
+    if (premium.value) return true;
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => PremiumScreen(vault: widget.vault)));
+    return premium.value;
+  }
+
+  Future<void> _openEditor(String? slot) async {
+    if (!await _premiumFirst() || !mounted) return;
+    if (slot == null && customThemes.length >= customSlots.length) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.themeEditorFull)));
+      return;
+    }
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => ThemeEditorScreen(vault: widget.vault, slot: slot)));
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _setSeasonal(bool on) async {
+    if (on && !await _premiumFirst()) return;
+    widget.vault.settings[seasonalThemeKey] = on;
+    await widget.vault.save();
+    themeChoice.value = themeToUse(widget.vault.settings, premium: premium.value, now: DateTime.now());
+    if (on && premium.value) await followSeasonIcon(widget.vault, DateTime.now());
+    if (mounted) setState(() {});
+  }
+
+  /// The "+" tile after the theme swatches that opens the theme editor.
+  Widget _makeOwnTile() => Semantics(
+        button: true,
+        label: premium.value ? l10n.themeMakeOwn : l10n.themeMakeOwnPremium,
+        excludeSemantics: true, // which drops the InkWell's tap too, so it is offered here
+        onTap: () => _openEditor(null),
+        child: InkWell(
+          key: const Key('makeOwnTheme'),
+          borderRadius: BorderRadius.circular(10),
+          onTap: () => _openEditor(null),
+          child: SizedBox(
+            width: 84,
+            child: Column(children: [
+              Container(
+                height: 52,
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), border: Border.all(color: Palette.lineBright)),
+                alignment: Alignment.center,
+                child: Icon(premium.value ? Icons.add : Icons.lock, size: 20, color: Palette.muted),
+              ),
+              const SizedBox(height: 6),
+              Text(l10n.themeMakeOwn, textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: Palette.text)),
+            ]),
+          ),
+        ),
+      );
 
   List<Widget> _premiumAndAppearance() {
     Widget swatch(String id, AppPalette? p) {
@@ -564,7 +620,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: const EdgeInsets.all(14),
           child: Wrap(spacing: 10, runSpacing: 14, children: [
             for (final e in themeChoices.entries) swatch(e.key, e.value),
+            for (final e in customThemes.entries) swatch(e.key, e.value),
+            _makeOwnTile(),
           ]),
+        ),
+      ),
+      if (customThemes.containsKey(themeChoice.value))
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            key: const Key('editCustomTheme'),
+            icon: const Icon(Icons.edit_outlined, size: 18),
+            label: Text(l10n.themeEditOwn),
+            onPressed: () => _openEditor(themeChoice.value),
+          ),
+        ),
+      const SizedBox(height: 10),
+      Card(
+        child: SwitchListTile(
+          key: const Key('seasonalSwitch'),
+          title: Text(premium.value ? l10n.settingsSeasonal : l10n.settingsSeasonalPremium),
+          subtitle: Text(l10n.settingsSeasonalHelp),
+          value: premium.value && widget.vault.settings[seasonalThemeKey] == true,
+          onChanged: _setSeasonal,
         ),
       ),
       const SizedBox(height: 10),

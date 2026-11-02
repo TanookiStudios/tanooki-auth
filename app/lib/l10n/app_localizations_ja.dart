@@ -1130,7 +1130,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String premiumPerkThemesBody(int count) {
-    return 'パステルピンク、パステルブルーほか$count種類。今後追加されるテーマもすべて使えます。';
+    return 'パステルピンク、パステルブルーほか$count種類、自動で切り替わる季節のテーマ、自分で作れるテーマ（3つまで）。今後追加されるテーマもすべて使えます。';
   }
 
   @override
@@ -4633,4 +4633,75 @@ class AppLocalizationsJa extends AppLocalizations {
   String exportUiLeftOutLine(String account, String reason) {
     return '・$account：$reason';
   }
+
+  @override
+  String themeCustom(int n) {
+    return 'マイテーマ$n';
+  }
+
+  @override
+  String get themeMakeOwn => '自分で作る';
+
+  @override
+  String get themeMakeOwnPremium => '自分でテーマを作る、Premium';
+
+  @override
+  String get themeEditOwn => 'このテーマを編集';
+
+  @override
+  String get themeEditorTitle => 'あなたのテーマ';
+
+  @override
+  String get themeEditorAccent => 'アクセント';
+
+  @override
+  String get themeEditorBackground => '背景';
+
+  @override
+  String get themeEditorCard => 'カード';
+
+  @override
+  String get themeEditorText => '文字';
+
+  @override
+  String get themeEditorHue => '色相';
+
+  @override
+  String themeEditorSwatch(String hex) {
+    return 'カラー $hex';
+  }
+
+  @override
+  String get themeEditorPreview => 'プレビュー';
+
+  @override
+  String get themeEditorSample => 'サンプルアカウント';
+
+  @override
+  String get themeEditorSampleHint => 'タップしてコピー';
+
+  @override
+  String get themeEditorSave => 'テーマを保存';
+
+  @override
+  String get themeEditorDelete => 'テーマを削除';
+
+  @override
+  String get themeEditorAdjusted => '文字やボタンが読みやすいように、一部の色を調整しました。';
+
+  @override
+  String get themeEditorUnreadable => 'この組み合わせでは読みやすくできません。背景に近いカードの色を選んでください。';
+
+  @override
+  String get themeEditorFull => 'テーマはすでに3つあります。新しく作るには1つ削除してください。';
+
+  @override
+  String get settingsSeasonal => '季節に合わせて変える';
+
+  @override
+  String get settingsSeasonalPremium => '季節に合わせて変える（Premium）';
+
+  @override
+  String get settingsSeasonalHelp =>
+      '秋はスプーキー、冬はコージー、春はスプリング。夏は選んだテーマ。季節のアイコンを使っていれば、アイコンも変わります。';
 }

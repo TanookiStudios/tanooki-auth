@@ -1198,7 +1198,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String premiumPerkThemesBody(int count) {
-    return 'Rose pastel, Bleu pastel et $count autres, plus tous les thèmes ajoutés plus tard.';
+    return 'Rose pastel, Bleu pastel et $count autres, des thèmes de saison qui changent tout seuls, jusqu\'à 3 à vous, plus tous les thèmes ajoutés plus tard.';
   }
 
   @override
@@ -4898,4 +4898,78 @@ class AppLocalizationsFr extends AppLocalizations {
   String exportUiLeftOutLine(String account, String reason) {
     return '• $account : $reason';
   }
+
+  @override
+  String themeCustom(int n) {
+    return 'Mon thème $n';
+  }
+
+  @override
+  String get themeMakeOwn => 'Créer le vôtre';
+
+  @override
+  String get themeMakeOwnPremium => 'Créer votre thème, Premium';
+
+  @override
+  String get themeEditOwn => 'Modifier ce thème';
+
+  @override
+  String get themeEditorTitle => 'Votre thème';
+
+  @override
+  String get themeEditorAccent => 'Accent';
+
+  @override
+  String get themeEditorBackground => 'Arrière-plan';
+
+  @override
+  String get themeEditorCard => 'Cartes';
+
+  @override
+  String get themeEditorText => 'Texte';
+
+  @override
+  String get themeEditorHue => 'Teinte';
+
+  @override
+  String themeEditorSwatch(String hex) {
+    return 'Couleur $hex';
+  }
+
+  @override
+  String get themeEditorPreview => 'Aperçu';
+
+  @override
+  String get themeEditorSample => 'Compte d\'exemple';
+
+  @override
+  String get themeEditorSampleHint => 'Touchez pour copier';
+
+  @override
+  String get themeEditorSave => 'Enregistrer le thème';
+
+  @override
+  String get themeEditorDelete => 'Supprimer le thème';
+
+  @override
+  String get themeEditorAdjusted =>
+      'Certaines couleurs ont été ajustées pour que le texte et les boutons restent lisibles.';
+
+  @override
+  String get themeEditorUnreadable =>
+      'Ces couleurs ne peuvent pas être rendues lisibles. Essayez une couleur de carte plus proche de l\'arrière-plan.';
+
+  @override
+  String get themeEditorFull =>
+      'Vous avez déjà 3 thèmes. Supprimez-en un pour en créer un autre.';
+
+  @override
+  String get settingsSeasonal => 'Changer avec les saisons';
+
+  @override
+  String get settingsSeasonalPremium => 'Changer avec les saisons (Premium)';
+
+  @override
+  String get settingsSeasonalHelp =>
+      'Effrayant en automne, Douillet en hiver, Printemps au printemps ; en été, votre choix. Une icône de saison change aussi.';
 }

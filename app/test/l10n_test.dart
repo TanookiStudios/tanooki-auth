@@ -19,6 +19,7 @@ import 'package:tanooki_auth/ui/quick_pick.dart';
 import 'package:tanooki_auth/ui/security_ui.dart';
 import 'package:tanooki_auth/ui/settings.dart';
 import 'package:tanooki_auth/ui/theme.dart';
+import 'package:tanooki_auth/ui/theme_editor.dart';
 import 'package:tanooki_auth/ui/trash.dart';
 
 import 'vault_test.dart' show MemoryKeyStore;
@@ -159,6 +160,7 @@ void main() {
       'what\'s new': (v) => const WhatsNewScreen(),
       'feedback': (v) => const FeedbackScreen(),
       'about Maddie': (v) => const AboutMaddieScreen(),
+      'theme editor': (v) => ThemeEditorScreen(vault: v, slot: 'custom1'),
     };
 
     for (final locale in locales) {

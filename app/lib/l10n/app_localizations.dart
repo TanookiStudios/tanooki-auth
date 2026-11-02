@@ -1967,7 +1967,7 @@ abstract class AppLocalizations {
   /// No description provided for @premiumPerkThemesBody.
   ///
   /// In en, this message translates to:
-  /// **'Pastel Pink, Pastel Blue and {count} more, plus every theme added later.'**
+  /// **'Pastel Pink, Pastel Blue and {count} more, seasonal ones that change by themselves, up to 3 of your own, plus every theme added later.'**
   String premiumPerkThemesBody(int count);
 
   /// No description provided for @premiumPerkIcons.
@@ -7501,6 +7501,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'• {account}: {reason}'**
   String exportUiLeftOutLine(String account, String reason);
+
+  /// No description provided for @themeCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'My theme {n}'**
+  String themeCustom(int n);
+
+  /// No description provided for @themeMakeOwn.
+  ///
+  /// In en, this message translates to:
+  /// **'Make your own'**
+  String get themeMakeOwn;
+
+  /// No description provided for @themeMakeOwnPremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Make your own theme, Premium'**
+  String get themeMakeOwnPremium;
+
+  /// No description provided for @themeEditOwn.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit this theme'**
+  String get themeEditOwn;
+
+  /// No description provided for @themeEditorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your theme'**
+  String get themeEditorTitle;
+
+  /// No description provided for @themeEditorAccent.
+  ///
+  /// In en, this message translates to:
+  /// **'Accent'**
+  String get themeEditorAccent;
+
+  /// No description provided for @themeEditorBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Background'**
+  String get themeEditorBackground;
+
+  /// No description provided for @themeEditorCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Cards'**
+  String get themeEditorCard;
+
+  /// No description provided for @themeEditorText.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get themeEditorText;
+
+  /// No description provided for @themeEditorHue.
+  ///
+  /// In en, this message translates to:
+  /// **'Hue'**
+  String get themeEditorHue;
+
+  /// No description provided for @themeEditorSwatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Color {hex}'**
+  String themeEditorSwatch(String hex);
+
+  /// No description provided for @themeEditorPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get themeEditorPreview;
+
+  /// No description provided for @themeEditorSample.
+  ///
+  /// In en, this message translates to:
+  /// **'Example account'**
+  String get themeEditorSample;
+
+  /// No description provided for @themeEditorSampleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to copy'**
+  String get themeEditorSampleHint;
+
+  /// No description provided for @themeEditorSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save theme'**
+  String get themeEditorSave;
+
+  /// No description provided for @themeEditorDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete theme'**
+  String get themeEditorDelete;
+
+  /// No description provided for @themeEditorAdjusted.
+  ///
+  /// In en, this message translates to:
+  /// **'Some colors were adjusted so text and buttons stay easy to read.'**
+  String get themeEditorAdjusted;
+
+  /// No description provided for @themeEditorUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'These colors can\'t be made easy to read. Try a card color closer to the background.'**
+  String get themeEditorUnreadable;
+
+  /// No description provided for @themeEditorFull.
+  ///
+  /// In en, this message translates to:
+  /// **'You have 3 themes already. Delete one to make another.'**
+  String get themeEditorFull;
+
+  /// No description provided for @settingsSeasonal.
+  ///
+  /// In en, this message translates to:
+  /// **'Change with the seasons'**
+  String get settingsSeasonal;
+
+  /// No description provided for @settingsSeasonalPremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Change with the seasons (Premium)'**
+  String get settingsSeasonalPremium;
+
+  /// No description provided for @settingsSeasonalHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Spooky in fall, Cozy in winter and Spring in spring; your own pick in summer. A seasonal app icon changes along with it.'**
+  String get settingsSeasonalHelp;
 }
 
 class _AppLocalizationsDelegate

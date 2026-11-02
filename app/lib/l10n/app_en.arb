@@ -645,7 +645,7 @@
   "premiumPitchStripe": "$5 once, or $10 for your whole family. Yours forever.",
   "premiumPitchStore": "Pay once for you, or once for your whole family. Yours forever.",
   "premiumPerkThemes": "Every Premium theme",
-  "premiumPerkThemesBody": "Pastel Pink, Pastel Blue and {count} more, plus every theme added later.",
+  "premiumPerkThemesBody": "Pastel Pink, Pastel Blue and {count} more, seasonal ones that change by themselves, up to 3 of your own, plus every theme added later.",
   "@premiumPerkThemesBody": {
     "placeholders": {
       "count": {
@@ -2991,5 +2991,41 @@
         "type": "String"
       }
     }
-  }
+  },
+  "themeCustom": "My theme {n}",
+  "@themeCustom": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "themeMakeOwn": "Make your own",
+  "themeMakeOwnPremium": "Make your own theme, Premium",
+  "themeEditOwn": "Edit this theme",
+  "themeEditorTitle": "Your theme",
+  "themeEditorAccent": "Accent",
+  "themeEditorBackground": "Background",
+  "themeEditorCard": "Cards",
+  "themeEditorText": "Text",
+  "themeEditorHue": "Hue",
+  "themeEditorSwatch": "Color {hex}",
+  "@themeEditorSwatch": {
+    "placeholders": {
+      "hex": {
+        "type": "String"
+      }
+    }
+  },
+  "themeEditorPreview": "Preview",
+  "themeEditorSample": "Example account",
+  "themeEditorSampleHint": "Tap to copy",
+  "themeEditorSave": "Save theme",
+  "themeEditorDelete": "Delete theme",
+  "themeEditorAdjusted": "Some colors were adjusted so text and buttons stay easy to read.",
+  "themeEditorUnreadable": "These colors can't be made easy to read. Try a card color closer to the background.",
+  "themeEditorFull": "You have 3 themes already. Delete one to make another.",
+  "settingsSeasonal": "Change with the seasons",
+  "settingsSeasonalPremium": "Change with the seasons (Premium)",
+  "settingsSeasonalHelp": "Spooky in fall, Cozy in winter and Spring in spring; your own pick in summer. A seasonal app icon changes along with it."
 }
