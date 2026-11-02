@@ -13,6 +13,7 @@ import 'brand_icon.dart';
 import 'clipboard.dart';
 import 'code_view.dart';
 import 'home.dart' show accountTitle, groupCode;
+import 'keys.dart';
 import 'security_ui.dart' show confirmItsYou;
 import '../l10n/l10n.dart';
 
@@ -49,6 +50,9 @@ class QuickPickScreen extends StatefulWidget {
 class _QuickPickScreenState extends State<QuickPickScreen> {
   late final Timer _tick;
   String _query = '';
+  int _selected = 0;
+  final _search = TextEditingController();
+  final _searchFocus = FocusNode();
 
   @override
   void initState() {
@@ -59,6 +63,8 @@ class _QuickPickScreenState extends State<QuickPickScreen> {
   @override
   void dispose() {
     _tick.cancel();
+    _search.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
 
@@ -138,20 +144,58 @@ class _QuickPickScreenState extends State<QuickPickScreen> {
         ),
       );
 
+  /// Keyboard: see [listKey]. Esc clears the search, or closes Quick pick when there's nothing to clear.
+  KeyEventResult _onKey(FocusNode _, KeyEvent e) {
+    final list = _matches;
+    return listKey(
+      e,
+      inSearch: _searchFocus.hasFocus,
+      onMove: (d) => setState(() => _selected = (_selected + d).clamp(0, (list.length - 1).clamp(0, 1 << 30))),
+      onEnter: () {
+        if (list.isNotEmpty) _copy(list[_selected.clamp(0, list.length - 1)]);
+      },
+      onEscape: () {
+        if (_search.text.isEmpty) {
+          Navigator.maybePop(context);
+        } else {
+          _search.clear();
+          setState(() {
+            _query = '';
+            _selected = 0;
+          });
+        }
+        return true;
+      },
+      onType: (ch) {
+        typeInto(_search, _searchFocus, ch);
+        setState(() {
+          _query = _search.text;
+          _selected = 0;
+        });
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final list = _matches;
-    return Scaffold(
+    final selected = list.isEmpty ? -1 : _selected.clamp(0, list.length - 1);
+    return Focus(onKeyEvent: _onKey, child: Scaffold(
       appBar: AppBar(title: Text(l10n.quickPickTitle)),
       body: Column(children: [
         Padding(
           padding: const EdgeInsets.all(12),
           child: TextField(
+            controller: _search,
+            focusNode: _searchFocus,
             autofocus: true,
             decoration: InputDecoration(prefixIcon: const Icon(Icons.search), hintText: l10n.quickPickSearch),
-            onChanged: (v) => setState(() => _query = v),
-            onSubmitted: (_) => list.isEmpty ? null : _copy(list.first),
+            onChanged: (v) => setState(() {
+              _query = v;
+              _selected = 0;
+            }),
+            onSubmitted: (_) => list.isEmpty ? null : _copy(list[selected]),
           ),
         ),
         if (Platform.isLinux)
@@ -169,6 +213,7 @@ class _QuickPickScreenState extends State<QuickPickScreen> {
                     final code = a.codeAt(now);
                     final left = a.timeBased ? secondsLeft(now.millisecondsSinceEpoch ~/ 1000, period: a.period) : null;
                     return ListTile(
+                      selected: i == selected && list.length > 1,
                       leading: IssuerAvatar(a, size: 32),
                       title: Text(accountTitle(a)),
                       subtitle: Text(
@@ -191,6 +236,6 @@ class _QuickPickScreenState extends State<QuickPickScreen> {
                 ),
         ),
       ]),
-    );
+    ));
   }
 }

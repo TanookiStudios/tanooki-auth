@@ -4633,4 +4633,336 @@ class AppLocalizationsJa extends AppLocalizations {
   String exportUiLeftOutLine(String account, String reason) {
     return '・$account：$reason';
   }
+
+  @override
+  String get keysTitle => 'キーボードショートカット';
+
+  @override
+  String get keysWhere => 'アカウント一覧とクイック選択で使えます。';
+
+  @override
+  String get keysMove => 'リストを上下に移動';
+
+  @override
+  String get keysEnter => 'Enter';
+
+  @override
+  String get keysCopy => '選択中のコードをコピー';
+
+  @override
+  String get keysAnyLetter => '文字キー';
+
+  @override
+  String get keysSearch => '検索を始める';
+
+  @override
+  String get keysEsc => 'Esc';
+
+  @override
+  String get keysClear => '検索をクリア';
+
+  @override
+  String get keysShowList => 'この一覧を表示';
+
+  @override
+  String get settingsKeysShortcutMac => 'どこでも ⌘/ で表示できます';
+
+  @override
+  String get settingsKeysShortcutOther => 'どこでも Ctrl+/ で表示できます';
+
+  @override
+  String trayTooltip(String name, int seconds) {
+    return 'Tanooki Auth：$name、残り $seconds 秒';
+  }
+
+  @override
+  String get settingsTrayCountdownMac => 'メニューバーにカウントダウンを表示';
+
+  @override
+  String get settingsTrayCountdownMacHelp =>
+      '最初のお気に入りの残り秒数をメニューバーのアイコンの横に表示します。コード自体は表示しません。';
+
+  @override
+  String get settingsTrayCountdownWindows => 'トレイアイコンにカウントダウンを表示';
+
+  @override
+  String get settingsTrayCountdownWindowsHelp =>
+      '時計の横の Tanooki Auth アイコンにマウスを置くと、最初のお気に入りの残り秒数が表示されます。コード自体は表示しません。';
+
+  @override
+  String get unusedTitle => '使っていないアカウント';
+
+  @override
+  String get settingsUnusedHelp => '6か月以上コードをコピーしていないもの';
+
+  @override
+  String get unusedIntro =>
+      'これらのアカウントは、このアプリで6か月以上コードがコピーされていません。もうそのサイトを使わないなら、先にサイト側で2段階認証をオフにしてから、ここで整理してください。ゴミ箱には30日間残ります。';
+
+  @override
+  String get unusedNone => 'すべてのアカウントが過去6か月以内に使われています。整理するものはありません。';
+
+  @override
+  String unusedLastUsed(DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat.yMMMd(localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return '最終使用日：$dateString';
+  }
+
+  @override
+  String unusedNeverUsed(DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat.yMMMd(localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return 'このアプリでは未使用。追加日：$dateString';
+  }
+
+  @override
+  String get unusedPickFirst => '先にアカウントを1つ以上チェックしてください。';
+
+  @override
+  String get unusedTagSuggestion => '未使用';
+
+  @override
+  String checkupUnusedTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '使っていないアカウントが $count 件',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get checkupUnusedBody =>
+      '6か月以上コードがコピーされていません。忘れた古いアカウントは、乗っ取られても気づきにくいものです。';
+
+  @override
+  String get checkupUnusedReview => '確認する';
+
+  @override
+  String get halvesTitle => '2つに分けた紙のバックアップ';
+
+  @override
+  String get settingsHalvesHelp => '2組のページ。片方だけでは何もわかりません';
+
+  @override
+  String get halvesRestoreTitle => '2つの半分から復元';
+
+  @override
+  String get settingsHalvesRestoreHelp => '紙のバックアップの両方の半分のコードをスキャン';
+
+  @override
+  String get halvesExplain =>
+      '暗号化したバックアップを、半分A と半分B の2組のページに分けて印刷します。\n\n片方だけではただのランダムなデータで、パスフレーズがあっても何もわかりません。復元には両方の半分とパスフレーズが必要です。\n\n2つの半分は別々の場所に保管してください（例：1つは自宅、もう1つは信頼できる人のところ）。';
+
+  @override
+  String get halvesHalfA => '2つのうち 半分A';
+
+  @override
+  String get halvesHalfB => '2つのうち 半分B';
+
+  @override
+  String halvesPart(String which, int part, int parts) {
+    return '半分$which・$parts 枚中 $part 枚目';
+  }
+
+  @override
+  String halvesPdfHeader(String date) {
+    return 'Tanooki Auth 紙のバックアップ（作成日 $date）';
+  }
+
+  @override
+  String get halvesPdfExplain =>
+      'この半分だけでは役に立ちません。復元するには、Tanooki Auth の「設定」>「2つの半分から復元」を開き、両方の半分のコードをすべてスキャンしてから、バックアップのパスフレーズを入力します。2つの半分は別々の場所に保管してください。';
+
+  @override
+  String halvesPdfPage(String half, int page, int pages) {
+    return '$half、$pages ページ中 $page ページ目';
+  }
+
+  @override
+  String get halvesNowB => '次に半分B を保存';
+
+  @override
+  String get halvesNowBBody => '半分A を保存しました。半分B はもう片方です。これも印刷して、別の場所に保管してください。';
+
+  @override
+  String get halvesSaveB => '半分B を保存';
+
+  @override
+  String get halvesOnlyA =>
+      '半分A しか保存されていません。半分A だけでは何も復元できないので、準備ができたら両方を作り直してください。';
+
+  @override
+  String get halvesReady => '両方の半分ができました。印刷して、別々の場所に保管してください。';
+
+  @override
+  String get halvesRestoreIntro =>
+      '両方の半分のコードを、順番は気にせずすべてスキャンしてください。両方そろったら、バックアップ作成時に決めたパスフレーズを入力します。';
+
+  @override
+  String halvesNotStarted(String half) {
+    return '$half：まだスキャンしていません';
+  }
+
+  @override
+  String halvesProgress(String half, int have, int total) {
+    return '$half：$total 件中 $have 件';
+  }
+
+  @override
+  String get halvesScan => 'コードをスキャン';
+
+  @override
+  String get halvesScanTitle => '両方の半分をスキャン';
+
+  @override
+  String get halvesPictures => 'コードの画像を開く';
+
+  @override
+  String halvesSomeUnread(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 枚の画像から読み取れるコードが見つかりませんでした。1つのコードを近くから撮った画像で試してください。',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get halvesNotAHalf => 'これは2つに分けた紙のバックアップのコードではありません。';
+
+  @override
+  String get halvesOtherSet => 'このコードは別の紙のバックアップのものです。同じときに印刷した2つの半分を使ってください。';
+
+  @override
+  String get halvesAlreadyHave => 'そのコードはスキャン済みです。次のコードへどうぞ。';
+
+  @override
+  String get halvesDontFit =>
+      'この2つの半分は一致しません。コードの読み取りミスか、別のバックアップの半分かもしれません。スキャンをやり直してください。';
+
+  @override
+  String get halvesRestoreNow => '両方スキャン済み：復元する';
+
+  @override
+  String get healthTitle => 'ヘルスチェック';
+
+  @override
+  String get settingsHealthHelp => '同期・バックアップ・時計・ロック・リカバリーコードを1画面で確認';
+
+  @override
+  String get healthIntro => '緑は問題なし。黄色は確認したほうがよい項目で、ボタンで直せます。';
+
+  @override
+  String get healthGood => '問題なし';
+
+  @override
+  String get healthLook => '確認をおすすめ';
+
+  @override
+  String get healthSync => '同期';
+
+  @override
+  String get healthSyncOff => '未設定です。同期すると、すべてのデバイスでアカウントがそろいます。';
+
+  @override
+  String healthSyncOk(String when) {
+    return '最終同期：$when';
+  }
+
+  @override
+  String healthSyncStale(String when) {
+    return '最終同期：$when。しばらく同期していません。同期を開いて原因を確認してください。';
+  }
+
+  @override
+  String get healthOpenSync => '同期を開く';
+
+  @override
+  String get healthSetUp => '設定する';
+
+  @override
+  String get healthOpen => '開く';
+
+  @override
+  String get healthBackup => 'バックアップ';
+
+  @override
+  String get healthBackupNever => 'まだバックアップがありません。このデバイスをなくすと、アカウントも失われます。';
+
+  @override
+  String healthBackupOk(DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat.yMMMd(localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return '最終バックアップ：$dateString';
+  }
+
+  @override
+  String healthBackupOld(DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat.yMMMd(localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return '最終バックアップ：$dateString。30日以上前です。新しく作りましょう。';
+  }
+
+  @override
+  String get healthClock => '時計';
+
+  @override
+  String get healthClockNotChecked => 'まだ確認していません。コードはこのデバイスの時計が正しいときだけ使えます。';
+
+  @override
+  String healthClockOk(String when) {
+    return '時計は正確です（確認：$when）。';
+  }
+
+  @override
+  String get healthCheckNow => '今すぐ確認';
+
+  @override
+  String get healthPhoneLink => '電話との連携';
+
+  @override
+  String healthPhoneLinkOk(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 件のブラウザとペアリング済み',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get healthPhoneLinkOff =>
+      '未ペアリングです。パソコンのブラウザとペアリングすると、この電話からログインコードを承認できます。';
+
+  @override
+  String get healthLock => 'ロック';
+
+  @override
+  String get healthLockOn => 'オン。コードを表示する前に本人確認をします。';
+
+  @override
+  String get healthLockOff => 'オフ。このデバイスを手にした人なら誰でもコードを見られます。';
+
+  @override
+  String get healthGoToSettings => 'ロックのスイッチへ';
+
+  @override
+  String get healthRecovery => 'リカバリーコード';
+
+  @override
+  String healthRecoveryCount(int count, int total) {
+    return '$total 件中 $count 件のアカウントにリカバリーコードが保存されています。';
+  }
+
+  @override
+  String get healthRecoveryNoAccounts => 'まだアカウントがありません。';
+
+  @override
+  String get healthAddCodes => 'コードを追加';
 }

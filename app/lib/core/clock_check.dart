@@ -39,6 +39,8 @@ class ClockCheck {
   /// Off until the app turns it on (main.dart), so tests never go online.
   bool auto = false;
   DateTime? _last;
+  /// When a check last finished (the health check screen shows it); null until one has.
+  DateTime? checkedAt;
   Future<String?>? _running;
 
   /// Runs the check if it's on and the last one was over an hour ago. Failures stay quiet: this is a background
@@ -57,7 +59,9 @@ class ClockCheck {
   /// Measures now. Returns the warning (null when the clock is fine); throws [RelayException] when offline.
   Future<String?> runNow() => _running ??= () async {
         try {
-          return warning.value = clockProblem(await measure());
+          final problem = clockProblem(await measure());
+          checkedAt = DateTime.now();
+          return warning.value = problem;
         } finally {
           _running = null;
         }
