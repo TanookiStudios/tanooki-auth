@@ -20,6 +20,7 @@ class FakeRelay {
   final grants = <String, Map<String, dynamic>>{};
   final pushes = <String>[];
   bool released = false;
+  int uploads = 0;
   String get base => 'http://127.0.0.1:${_server.port}';
 
   Future<void> start() async {
@@ -58,6 +59,7 @@ class FakeRelay {
     if (req.method == 'POST' && sub == '') {
       if (g != null && g['owner'] != dev) return send(403, {'error': 'only the owner can change this grant'});
       final fresh = g == null;
+      uploads++;
       g = grants[id] = {...?g, 'owner': dev, 'contactKey': body['contactKey'], 'blob': body['blob'], 'updatedAt': DateTime.now().millisecondsSinceEpoch};
       return send(fresh ? 201 : 200, status());
     }
@@ -143,7 +145,9 @@ void main() {
 
   test('the whole flow: choose, ask, owner sees it and denies, ask again, wait ends, contact opens the copy', () async {
     final base = realRelay.isEmpty ? relay.base : realRelay;
-    final service = EmergencyService(base: base)..isPremium = () => true;
+    final service = EmergencyService(base: base)
+      ..isPremium = (() => true)
+      ..minGap = Duration.zero; // the once-a-minute limit has its own test
 
     // The contact shows a code; the owner chooses them and gets a code to give back.
     final contactCode = parseContactCode(await myContactCode(contact, 'Sam'));
@@ -191,6 +195,29 @@ void main() {
     await service.remove(owner);
     expect(grantOf(owner), isNull);
     await expectLater(asContact.status(), throwsA(isA<EmergencyException>().having((e) => e.message, 'm', contains('doesn\'t exist any more'))));
+  });
+
+  test('after a save the copy re-uploads only when the accounts changed, and at most once per minGap', () async {
+    final service = EmergencyService(base: relay.base)..isPremium = () => true;
+    service.minGap = const Duration(milliseconds: 600);
+    await service.setUp(owner, parseContactCode(await myContactCode(contact, 'Sam')), 'Maddie');
+    expect(relay.uploads, 1);
+    Future<void> saved([int ms = 150]) async {
+      service.vaultChanged(owner, delay: Duration.zero);
+      await Future<void>.delayed(Duration(milliseconds: ms));
+    }
+
+    owner.settings['theme'] = 'midnight'; // a settings save, or a team sync that changed nothing here
+    await saved(700);
+    expect(relay.uploads, 1, reason: 'same accounts: nothing to upload');
+    owner.accounts.add(Account(id: 'new', issuer: 'Steam', secret: 'MFRGGZDFMZTWQ2LK'));
+    await saved();
+    expect(relay.uploads, 2);
+    owner.accounts.add(Account(id: 'new2', issuer: 'Mail', secret: 'MFRGGZDFMZTWQ2LK'));
+    await saved();
+    expect(relay.uploads, 2, reason: 'inside the gap: held back, not dropped');
+    await Future<void>.delayed(const Duration(milliseconds: 700));
+    expect(relay.uploads, 3, reason: 'the held-back change goes up when the gap ends');
   });
 
   test('waitLeft reads like a person would say it', () {

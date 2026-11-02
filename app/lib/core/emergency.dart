@@ -171,6 +171,15 @@ class EmergencyService {
   /// Whether Premium is unlocked; set by the app (main.dart). Without it the copy isn't kept up to date.
   bool Function() isPremium = () => false;
   Timer? _debounce;
+  /// After a save, the copy is re-uploaded at most this often (tests shorten it).
+  Duration minGap = const Duration(minutes: 1);
+  String? _uploadedHash;
+  DateTime? _uploadedAt;
+
+  /// SHA-256 of exactly what [sealSnapshot] seals, so unchanged accounts (a team sync, a settings save) upload nothing.
+  static Future<String> _hash(List<Account> accounts) async => b64u((await Sha256().hash(
+          utf8.encode(jsonEncode({'v': 1, 'accounts': [for (final a in accounts) a.toJson()]}))))
+      .bytes);
 
   Future<EmergencyRelay> _owner(Map<String, dynamic> g) async =>
       EmergencyRelay(g['id'] as String, await DeviceKey.fromSeed(unb64u(g['seed'] as String)), base: base);
@@ -193,16 +202,24 @@ class EmergencyService {
 
   Future<void> _upload(Vault v, Map<String, dynamic> g) async {
     final relay = await _owner(g);
-    status.value = await relay.upload(g['contactKey'] as String, await sealSnapshot(v.live, g['contactBox'] as String));
-    g['sealedAt'] = DateTime.now().toUtc().toIso8601String();
+    final accounts = v.live, hash = await _hash(accounts);
+    status.value = await relay.upload(g['contactKey'] as String, await sealSnapshot(accounts, g['contactBox'] as String));
+    _uploadedHash = hash;
+    _uploadedAt = DateTime.now();
+    g['sealedAt'] = _uploadedAt!.toUtc().toIso8601String();
     problem.value = null;
   }
 
-  /// After a save: refreshes the copy a few seconds later, so a burst of edits uploads once.
+  /// After a save: refreshes the copy a few seconds later, so a burst of edits uploads once. Only when the accounts
+  /// changed since the last upload, and at most once per [minGap]; a change inside the gap waits for its end.
   void vaultChanged(Vault v, {Duration delay = const Duration(seconds: 5)}) {
     if (grantOf(v) == null || !isPremium()) return;
     _debounce?.cancel();
-    _debounce = Timer(delay, () => updateNow(v));
+    final last = _uploadedAt, sinceLast = last == null ? null : DateTime.now().difference(last);
+    final wait = sinceLast == null || sinceLast >= minGap - delay ? delay : minGap - sinceLast;
+    _debounce = Timer(wait, () async {
+      if (await _hash(v.live) != _uploadedHash) await updateNow(v);
+    });
   }
 
   /// Uploads a fresh copy now. Returns false (with [problem] set) when it couldn't.
