@@ -406,7 +406,10 @@ void main() {
       await t.pumpAndSettle();
       expect(find.text('Copy the highlighted code'), findsNothing);
       if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
-        await t.scrollUntilVisible(find.byKey(const Key('keyboardShortcuts')), 300);
+        await t.scrollUntilVisible(find.byKey(const Key('keyboardShortcuts')), 300,
+            scrollable: find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).first);
+        await t.ensureVisible(find.byKey(const Key('keyboardShortcuts')));
+        await t.pumpAndSettle();
         await t.tap(find.byKey(const Key('keyboardShortcuts')));
         await t.pumpAndSettle();
         expect(find.text('Copy the highlighted code'), findsOneWidget);

@@ -55,6 +55,11 @@ final class Extras: NSObject, FlutterSceneLifeCycleDelegate, WCSessionDelegate {
         saved.status == errSecSuccess
           ? result(nil)
           : result(FlutterError(code: "keychain\(saved.status)", message: nil, details: nil))
+      case "watchCopied":
+        // A favorite's code was just copied (never its secret): the watch's Smart Stack widget raises it.
+        let args = call.arguments as? [String: Any] ?? [:]
+        self.tellWatchCopied(issuer: args["issuer"] as? String ?? "", label: args["label"] as? String ?? "")
+        result(nil)
       case "openAutofillSettings":
         // iOS 18 asks "Allow Tanooki Auth to fill codes?" right here; true when the person said yes.
         if #available(iOS 18.0, *) {
@@ -166,6 +171,13 @@ final class Extras: NSObject, FlutterSceneLifeCycleDelegate, WCSessionDelegate {
     guard WCSession.isSupported(), WCSession.default.activationState == .activated, WCSession.default.isPaired
     else { return }
     try? WCSession.default.updateApplicationContext(["favorites": json])
+  }
+
+  /// Queued, so it still arrives if the watch is asleep; the watch ignores it once it's a couple of minutes old.
+  private func tellWatchCopied(issuer: String, label: String) {
+    guard WCSession.isSupported(), WCSession.default.activationState == .activated, WCSession.default.isPaired
+    else { return }
+    WCSession.default.transferUserInfo(["copied": "\(issuer)\n\(label)", "at": Date().timeIntervalSince1970])
   }
 
   func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {

@@ -74,7 +74,7 @@ Future<void> createDecoyVault(Vault real, Map<String, Object> passcodeRecord) as
 
 /// Settings the decoy copies from the real vault so it looks the same. Premium comes from a license key or, for an
 /// App Store / Google Play purchase, the store purchase record; without it a Premium theme would fall back to Auto.
-const decoyLookAlikeKeys = ['theme', 'license', storePurchaseKey, languageKey, easyFontKey, countdownKey, layoutKey, hideCodesKey, recentFirstKey, sortKey, lockKey, lockAfterKey, blockScreenshotsKey, trayCountdownKey];
+const decoyLookAlikeKeys = ['theme', customThemesKey, seasonalThemeKey, 'license', storePurchaseKey, languageKey, easyFontKey, countdownKey, layoutKey, hideCodesKey, recentFirstKey, sortKey, lockKey, lockAfterKey, blockScreenshotsKey, trayCountdownKey];
 
 bool isDecoyVault(Vault v) => v.file.path.endsWith('vault-b.json');
 
@@ -162,7 +162,7 @@ class _TanookiAuthAppState extends State<TanookiAuthApp> with WidgetsBindingObse
 
   @override
   Widget build(BuildContext context) {
-    final fixed = themeChoices[themeChoice.value];
+    final fixed = paletteFor(themeChoice.value);
     return MaterialApp(
       title: 'Tanooki Auth',
       navigatorKey: _navigator,
@@ -389,6 +389,7 @@ class _GateState extends State<Gate> implements BridgeHost {
     easyFont.value = vault.settings[easyFontKey] == true;
     loadLanguage(vault.settings);
     await restoreDockIcon(vault, premium: premium.value);
+    if (premium.value) await followSeasonIcon(vault, DateTime.now());
     await loadBrandIcons();
     await applyScreenshotBlocking(blockScreenshotsOn(vault.settings));
     setState(() {

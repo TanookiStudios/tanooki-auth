@@ -20,6 +20,9 @@ struct Favorite: Codable, Hashable {
 
   var title: String { issuer.isEmpty ? label : issuer }
 
+  /// Matches the "copied on the iPhone" note to a favorite (the phone never sends secrets for it).
+  var key: String { "\(issuer)\n\(label)" }
+
   /// The emoji before the name, if any: "🎮 Steam".
   var badgedTitle: String { emoji.map { "\($0) \(title)" } ?? title }
 
@@ -47,7 +50,7 @@ enum FavoriteStore {
   /// On the watch: $(AppIdentifierPrefix)com.tanookistudios.auth.watch, shared with the complication.
   static var sharedGroup: String? { Bundle.main.object(forInfoDictionaryKey: "TAKeychainGroup") as? String }
 
-  private static func query(_ group: String?) -> [String: Any] {
+  private static func query(_ group: String?, account: String = account) -> [String: Any] {
     var q: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrService as String: service,
@@ -57,12 +60,15 @@ enum FavoriteStore {
     return q
   }
 
-  /// Replaces the stored list. An empty list erases it.
+  /// Replaces the stored list. An empty list erases it, and the watch's "copied" note with it.
   @discardableResult
   static func save(_ json: Data, group: String?) -> OSStatus {
     // No group here: erases every copy, including one an older watch build kept in its own keychain.
     SecItemDelete(query(nil) as CFDictionary)
-    guard let list = try? JSONDecoder().decode([Favorite].self, from: json), !list.isEmpty else { return errSecSuccess }
+    guard let list = try? JSONDecoder().decode([Favorite].self, from: json), !list.isEmpty else {
+      SecItemDelete(query(nil, account: copiedAccount) as CFDictionary)
+      return errSecSuccess
+    }
     var add = query(group)
     add[kSecValueData as String] = json
     // Readable after the first unlock since restart, so widgets can refresh in the background. They still
@@ -78,5 +84,54 @@ enum FavoriteStore {
     var out: AnyObject?
     guard SecItemCopyMatching(q as CFDictionary, &out) == errSecSuccess, let data = out as? Data else { return [] }
     return (try? JSONDecoder().decode([Favorite].self, from: data)) ?? []
+  }
+
+  /// Apple Watch only: which favorite the paired iPhone copied last, and when (see [SmartStack]).
+  struct Copied: Codable {
+    let key: String
+    let at: Date
+  }
+
+  private static let copiedAccount = "copied"
+
+  static func saveCopied(_ copied: Copied, group: String?) {
+    SecItemDelete(query(nil, account: copiedAccount) as CFDictionary)
+    guard let data = try? JSONEncoder().encode(copied) else { return }
+    var add = query(group, account: copiedAccount)
+    add[kSecValueData as String] = data
+    add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+    SecItemAdd(add as CFDictionary, nil)
+  }
+
+  static func loadCopied(group: String?) -> Copied? {
+    var q = query(group, account: copiedAccount)
+    q[kSecReturnData as String] = true
+    q[kSecMatchLimit as String] = kSecMatchLimitOne
+    var out: AnyObject?
+    guard SecItemCopyMatching(q as CFDictionary, &out) == errSecSuccess, let data = out as? Data else { return nil }
+    return try? JSONDecoder().decode(Copied.self, from: data)
+  }
+}
+
+/// What the Apple Watch Smart Stack widget shows, and how hard it asks to be on top: the favorite the
+/// iPhone just copied (top of the stack for [boost]), else the watch face favorite, else the first one.
+enum SmartStack {
+  static let boost: TimeInterval = 120
+
+  /// Relevance scores: just copied, the watch face favorite, any other favorite, nothing to show.
+  static let copiedScore: Float = 100, chosenScore: Float = 20, otherScore: Float = 5, emptyScore: Float = 0
+
+  static func pick(_ list: [Favorite], copied: FavoriteStore.Copied?, now: Date) -> (favorite: Favorite?, boostedUntil: Date?) {
+    if let c = copied, now >= c.at, now < c.at + boost, let f = list.first(where: { $0.key == c.key }) {
+      return (f, c.at + boost)
+    }
+    return (list.first { $0.complication == true } ?? list.first, nil)
+  }
+
+  /// The relevance score at [date] for what [pick] chose, and for how long it holds.
+  static func score(_ favorite: Favorite?, boostedUntil: Date?, at date: Date) -> (score: Float, duration: TimeInterval) {
+    guard let favorite else { return (emptyScore, 0) }
+    if let until = boostedUntil, date < until { return (copiedScore, until.timeIntervalSince(date)) }
+    return (favorite.complication == true ? chosenScore : otherScore, 0)
   }
 }

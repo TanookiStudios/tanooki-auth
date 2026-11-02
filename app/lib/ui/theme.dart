@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import '../l10n/l10n.dart';
 
@@ -109,8 +111,121 @@ const themeChoices = <String, AppPalette?>{
     text: Color(0xFF111111), muted: Color(0xFF5E5E5E), accent: Color(0xFF222222),
     green: Color(0xFF1F7A45), red: Color(0xFFC62828),
   ),
+  // Seasonal (Premium), matching the seasonal app icons. "Change with the seasons" picks one by month.
+  'spooky': AppPalette(
+    name: 'Spooky', brightness: Brightness.dark,
+    background: Color(0xFF1A1022), panel: Color(0xFF21152B), card: Color(0xFF251830),
+    line: Color(0xFF3A2643), lineBright: Color(0xFF4F3459),
+    text: Color(0xFFFFF0E0), muted: Color(0xFFB9A3B8), accent: Color(0xFFE86E14),
+  ),
+  'cozy': AppPalette(
+    name: 'Cozy', brightness: Brightness.dark,
+    background: Color(0xFF0E2238), panel: Color(0xFF112840), card: Color(0xFF132B45),
+    line: Color(0xFF22405F), lineBright: Color(0xFF2F5378),
+    text: Color(0xFFF2F6FB), muted: Color(0xFF9DB0C6), accent: Color(0xFFF06070),
+  ),
+  'spring': AppPalette(
+    name: 'Spring', brightness: Brightness.light,
+    background: Color(0xFFEEF8EA), panel: Color(0xFFFFFFFF), card: Color(0xFFFFFFFF),
+    line: Color(0xFFCFE6C6), lineBright: Color(0xFFB5D8A8),
+    text: Color(0xFF1D3324), muted: Color(0xFF56705C), accent: Color(0xFF2E7D4A),
+    green: Color(0xFF2E7D4A), red: Color(0xFFD9364F),
+  ),
 };
 const freeThemes = {'auto', 'dark', 'light'};
+const seasonalThemes = {'spooky', 'cozy', 'spring'};
+
+/// Settings keys (Premium): the custom themes made in the editor, and "Change with the seasons".
+const customThemesKey = 'customThemes', seasonalThemeKey = 'seasonalTheme';
+
+/// Up to three custom themes, saved in these slots.
+const customSlots = ['custom1', 'custom2', 'custom3'];
+
+/// The custom themes in use, by slot. Filled from the vault's settings by [loadCustomThemes].
+final customThemes = <String, AppPalette>{};
+
+/// Built-in or custom palette for [id]; null for Auto or an unknown id.
+AppPalette? paletteFor(String id) => themeChoices[id] ?? customThemes[id];
+bool themeExists(String id) => themeChoices.containsKey(id) || customThemes.containsKey(id);
+
+/// The seasonal theme for [now]'s month, or null in summer (then the picked theme shows).
+/// shortcut: northern-hemisphere seasons; add a hemisphere choice if southern users ask.
+String? seasonFor(DateTime now) => switch (now.month) {
+      9 || 10 || 11 => 'spooky',
+      12 || 1 || 2 => 'cozy',
+      3 || 4 || 5 => 'spring',
+      _ => null,
+    };
+
+/// The theme to show: this season's one when "Change with the seasons" is on, else the picked one.
+/// Premium themes without Premium (and themes that no longer exist) fall back to Auto.
+String themeToUse(Map<String, dynamic> settings, {required bool premium, required DateTime now}) {
+  final season = premium && settings[seasonalThemeKey] == true ? seasonFor(now) : null;
+  if (season != null) return season;
+  final t = settings['theme'] as String? ?? 'auto';
+  return themeExists(t) && (freeThemes.contains(t) || premium) ? t : 'auto';
+}
+
+/// WCAG 2.x contrast ratio between two opaque colors, from 1 to 21.
+double contrast(Color a, Color b) {
+  final x = a.computeLuminance(), y = b.computeLuminance();
+  return (max(x, y) + 0.05) / (min(x, y) + 0.05);
+}
+
+/// [fg], made lighter or darker only as far as needed to read at [ratio] on every one of [surfaces].
+/// Returns null when no shade of it can (say, one surface is near-black and the other near-white).
+Color? readableOn(Color fg, List<Color> surfaces, [double ratio = 4.5]) {
+  bool ok(Color c) => surfaces.every((s) => contrast(c, s) >= ratio);
+  if (ok(fg)) return fg;
+  final up = surfaces.every((s) => contrast(Colors.white, s) >= contrast(Colors.black, s));
+  var hsl = HSLColor.fromColor(fg);
+  while (!ok(hsl.toColor()) && (up ? hsl.lightness < 1 : hsl.lightness > 0)) {
+    hsl = hsl.withLightness((hsl.lightness + (up ? 0.01 : -0.01)).clamp(0.0, 1.0));
+  }
+  return ok(hsl.toColor()) ? hsl.toColor() : null;
+}
+
+/// A whole palette from the editor's four picks. Text, gray text and the accent are adjusted until they
+/// read at 4.5:1 (WCAG AA) on the background and cards; filled buttons get [buttonFill] like every theme.
+/// Null when the picks can't be made readable.
+AppPalette? customPalette(String name, {required Color accent, required Color background, required Color card, required Color text}) {
+  final surfaces = [background, card];
+  final t = readableOn(text, surfaces);
+  if (t == null) return null;
+  final muted = readableOn(Color.lerp(t, card, 0.35)!, surfaces);
+  final a = readableOn(accent, surfaces);
+  if (muted == null || a == null) return null;
+  final dark = contrast(Colors.white, background) > contrast(Colors.black, background);
+  final base = dark ? darkPalette : lightPalette;
+  return AppPalette(
+    name: name, brightness: dark ? Brightness.dark : Brightness.light,
+    background: background, panel: card, card: card,
+    line: Color.lerp(card, t, 0.14)!, lineBright: Color.lerp(card, t, 0.24)!,
+    text: t, muted: muted, accent: a, green: base.green, red: base.red,
+  );
+}
+
+/// The editor's four picks for a custom theme, as saved in settings (0xAARRGGBB numbers).
+const customRoles = ['accent', 'background', 'card', 'text'];
+
+AppPalette? customPaletteFrom(String id, Map<dynamic, dynamic> picks) {
+  final c = [for (final r in customRoles) picks[r]];
+  if (c.any((v) => v is! int)) return null;
+  final colors = [for (final v in c) Color(v as int)];
+  return customPalette(id, accent: colors[0], background: colors[1], card: colors[2], text: colors[3]);
+}
+
+/// Reads the saved custom themes into [customThemes]. Broken entries are left out.
+void loadCustomThemes(Map<String, dynamic> settings) {
+  customThemes.clear();
+  final saved = settings[customThemesKey];
+  if (saved is! Map) return;
+  for (final id in customSlots) {
+    final picks = saved[id];
+    final p = picks is Map ? customPaletteFrom(id, picks) : null;
+    if (p != null) customThemes[id] = p;
+  }
+}
 
 /// The name shown for theme [id] in the app's language (AppPalette.name stays the English one).
 String themeName(String id) => switch (id) {
@@ -126,6 +241,12 @@ String themeName(String id) => switch (id) {
       'forest' => l10n.themeForest,
       'ocean' => l10n.themeOcean,
       'mono' => l10n.themeMono,
+      'spooky' => l10n.appIconSpooky,
+      'cozy' => l10n.appIconCozy,
+      'spring' => l10n.appIconSpring,
+      'custom1' => l10n.themeCustom(1),
+      'custom2' => l10n.themeCustom(2),
+      'custom3' => l10n.themeCustom(3),
       _ => l10n.themeAuto,
     };
 

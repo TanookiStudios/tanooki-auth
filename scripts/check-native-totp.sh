@@ -1,6 +1,6 @@
 #!/bin/bash
 # Checks the widget/watch/AutoFill code generators (Swift for iPhone/Apple Watch, Kotlin for Android/Wear OS)
-# against the RFC 6238 Appendix B test vectors, plus AutoFill's website and app matching. Exits non-zero if either is wrong.
+# against the RFC 6238 Appendix B test vectors, plus AutoFill's website and app matching and the watch Smart Stack's pick. Exits non-zero if either is wrong.
 set -euo pipefail
 cd "$(dirname "$0")/../app"
 out=$(mktemp -d)
@@ -8,6 +8,8 @@ trap 'rm -rf "$out"' EXIT
 swiftc -O ios/Shared/TOTP.swift ios/SharedTests/main.swift -o "$out/totpcheck"
 "$out/totpcheck"
 swiftc -O ios/Shared/TOTP.swift ios/Shared/AutoFill.swift ios/AutoFillTests/main.swift -o "$out/autofillcheck"
+swiftc -O ios/Shared/TOTP.swift ios/Shared/FavoriteStore.swift ios/SmartStackTests/main.swift -o "$out/smartstackcheck"
+"$out/smartstackcheck"
 "$out/autofillcheck"
 export JAVA_HOME="${JAVA_HOME:-/opt/homebrew/opt/openjdk@17}"
 d=build/wear/test-results/testDebugUnitTest

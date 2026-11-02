@@ -131,8 +131,19 @@ Future<void> publishSharedFavorites(Vault v) async {
 /// After a code is copied on iPhone: a Live Activity (Lock Screen and Dynamic Island) with the account's
 /// name, that code and a countdown, ending when the code expires. Premium, opt-in, and never for an account
 /// travel mode hides or one that asks for Face ID before showing its code.
+/// Also tells the Apple Watch, whose Smart Stack widget then puts that code on top for a couple of minutes.
 Future<void> showCopiedCodeActivity(Vault v, Account a, DateTime now) async {
-  if (!Platform.isIOS || !liveActivityAllowed(v, a, premium: widgetPremium())) return;
+  if (!Platform.isIOS) return;
+  if (watchMayHearCopied(v, a)) {
+    try {
+      await _channel.invokeMethod<void>('watchCopied', {'issuer': a.issuer, 'label': a.label});
+    } on MissingPluginException {
+      // Not wired (unit tests).
+    } on PlatformException catch (e) {
+      debugPrint('Telling the watch failed: ${e.code}');
+    }
+  }
+  if (!liveActivityAllowed(v, a, premium: widgetPremium())) return;
   final unix = now.millisecondsSinceEpoch ~/ 1000;
   try {
     await _channel.invokeMethod<void>('startCodeActivity', {
@@ -146,6 +157,11 @@ Future<void> showCopiedCodeActivity(Vault v, Account a, DateTime now) async {
     debugPrint('Live Activity failed: ${e.code}'); // e.g. turned off in the iPhone Settings app
   }
 }
+
+/// Whether the watch may hear that [a] was just copied: only a favorite the watch already has (see
+/// [sharedFavorites], which leaves out ask-first and travel-hidden accounts), and never while the decoy is open.
+bool watchMayHearCopied(Vault v, Account a) =>
+    !_decoyOpen && sharedFavorites(v).any((f) => f['issuer'] == a.issuer && f['label'] == a.label && f['secret'] == a.secret);
 
 /// Whether [a]'s code may go on the Lock Screen after copying (see [showCopiedCodeActivity]).
 bool liveActivityAllowed(Vault v, Account a, {required bool premium}) =>

@@ -38,13 +38,13 @@ String get payOnce => storefront == Storefront.stripe ? l10n.premiumFiveOnce : l
 final premium = ValueNotifier<bool>(false);
 final themeChoice = ValueNotifier<String>('auto');
 
-/// Reads Premium and the chosen theme from the vault. A Premium theme without Premium falls back to Auto.
+/// Reads Premium, the custom themes and the theme to show (see [themeToUse]) from the vault.
 /// On store builds it also starts listening to the store, so a purchase that finished while the app was
 /// closed still unlocks.
 Future<void> loadPremiumAndTheme(Vault vault) async {
   premium.value = await hasPremium(vault);
-  final t = vault.settings['theme'] as String? ?? 'auto';
-  themeChoice.value = themeChoices.containsKey(t) && (freeThemes.contains(t) || premium.value) ? t : 'auto';
+  loadCustomThemes(vault.settings);
+  themeChoice.value = themeToUse(vault.settings, premium: premium.value, now: DateTime.now());
   if (storefront != Storefront.stripe) {
     Store.instance
       ..onUnlocked = (() => premium.value = true)

@@ -48,6 +48,13 @@ final class PhoneLink: NSObject, ObservableObject, WCSessionDelegate {
     store(context)
   }
 
+  /// The iPhone just copied a favorite's code: the Smart Stack widget puts it on top for a little while.
+  func session(_ session: WCSession, didReceiveUserInfo info: [String: Any]) {
+    guard let key = info["copied"] as? String, let at = info["at"] as? Double else { return }
+    FavoriteStore.saveCopied(.init(key: key, at: Date(timeIntervalSince1970: at)), group: FavoriteStore.sharedGroup)
+    WidgetCenter.shared.reloadTimelines(ofKind: "FavoriteSmartStack")
+  }
+
   #if DEBUG
   /// Test-only (launch with TA_SELFTEST=1): prints the codes on screen so a script can compare them with
   /// the phone's. Codes only, never secrets, and not in release builds.

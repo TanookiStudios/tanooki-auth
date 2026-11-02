@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../core/vault.dart';
 import '../l10n/l10n.dart';
+import 'theme.dart' show seasonFor, seasonalThemeKey, seasonalThemes;
 
 /// Premium alternate app icons, in picker order: the blue shield, the shield recolored per theme, then the
 /// seasonal ones.
@@ -73,4 +74,17 @@ Future<void> restoreDockIcon(Vault vault, {required bool premium}) async {
 Future<void> _setDockIcon(String id) async {
   final png = id == 'default' ? null : (await rootBundle.load(appIconAsset(id))).buffer.asUint8List();
   await const MethodChannel('tanooki/window').invokeMethod<void>('setDockIcon', png);
+}
+
+/// With "Change with the seasons" on, someone already using a seasonal icon gets this season's one (in
+/// summer it stays put). Anyone on a non-seasonal icon keeps it. Premium is checked by the caller.
+Future<void> followSeasonIcon(Vault vault, DateTime now) async {
+  final season = seasonFor(now);
+  if (!appIconsSupported || vault.settings[seasonalThemeKey] != true || season == null) return;
+  try {
+    final current = await currentAppIcon(vault);
+    if (seasonalThemes.contains(current) && current != season) await setAppIcon(vault, season);
+  } on PlatformException catch (e) {
+    debugPrint('Seasonal app icon failed: ${e.code}');
+  }
 }
