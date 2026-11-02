@@ -99,6 +99,7 @@ export const fail = (status, error, extra = {}) => json({ error, ...extra }, sta
 
 const PRIVACY = `<h1>Privacy policy</h1><p>Tanooki Auth, by Tanooki Studios. Last updated November 2, 2026.</p>
 <p><b>The app collects nothing.</b> Your accounts and setup keys are encrypted and stored only on your own device. There is no account to create, no analytics, no ads, and no tracking. The app makes no internet connections except opening a web page when you tap a link, and the features below, which stay off unless you turn them on.</p>
+<p><b>Clock check.</b> Codes only work if your device's clock is right, so while codes are on screen the app asks the Tanooki relay for the current time, at most once an hour. That request carries nothing about you or your accounts, and Tanooki doesn't store it.</p>
 <p><b>The browser extension</b> reads the web pages you visit only to find code boxes and two-factor setup QR codes. It talks only to the Tanooki Auth app on your own computer (127.0.0.1), receives one current code at a time, and stores only a pairing token in your browser. Nothing is sent anywhere else.</p>
 <p><b>Backups</b> are files you create, encrypted with a passphrase only you know.</p>
 <p><b>Breach alerts</b> (off unless you turn them on) download the public list of known website breaches from Have I Been Pwned and check it on your device. Nothing about you or your accounts is sent.</p>
