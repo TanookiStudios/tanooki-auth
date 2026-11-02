@@ -7,6 +7,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tanooki_auth/core/account.dart';
 import 'package:tanooki_auth/core/activity.dart';
+import 'package:tanooki_auth/core/backup.dart';
 import 'package:tanooki_auth/core/clock_check.dart';
 import 'package:tanooki_auth/core/phone_link.dart';
 import 'package:tanooki_auth/core/security.dart';
@@ -259,6 +260,15 @@ void main() {
           expect(vault.visible.length, on ? 1 : 2);
           expect(vault.live.length, 2, reason: 'auto backup and the emergency copy use live, so nothing is lost');
         }));
+
+    test('never encrypted backups: a manual or automatic backup made in travel mode still holds hidden accounts',
+        () async {
+      vault.settings[Vault.travelModeKey] = true;
+      expect(vault.backupAccounts.map((a) => a.id), containsAll(['Bank', 'Game']),
+          reason: 'a backup counts as "backed up" for panic wipe and the reminder, so it must hold every account');
+      final file = await exportBackup(vault.backupAccounts, 'correct horse', iterations: 1000);
+      expect((await importBackup(file, 'correct horse')).map((a) => a.id), containsAll(['Bank', 'Game']));
+    });
   });
 
   // ------------------------------------------------------------------ 24 ask-first accounts

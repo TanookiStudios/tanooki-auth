@@ -236,8 +236,8 @@ class AutoBackupRunner {
     try {
       // Encrypt first: the folder is only opened once there is something complete to write.
       final text = iterations == null
-          ? await exportBackup(v.live, s['passphrase'] as String)
-          : await exportBackup(v.live, s['passphrase'] as String, iterations: iterations!);
+          ? await exportBackup(v.backupAccounts, s['passphrase'] as String)
+          : await exportBackup(v.backupAccounts, s['passphrase'] as String, iterations: iterations!);
       await opener.use(s['folder'] as String, (folder) async {
         final name = autoBackupName(now);
         await folder.write(name, utf8.encode(text));

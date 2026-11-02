@@ -67,6 +67,11 @@ class Vault {
   /// What the app may show or hand out: [live] minus what travel mode hides.
   List<Account> get visible => accounts.where((a) => !a.trashed && !_travelHides(a)).toList();
 
+  /// What an encrypted backup (manual or automatic) holds: every live account, travel-hidden ones too. A backup
+  /// without them would still count as "backed up" for panic wipe and the reminder, leaving them in no copy.
+  /// Plain-text exports (setup links, paper, other apps) keep using [visible].
+  List<Account> get backupAccounts => live;
+
   static const trashDays = 30;
 
   /// Permanently removes accounts that have been in Trash for more than [trashDays]. Returns how many.

@@ -108,13 +108,13 @@ Future<bool> deliverFile(BuildContext context, String fileName, Uint8List bytes,
 String _today() => DateTime.now().toIso8601String().substring(0, 10);
 
 Future<void> exportBackupFlow(BuildContext context, Vault vault) async {
-  if (vault.visible.isEmpty) {
+  if (vault.backupAccounts.isEmpty) {
     _say(context, l10n.backupUiNothingToBackUp);
     return;
   }
   final pass = await askPassphrase(context, forExport: true);
   if (pass == null || !context.mounted) return;
-  final text = await busy(context, l10n.backupUiEncrypting, () => exportBackup(vault.visible, pass));
+  final text = await busy(context, l10n.backupUiEncrypting, () => exportBackup(vault.backupAccounts, pass));
   if (!context.mounted) return;
   final saved = await deliverFile(context, 'Tanooki Auth backup ${_today()}.$backupExtension',
       Uint8List.fromList(utf8.encode(text)), 'application/octet-stream');
@@ -122,7 +122,7 @@ Future<void> exportBackupFlow(BuildContext context, Vault vault) async {
   vault.settings[lastBackupKey] = DateTime.now().toUtc().toIso8601String();
   logActivity(vault, ActivityKind.exported, where: 'Backup file');
   await vault.save();
-  if (context.mounted) _say(context, l10n.backupUiSaved(vault.visible.length));
+  if (context.mounted) _say(context, l10n.backupUiSaved(vault.backupAccounts.length));
 }
 
 /// Picks a backup file and decrypts it. Returns null if the user cancels or it fails (with a message shown).
