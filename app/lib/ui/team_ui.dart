@@ -15,6 +15,7 @@ import '../core/vault.dart';
 import 'add.dart' show ScanScreen, hasCamera;
 import 'clipboard.dart';
 import 'premium.dart';
+import 'security_ui.dart' show confirmItsYou;
 import 'sync_ui.dart' show QrView, agoText;
 import 'theme.dart';
 import '../l10n/l10n.dart';
@@ -240,6 +241,8 @@ class _TeamScreenState extends State<TeamScreen> {
       ),
     );
     if (picked == null) return;
+    // Copying it in hands its setup key to everyone in the team, so "ask first" asks here like Share does.
+    if (picked.requireAuth && (!mounted || !await confirmItsYou(context, v, l10n.homeProveShare(_title(picked))))) return;
     putTeamAccount(v, teamCopyOf(picked));
     await v.save();
     await _sync();
@@ -431,6 +434,8 @@ class _TeamHomeSectionState extends State<TeamHomeSection> {
   }
 
   Future<void> _copy(Account a) async {
+    // A team copy of an "ask first" account keeps asking, like on the personal list.
+    if (a.requireAuth && !await confirmItsYou(context, widget.vault, l10n.homeProveCopy(_title(a)))) return;
     await copyCode(a.codeAt(DateTime.now()));
     if (a.type == OtpType.hotp) {
       a.counter++; // a counter code works once; the next tap gets the next one, for the whole team
@@ -492,7 +497,7 @@ class _TeamHomeSectionState extends State<TeamHomeSection> {
                           dense: true,
                           title: Text(_title(a)),
                           subtitle: a.label.isEmpty ? null : Text(a.label, maxLines: 1, overflow: TextOverflow.ellipsis),
-                          trailing: Text(a.codeAt(now),
+                          trailing: Text(a.requireAuth ? '•' * a.digits : a.codeAt(now),
                               style: const TextStyle(fontFamily: 'monospace', fontSize: 18, fontWeight: FontWeight.w700, letterSpacing: 1.5)),
                           onTap: () => _copy(a),
                         ),
