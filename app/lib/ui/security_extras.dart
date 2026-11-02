@@ -123,7 +123,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                         ActivityKind.exported => Icons.output,
                       }),
                       title: Text(l10n.securityExtrasActivityLine(e.kind.label, what)),
-                      subtitle: Text('${_time(e.time)} · ${e.where}'),
+                      subtitle: Text('${_time(e.time)} · ${e.whereText}'),
                     );
                   },
                 ),

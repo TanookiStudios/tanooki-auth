@@ -4728,6 +4728,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activityExported => 'Exported';
 
   @override
+  String get activityPlaceThisApp => 'This app';
+
+  @override
+  String get activityPlaceBackupFile => 'Backup file';
+
+  @override
+  String get activityPlaceSetupLinks => 'Setup links file';
+
+  @override
+  String get activityPlacePaperBackup => 'Paper backup PDF';
+
+  @override
+  String get activityPlaceGoogleQr => 'Google Authenticator QR codes';
+
+  @override
   String totpBadCharacter(String char) {
     return 'Not a valid base32 secret (bad character \"$char\")';
   }

@@ -120,7 +120,7 @@ Future<void> exportBackupFlow(BuildContext context, Vault vault) async {
       Uint8List.fromList(utf8.encode(text)), 'application/octet-stream');
   if (!saved) return;
   vault.settings[lastBackupKey] = DateTime.now().toUtc().toIso8601String();
-  logActivity(vault, ActivityKind.exported, where: 'Backup file');
+  logActivity(vault, ActivityKind.exported, place: ActivityPlace.backupFile);
   await vault.save();
   if (context.mounted) _say(context, l10n.backupUiSaved(vault.backupAccounts.length));
 }
@@ -240,7 +240,7 @@ Future<void> exportPlainFlow(BuildContext context, Vault vault) async {
   if (!await confirmPlainExport(context) || !context.mounted) return;
   final text = '${vault.visible.map(toOtpauthUri).join('\n')}\n';
   if (!await deliverFile(context, 'Tanooki Auth setup links ${_today()}.txt', Uint8List.fromList(utf8.encode(text)), 'text/plain')) return;
-  logActivity(vault, ActivityKind.exported, where: 'Setup links file');
+  logActivity(vault, ActivityKind.exported, place: ActivityPlace.setupLinksFile);
   await vault.save();
 }
 
@@ -292,7 +292,7 @@ Future<void> paperBackupFlow(BuildContext context, Vault vault) async {
   if (!context.mounted) return;
   final saved = await deliverFile(context, 'Tanooki Auth paper backup ${_today()}.pdf', pdf, 'application/pdf');
   if (saved) {
-    logActivity(vault, ActivityKind.exported, where: 'Paper backup PDF');
+    logActivity(vault, ActivityKind.exported, place: ActivityPlace.paperBackup);
     await vault.save();
   }
   if (saved && context.mounted) _say(context, l10n.backupUiPdfReady);

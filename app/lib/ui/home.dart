@@ -189,7 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
         duration: const Duration(seconds: 2),
       ));
     a.lastUsedAt = DateTime.now().toUtc();
-    logActivity(widget.vault, ActivityKind.copied, accountId: a.id, where: 'This app');
+    logActivity(widget.vault, ActivityKind.copied, accountId: a.id, place: ActivityPlace.thisApp);
     await widget.vault.save();
     if (mounted) setState(() => _selected = _visible.indexOf(a).clamp(0, 1 << 30));
   }
@@ -233,7 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!await confirmItsYou(context, widget.vault, l10n.homeShowQrFor(accountTitle(a))) || !mounted) return;
     final shownAt = DateTime.now();
     await Navigator.push(context, MaterialPageRoute(builder: (_) => AccountQrScreen(account: a)));
-    logActivity(widget.vault, ActivityKind.shownQr, accountId: a.id, where: 'This app', now: shownAt);
+    logActivity(widget.vault, ActivityKind.shownQr, accountId: a.id, place: ActivityPlace.thisApp, now: shownAt);
     await widget.vault.save();
   }
 

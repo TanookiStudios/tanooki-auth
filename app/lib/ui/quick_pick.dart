@@ -71,7 +71,7 @@ class _QuickPickScreenState extends State<QuickPickScreen> {
 
   Future<void> _used(Account a, ActivityKind kind) async {
     a.lastUsedAt = DateTime.now().toUtc();
-    logActivity(widget.vault, kind, accountId: a.id, where: 'Quick pick');
+    logActivity(widget.vault, kind, accountId: a.id, place: ActivityPlace.quickPick);
     await widget.vault.save();
   }
 

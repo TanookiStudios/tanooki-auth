@@ -17,6 +17,7 @@ import 'package:tanooki_auth/core/sync/relay_client.dart';
 import 'package:tanooki_auth/core/vault.dart';
 import 'package:tanooki_auth/core/widget_share.dart';
 import 'package:tanooki_auth/ui/clipboard.dart';
+import 'package:tanooki_auth/l10n/l10n.dart';
 
 import 'vault_test.dart' show MemoryKeyStore;
 
@@ -184,6 +185,24 @@ void main() {
   // ------------------------------------------------------------------ 23 activity history
 
   group('activity history', () {
+    test('places are saved as codes and shown in the current language; old English entries show as they are', () async {
+      activityPremium = () => true;
+      addTearDown(() => appLanguage.value = null);
+      vault.settings[activityKey] = [
+        {'k': 'exported', 'a': null, 't': '2026-10-01T00:00:00.000Z', 'w': 'Backup file'}, // saved by an older version
+      ];
+      logActivity(vault, ActivityKind.copied, accountId: 'a', place: ActivityPlace.quickPick);
+      logActivity(vault, ActivityKind.filled, accountId: 'a', where: 'Raycast');
+      expect(jsonEncode(vault.settings[activityKey]), isNot(contains('Quick pick')), reason: 'a code, not English text');
+      await vault.save();
+      final again = Vault(vault.file, vault.keyStore);
+      await again.load();
+      appLanguage.value = 'es';
+      expect(activityOf(again).map((e) => e.whereText), ['Raycast', 'Selección rápida', 'Backup file']);
+      appLanguage.value = 'ja';
+      expect(activityOf(again)[1].whereText, 'クイックピック');
+    });
+
     test('recorded only with Premium, newest first, capped at 500, clearable', () async {
       logActivity(vault, ActivityKind.copied, accountId: 'a', where: 'This app');
       expect(activityOf(vault), isEmpty, reason: 'free: nothing recorded');

@@ -4541,6 +4541,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get activityExported => '書き出し';
 
   @override
+  String get activityPlaceThisApp => 'このアプリ';
+
+  @override
+  String get activityPlaceBackupFile => 'バックアップファイル';
+
+  @override
+  String get activityPlaceSetupLinks => '設定リンクのファイル';
+
+  @override
+  String get activityPlacePaperBackup => '紙のバックアップ（PDF）';
+
+  @override
+  String get activityPlaceGoogleQr => 'Google Authenticator 用 QR コード';
+
+  @override
   String totpBadCharacter(String char) {
     return '有効な Base32 のシークレットではありません（不正な文字「$char」）';
   }

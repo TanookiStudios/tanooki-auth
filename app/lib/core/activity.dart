@@ -25,30 +25,64 @@ enum ActivityKind {
       };
 }
 
+/// Where something happened, saved as a code and put into words in the reader's language when shown.
+enum ActivityPlace {
+  thisApp,
+  quickPick,
+  browserExtension,
+  phoneLink,
+  backupFile,
+  setupLinksFile,
+  paperBackup,
+  googleQrCodes;
+
+  String get label => switch (this) {
+        thisApp => l10n.activityPlaceThisApp,
+        quickPick => l10n.quickPickTitle,
+        browserExtension => l10n.serverBrowserExtension,
+        phoneLink => l10n.phoneUiActivityWhere,
+        backupFile => l10n.activityPlaceBackupFile,
+        setupLinksFile => l10n.activityPlaceSetupLinks,
+        paperBackup => l10n.activityPlacePaperBackup,
+        googleQrCodes => l10n.activityPlaceGoogleQr,
+      };
+}
+
 class ActivityEvent {
-  ActivityEvent(this.kind, this.accountId, this.time, this.where);
+  ActivityEvent(this.kind, this.accountId, this.time, this.where, {this.place});
   final ActivityKind kind;
   /// Null for an export of many accounts.
   final String? accountId;
   final DateTime time;
-  /// Where it happened, in plain words: "This app", "Browser extension", "Quick pick", "Backup file"...
+  /// A known place ([where] is then empty), or null for a name that needs no translating (Raycast, a file name)
+  /// and for entries saved before places were codes, whose English text in [where] is shown as it is.
+  final ActivityPlace? place;
   final String where;
 
-  Map<String, Object?> toJson() => {'k': kind.name, 'a': accountId, 't': time.toUtc().toIso8601String(), 'w': where};
+  /// What to show for where it happened, in the current language when it is a known place.
+  String get whereText => place?.label ?? where;
+
+  Map<String, Object?> toJson() =>
+      {'k': kind.name, 'a': accountId, 't': time.toUtc().toIso8601String(), if (place != null) 'p': place!.name else 'w': where};
 
   static ActivityEvent? fromJson(Object? j) {
     if (j is! Map) return null;
     final kind = ActivityKind.values.where((k) => k.name == j['k']).firstOrNull;
     final time = DateTime.tryParse(j['t'] as String? ?? '');
     if (kind == null || time == null) return null;
-    return ActivityEvent(kind, j['a'] as String?, time, j['w'] as String? ?? '');
+    final place = ActivityPlace.values.where((p) => p.name == j['p']).firstOrNull;
+    return ActivityEvent(kind, j['a'] as String?, time, j['w'] as String? ?? '', place: place);
   }
 }
 
-/// Adds an event to [v]'s history (the caller saves the vault). Does nothing without Premium.
-void logActivity(Vault v, ActivityKind kind, {String? accountId, required String where, DateTime? now}) {
+/// Adds an event to [v]'s history (the caller saves the vault). Does nothing without Premium. Pass [place] for a
+/// known place, or [where] for a name that is the same in every language.
+void logActivity(Vault v, ActivityKind kind, {String? accountId, ActivityPlace? place, String where = '', DateTime? now}) {
   if (!activityPremium()) return;
-  final list = [...(v.settings[activityKey] as List?) ?? const [], ActivityEvent(kind, accountId, now ?? DateTime.now(), where).toJson()];
+  final list = [
+    ...(v.settings[activityKey] as List?) ?? const [],
+    ActivityEvent(kind, accountId, now ?? DateTime.now(), where, place: place).toJson(),
+  ];
   v.settings[activityKey] = list.length > maxActivity ? list.sublist(list.length - maxActivity) : list;
 }
 

@@ -58,12 +58,13 @@ const integrationOrigins = {'tanooki-integration://raycast', 'tanooki-integratio
 bool isAllowedOrigin(String origin) => integrationOrigins.contains(origin) || extensionOrigin.hasMatch(origin);
 
 /// What to call a paired client in the pairing dialog and Settings.
-String bridgeClientName(String origin) => switch (origin) {
-      'tanooki-integration://raycast' => 'Raycast',
-      'tanooki-integration://alfred' => 'Alfred',
-      'tanooki-integration://powertoys' => 'PowerToys',
-      _ => l10n.serverBrowserExtension,
-    };
+const _knownApps = {
+  'tanooki-integration://raycast': 'Raycast',
+  'tanooki-integration://alfred': 'Alfred',
+  'tanooki-integration://powertoys': 'PowerToys',
+};
+
+String bridgeClientName(String origin) => _knownApps[origin] ?? l10n.serverBrowserExtension;
 
 String _hostOf(String domain) => domain.toLowerCase().replaceFirst(RegExp(r'^www\.'), '');
 
@@ -192,7 +193,8 @@ class BridgeServer {
         if (a.requireAuth && !await host.confirmReveal(a, bridgeClientName(origin))) {
           throw _BridgeError('denied', l10n.serverDenied);
         }
-        logActivity(host.vault, ActivityKind.filled, accountId: a.id, where: bridgeClientName(origin));
+        logActivity(host.vault, ActivityKind.filled, accountId: a.id,
+            place: _knownApps.containsKey(origin) ? null : ActivityPlace.browserExtension, where: _knownApps[origin] ?? '');
         if (activityPremium() && a.type != OtpType.hotp) await host.vault.save();
         final at = a.requireAuth ? DateTime.now() : now; // the prompt may have taken a while
         if (a.type == OtpType.hotp) {

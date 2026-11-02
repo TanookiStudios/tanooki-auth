@@ -397,7 +397,7 @@ void startSyncAndLink(BuildContext context, Vault v, Future<void> Function() bri
     if (a == null || !context.mounted) return null;
     // "Ask first" accounts: Face ID / passcode here before the code goes to the browser.
     if (a.requireAuth && !await confirmItsYou(context, v, l10n.phoneUiSendCodeFor(accountTitle(a)))) return null;
-    logActivity(v, ActivityKind.filled, accountId: a.id, where: l10n.phoneUiActivityWhere);
+    logActivity(v, ActivityKind.filled, accountId: a.id, place: ActivityPlace.phoneLink);
     await v.save();
     return a;
   }, (accounts) async {

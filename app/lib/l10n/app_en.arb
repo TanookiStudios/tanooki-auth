@@ -2921,6 +2921,11 @@
   "activityTyped": "Typed",
   "activityShownQr": "Showed QR code",
   "activityExported": "Exported",
+  "activityPlaceThisApp": "This app",
+  "activityPlaceBackupFile": "Backup file",
+  "activityPlaceSetupLinks": "Setup links file",
+  "activityPlacePaperBackup": "Paper backup PDF",
+  "activityPlaceGoogleQr": "Google Authenticator QR codes",
   "totpBadCharacter": "Not a valid base32 secret (bad character \"{char}\")",
   "@totpBadCharacter": {
     "placeholders": {

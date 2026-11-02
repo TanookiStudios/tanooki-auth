@@ -4790,6 +4790,21 @@ class AppLocalizationsDe extends AppLocalizations {
   String get activityExported => 'Exportiert';
 
   @override
+  String get activityPlaceThisApp => 'Diese App';
+
+  @override
+  String get activityPlaceBackupFile => 'Backup-Datei';
+
+  @override
+  String get activityPlaceSetupLinks => 'Datei mit Einrichtungslinks';
+
+  @override
+  String get activityPlacePaperBackup => 'Papier-Backup als PDF';
+
+  @override
+  String get activityPlaceGoogleQr => 'QR-Codes für Google Authenticator';
+
+  @override
   String totpBadCharacter(String char) {
     return 'Kein gültiges Base32-Geheimnis (ungültiges Zeichen „$char“)';
   }

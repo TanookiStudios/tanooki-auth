@@ -7364,6 +7364,36 @@ abstract class AppLocalizations {
   /// **'Exported'**
   String get activityExported;
 
+  /// No description provided for @activityPlaceThisApp.
+  ///
+  /// In en, this message translates to:
+  /// **'This app'**
+  String get activityPlaceThisApp;
+
+  /// No description provided for @activityPlaceBackupFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup file'**
+  String get activityPlaceBackupFile;
+
+  /// No description provided for @activityPlaceSetupLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup links file'**
+  String get activityPlaceSetupLinks;
+
+  /// No description provided for @activityPlacePaperBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Paper backup PDF'**
+  String get activityPlacePaperBackup;
+
+  /// No description provided for @activityPlaceGoogleQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Authenticator QR codes'**
+  String get activityPlaceGoogleQr;
+
   /// No description provided for @totpBadCharacter.
   ///
   /// In en, this message translates to:

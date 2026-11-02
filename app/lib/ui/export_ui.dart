@@ -75,7 +75,7 @@ Future<void> exportToAppFlow(BuildContext context, Vault vault) async {
         ),
       );
       if (ok != true || !context.mounted) return;
-      logActivity(vault, ActivityKind.exported, where: 'Google Authenticator QR codes');
+      logActivity(vault, ActivityKind.exported, place: ActivityPlace.googleQrCodes);
       await vault.save();
       if (!context.mounted) return;
       await Navigator.push(context, MaterialPageRoute(builder: (_) => GoogleExportScreen(accounts: accounts)));

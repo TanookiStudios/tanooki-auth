@@ -4803,6 +4803,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get activityExported => 'Exporté';
 
   @override
+  String get activityPlaceThisApp => 'Cette app';
+
+  @override
+  String get activityPlaceBackupFile => 'Fichier de sauvegarde';
+
+  @override
+  String get activityPlaceSetupLinks => 'Fichier de liens de configuration';
+
+  @override
+  String get activityPlacePaperBackup => 'PDF de sauvegarde papier';
+
+  @override
+  String get activityPlaceGoogleQr => 'Codes QR pour Google Authenticator';
+
+  @override
   String totpBadCharacter(String char) {
     return 'Ce n\'est pas un secret base32 valide (caractère incorrect « $char »)';
   }
