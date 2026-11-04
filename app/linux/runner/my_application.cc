@@ -94,8 +94,8 @@ static void add_tray(MyApplication* self, const gchar* icon) {
 #pragma GCC diagnostic push  // Ubuntu now marks this call deprecated; its replacement isn't in the libraries we target yet.
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   self->tray = app_indicator_new(APPLICATION_ID, icon ? icon : "dialog-password",
-#pragma GCC diagnostic pop
                                  APP_INDICATOR_CATEGORY_APPLICATION_STATUS);
+#pragma GCC diagnostic pop
   app_indicator_set_title(self->tray, "Tanooki Auth");
   GtkWidget* menu = gtk_menu_new();
   struct {
