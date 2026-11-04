@@ -1134,7 +1134,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String premiumPerkIconsBody(int count) {
-    return 'iPhone과 Android에서 홈 화면 아이콘을 바꿀 수 있어요. 파스텔 핑크, 파스텔 블루 외 $count가지 색상과 가을, 겨울, 봄 계절 아이콘이 있어요. Mac에서는 앱이 열려 있는 동안 Dock 아이콘이 바뀌어요.';
+    return 'iPhone과 Android에서 홈 화면 아이콘 $count개 중에서 고르세요. 색상, 기념일, 프라이드 깃발이 있어요. Mac에서는 앱이 열려 있는 동안 Dock 아이콘이 바뀝니다.';
   }
 
   @override
@@ -3662,7 +3662,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get appIconClassic => '클래식';
+  String get appIconClassic => '오리지널 블루';
 
   @override
   String get appIconPink => '파스텔 핑크';
@@ -3671,25 +3671,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get appIconBlue => '파스텔 블루';
 
   @override
-  String get appIconLavender => '라벤더';
+  String get appIconSpooky => '핼러윈';
 
   @override
-  String get appIconMint => '민트';
+  String get appIconCozy => '겨울';
 
   @override
-  String get appIconMidnight => '미드나잇';
-
-  @override
-  String get appIconSunset => '선셋';
-
-  @override
-  String get appIconSpooky => '으스스 (가을)';
-
-  @override
-  String get appIconCozy => '포근 (겨울)';
-
-  @override
-  String get appIconSpring => '봄';
+  String get appIconSpring => '부활절';
 
   @override
   String get serverBrowserExtension => '브라우저 확장 프로그램';
@@ -5253,4 +5241,85 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get helpNew040i => '언어 5개 추가: 포르투갈어, 이탈리아어, 한국어, 중국어, 네덜란드어.';
+
+  @override
+  String get appIconGroupColors => '색상';
+
+  @override
+  String get appIconGroupHolidays => '기념일';
+
+  @override
+  String get appIconGroupPride => '프라이드';
+
+  @override
+  String get appIconHotpink => '핑크';
+
+  @override
+  String get appIconRed => '레드';
+
+  @override
+  String get appIconOrange => '오렌지';
+
+  @override
+  String get appIconGold => '골드';
+
+  @override
+  String get appIconGreen => '그린';
+
+  @override
+  String get appIconCyan => '시안';
+
+  @override
+  String get appIconPurple => '퍼플';
+
+  @override
+  String get appIconMonochrome => '모노크롬';
+
+  @override
+  String get appIconBlackgold => '블랙 앤 골드';
+
+  @override
+  String get appIconSummer => '여름';
+
+  @override
+  String get appIconThanksgiving => '추수감사절';
+
+  @override
+  String get appIconChristmas => '크리스마스';
+
+  @override
+  String get appIconValentines => '밸런타인데이';
+
+  @override
+  String get appIconStpatricks => '성 패트릭의 날';
+
+  @override
+  String get appIconIndependence => '독립기념일';
+
+  @override
+  String get appIconRainbow => '레인보우';
+
+  @override
+  String get appIconProgress => '프로그레스';
+
+  @override
+  String get appIconTransgender => '트랜스젠더';
+
+  @override
+  String get appIconLesbian => '레즈비언';
+
+  @override
+  String get appIconBisexual => '바이섹슈얼';
+
+  @override
+  String get appIconPansexual => '팬섹슈얼';
+
+  @override
+  String get appIconNonbinary => '논바이너리';
+
+  @override
+  String get appIconAsexual => '무성애';
+
+  @override
+  String get appIconGenderfluid => '젠더플루이드';
 }

@@ -1192,7 +1192,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String premiumPerkIconsBody(int count) {
-    return 'Escolha outro ícone para a tela de início no iPhone e no Android, em Rosa Pastel, Azul Pastel e mais $count cores, além de ícones sazonais de outono, inverno e primavera. No Mac, ele muda o ícone do Dock enquanto o app está aberto.';
+    return 'Escolha entre $count ícones da tela inicial no iPhone e no Android: cores, datas festivas e bandeiras do Orgulho. No Mac, muda o ícone do Dock enquanto o app está aberto.';
   }
 
   @override
@@ -3853,34 +3853,22 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get appIconClassic => 'Clássico';
+  String get appIconClassic => 'Azul original';
 
   @override
-  String get appIconPink => 'Rosa Pastel';
+  String get appIconPink => 'Rosa pastel';
 
   @override
-  String get appIconBlue => 'Azul Pastel';
+  String get appIconBlue => 'Azul pastel';
 
   @override
-  String get appIconLavender => 'Lavanda';
+  String get appIconSpooky => 'Halloween';
 
   @override
-  String get appIconMint => 'Menta';
+  String get appIconCozy => 'Inverno';
 
   @override
-  String get appIconMidnight => 'Meia-noite';
-
-  @override
-  String get appIconSunset => 'Pôr do sol';
-
-  @override
-  String get appIconSpooky => 'Assustador (outono)';
-
-  @override
-  String get appIconCozy => 'Aconchegante (inverno)';
-
-  @override
-  String get appIconSpring => 'Primavera';
+  String get appIconSpring => 'Páscoa';
 
   @override
   String get serverBrowserExtension => 'Extensão do navegador';
@@ -5526,4 +5514,85 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get helpNew040i =>
       'Mais cinco idiomas: português, italiano, coreano, chinês e holandês.';
+
+  @override
+  String get appIconGroupColors => 'Cores';
+
+  @override
+  String get appIconGroupHolidays => 'Datas festivas';
+
+  @override
+  String get appIconGroupPride => 'Orgulho';
+
+  @override
+  String get appIconHotpink => 'Rosa';
+
+  @override
+  String get appIconRed => 'Vermelho';
+
+  @override
+  String get appIconOrange => 'Laranja';
+
+  @override
+  String get appIconGold => 'Dourado';
+
+  @override
+  String get appIconGreen => 'Verde';
+
+  @override
+  String get appIconCyan => 'Ciano';
+
+  @override
+  String get appIconPurple => 'Roxo';
+
+  @override
+  String get appIconMonochrome => 'Monocromático';
+
+  @override
+  String get appIconBlackgold => 'Preto e dourado';
+
+  @override
+  String get appIconSummer => 'Verão';
+
+  @override
+  String get appIconThanksgiving => 'Ação de Graças';
+
+  @override
+  String get appIconChristmas => 'Natal';
+
+  @override
+  String get appIconValentines => 'Dia dos Namorados';
+
+  @override
+  String get appIconStpatricks => 'Dia de São Patrício';
+
+  @override
+  String get appIconIndependence => 'Dia da Independência';
+
+  @override
+  String get appIconRainbow => 'Arco-íris';
+
+  @override
+  String get appIconProgress => 'Progresso';
+
+  @override
+  String get appIconTransgender => 'Transgênero';
+
+  @override
+  String get appIconLesbian => 'Lésbico';
+
+  @override
+  String get appIconBisexual => 'Bissexual';
+
+  @override
+  String get appIconPansexual => 'Pansexual';
+
+  @override
+  String get appIconNonbinary => 'Não binário';
+
+  @override
+  String get appIconAsexual => 'Assexual';
+
+  @override
+  String get appIconGenderfluid => 'Gênero fluido';
 }

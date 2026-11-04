@@ -1990,7 +1990,7 @@ abstract class AppLocalizations {
   /// No description provided for @premiumPerkIconsBody.
   ///
   /// In en, this message translates to:
-  /// **'Pick a different home-screen icon on iPhone and Android, in Pastel Pink, Pastel Blue and {count} more colors, plus seasonal ones for fall, winter and spring. On a Mac it changes the Dock icon while the app is open.'**
+  /// **'Pick from {count} home-screen icons on iPhone and Android, in colors, holidays and Pride flags. On a Mac it changes the Dock icon while the app is open.'**
   String premiumPerkIconsBody(int count);
 
   /// No description provided for @premiumPerkSync.
@@ -6088,7 +6088,7 @@ abstract class AppLocalizations {
   /// No description provided for @appIconClassic.
   ///
   /// In en, this message translates to:
-  /// **'Classic'**
+  /// **'Original Blue'**
   String get appIconClassic;
 
   /// No description provided for @appIconPink.
@@ -6103,46 +6103,22 @@ abstract class AppLocalizations {
   /// **'Pastel Blue'**
   String get appIconBlue;
 
-  /// No description provided for @appIconLavender.
-  ///
-  /// In en, this message translates to:
-  /// **'Lavender'**
-  String get appIconLavender;
-
-  /// No description provided for @appIconMint.
-  ///
-  /// In en, this message translates to:
-  /// **'Mint'**
-  String get appIconMint;
-
-  /// No description provided for @appIconMidnight.
-  ///
-  /// In en, this message translates to:
-  /// **'Midnight'**
-  String get appIconMidnight;
-
-  /// No description provided for @appIconSunset.
-  ///
-  /// In en, this message translates to:
-  /// **'Sunset'**
-  String get appIconSunset;
-
   /// No description provided for @appIconSpooky.
   ///
   /// In en, this message translates to:
-  /// **'Spooky (fall)'**
+  /// **'Halloween'**
   String get appIconSpooky;
 
   /// No description provided for @appIconCozy.
   ///
   /// In en, this message translates to:
-  /// **'Cozy (winter)'**
+  /// **'Winter'**
   String get appIconCozy;
 
   /// No description provided for @appIconSpring.
   ///
   /// In en, this message translates to:
-  /// **'Spring'**
+  /// **'Easter'**
   String get appIconSpring;
 
   /// No description provided for @serverBrowserExtension.
@@ -8556,6 +8532,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Five more languages: Portuguese, Italian, Korean, Chinese and Dutch.'**
   String get helpNew040i;
+
+  /// No description provided for @appIconGroupColors.
+  ///
+  /// In en, this message translates to:
+  /// **'Colors'**
+  String get appIconGroupColors;
+
+  /// No description provided for @appIconGroupHolidays.
+  ///
+  /// In en, this message translates to:
+  /// **'Holidays'**
+  String get appIconGroupHolidays;
+
+  /// No description provided for @appIconGroupPride.
+  ///
+  /// In en, this message translates to:
+  /// **'Pride'**
+  String get appIconGroupPride;
+
+  /// No description provided for @appIconHotpink.
+  ///
+  /// In en, this message translates to:
+  /// **'Pink'**
+  String get appIconHotpink;
+
+  /// No description provided for @appIconRed.
+  ///
+  /// In en, this message translates to:
+  /// **'Red'**
+  String get appIconRed;
+
+  /// No description provided for @appIconOrange.
+  ///
+  /// In en, this message translates to:
+  /// **'Orange'**
+  String get appIconOrange;
+
+  /// No description provided for @appIconGold.
+  ///
+  /// In en, this message translates to:
+  /// **'Gold'**
+  String get appIconGold;
+
+  /// No description provided for @appIconGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Green'**
+  String get appIconGreen;
+
+  /// No description provided for @appIconCyan.
+  ///
+  /// In en, this message translates to:
+  /// **'Cyan'**
+  String get appIconCyan;
+
+  /// No description provided for @appIconPurple.
+  ///
+  /// In en, this message translates to:
+  /// **'Purple'**
+  String get appIconPurple;
+
+  /// No description provided for @appIconMonochrome.
+  ///
+  /// In en, this message translates to:
+  /// **'Monochrome'**
+  String get appIconMonochrome;
+
+  /// No description provided for @appIconBlackgold.
+  ///
+  /// In en, this message translates to:
+  /// **'Black and Gold'**
+  String get appIconBlackgold;
+
+  /// No description provided for @appIconSummer.
+  ///
+  /// In en, this message translates to:
+  /// **'Summer'**
+  String get appIconSummer;
+
+  /// No description provided for @appIconThanksgiving.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanksgiving'**
+  String get appIconThanksgiving;
+
+  /// No description provided for @appIconChristmas.
+  ///
+  /// In en, this message translates to:
+  /// **'Christmas'**
+  String get appIconChristmas;
+
+  /// No description provided for @appIconValentines.
+  ///
+  /// In en, this message translates to:
+  /// **'Valentine\'s Day'**
+  String get appIconValentines;
+
+  /// No description provided for @appIconStpatricks.
+  ///
+  /// In en, this message translates to:
+  /// **'St. Patrick\'s Day'**
+  String get appIconStpatricks;
+
+  /// No description provided for @appIconIndependence.
+  ///
+  /// In en, this message translates to:
+  /// **'Independence Day'**
+  String get appIconIndependence;
+
+  /// No description provided for @appIconRainbow.
+  ///
+  /// In en, this message translates to:
+  /// **'Rainbow'**
+  String get appIconRainbow;
+
+  /// No description provided for @appIconProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get appIconProgress;
+
+  /// No description provided for @appIconTransgender.
+  ///
+  /// In en, this message translates to:
+  /// **'Transgender'**
+  String get appIconTransgender;
+
+  /// No description provided for @appIconLesbian.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesbian'**
+  String get appIconLesbian;
+
+  /// No description provided for @appIconBisexual.
+  ///
+  /// In en, this message translates to:
+  /// **'Bisexual'**
+  String get appIconBisexual;
+
+  /// No description provided for @appIconPansexual.
+  ///
+  /// In en, this message translates to:
+  /// **'Pansexual'**
+  String get appIconPansexual;
+
+  /// No description provided for @appIconNonbinary.
+  ///
+  /// In en, this message translates to:
+  /// **'Nonbinary'**
+  String get appIconNonbinary;
+
+  /// No description provided for @appIconAsexual.
+  ///
+  /// In en, this message translates to:
+  /// **'Asexual'**
+  String get appIconAsexual;
+
+  /// No description provided for @appIconGenderfluid.
+  ///
+  /// In en, this message translates to:
+  /// **'Genderfluid'**
+  String get appIconGenderfluid;
 }
 
 class _AppLocalizationsDelegate

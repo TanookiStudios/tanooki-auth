@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 0.4.0+8
+version: 0.4.0+9
 
 environment:
   sdk: ^3.13.4
@@ -67,7 +67,6 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
-  flutter_launcher_icons: ^0.14.4
   msix: ^3.18.0
 
 # For information on the generic Dart part of this file, see the
@@ -126,27 +125,10 @@ flutter:
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
 
-# Blue-shield app icon for every platform. Masters come from assets/icon/make_icons.cjs.
-# Regenerate with: dart run flutter_launcher_icons
-flutter_launcher_icons:
-  image_path: assets/icon/icon-square.png
-  ios: true
-  remove_alpha_ios: true
-  android: true
-  adaptive_icon_background: "#0B0B0D"
-  adaptive_icon_foreground: assets/icon/icon-foreground.png
-  macos:
-    generate: true
-    image_path: assets/icon/icon-rounded.png
-  windows:
-    generate: true
-    image_path: assets/icon/icon-rounded.png
-    icon_size: 256
 
-# Microsoft Store package (MSIX). The three identity values below are placeholders: the
-# Windows workflow overrides them from the MSIX_IDENTITY_NAME, MSIX_PUBLISHER and
-# MSIX_PUBLISHER_DISPLAY_NAME repository variables once Partner Center gives them out
-# (see store/microsoft-store.md). Build: dart run msix:create --store
+# App icons for every platform come from tool/make_app_icons.cjs.
+
+
 msix_config:
   display_name: Tanooki Auth
   identity_name: TanookiStudios.TanookiAuth

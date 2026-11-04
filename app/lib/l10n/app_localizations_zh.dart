@@ -1094,7 +1094,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String premiumPerkIconsBody(int count) {
-    return '在 iPhone 和 Android 上选择不同的主屏幕图标，有淡粉、淡蓝和另外 $count 种颜色，还有秋季、冬季和春季的应季图标。在 Mac 上，应用打开时会更换程序坞图标。';
+    return '在 iPhone 和 Android 上从 $count 款主屏幕图标中选择,包括颜色、节日和骄傲旗。在 Mac 上,应用打开时会更换程序坞图标。';
   }
 
   @override
@@ -3579,34 +3579,22 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get appIconClassic => '经典';
+  String get appIconClassic => '原版蓝';
 
   @override
-  String get appIconPink => '淡粉';
+  String get appIconPink => '粉彩粉';
 
   @override
-  String get appIconBlue => '淡蓝';
+  String get appIconBlue => '粉彩蓝';
 
   @override
-  String get appIconLavender => '薰衣草';
+  String get appIconSpooky => '万圣节';
 
   @override
-  String get appIconMint => '薄荷';
+  String get appIconCozy => '冬日';
 
   @override
-  String get appIconMidnight => '午夜';
-
-  @override
-  String get appIconSunset => '日落';
-
-  @override
-  String get appIconSpooky => '万圣（秋季）';
-
-  @override
-  String get appIconCozy => '暖冬（冬季）';
-
-  @override
-  String get appIconSpring => '春日';
+  String get appIconSpring => '复活节';
 
   @override
   String get serverBrowserExtension => '浏览器扩展';
@@ -5147,6 +5135,87 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get helpNew040i => '新增五种语言:葡萄牙语、意大利语、韩语、中文和荷兰语。';
+
+  @override
+  String get appIconGroupColors => '颜色';
+
+  @override
+  String get appIconGroupHolidays => '节日';
+
+  @override
+  String get appIconGroupPride => '骄傲';
+
+  @override
+  String get appIconHotpink => '粉色';
+
+  @override
+  String get appIconRed => '红色';
+
+  @override
+  String get appIconOrange => '橙色';
+
+  @override
+  String get appIconGold => '金色';
+
+  @override
+  String get appIconGreen => '绿色';
+
+  @override
+  String get appIconCyan => '青色';
+
+  @override
+  String get appIconPurple => '紫色';
+
+  @override
+  String get appIconMonochrome => '黑白';
+
+  @override
+  String get appIconBlackgold => '黑金';
+
+  @override
+  String get appIconSummer => '夏日';
+
+  @override
+  String get appIconThanksgiving => '感恩节';
+
+  @override
+  String get appIconChristmas => '圣诞节';
+
+  @override
+  String get appIconValentines => '情人节';
+
+  @override
+  String get appIconStpatricks => '圣帕特里克节';
+
+  @override
+  String get appIconIndependence => '独立日';
+
+  @override
+  String get appIconRainbow => '彩虹';
+
+  @override
+  String get appIconProgress => '进步';
+
+  @override
+  String get appIconTransgender => '跨性别';
+
+  @override
+  String get appIconLesbian => '女同性恋';
+
+  @override
+  String get appIconBisexual => '双性恋';
+
+  @override
+  String get appIconPansexual => '泛性恋';
+
+  @override
+  String get appIconNonbinary => '非二元';
+
+  @override
+  String get appIconAsexual => '无性恋';
+
+  @override
+  String get appIconGenderfluid => '性别流动';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hans`).
@@ -6238,7 +6307,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String premiumPerkIconsBody(int count) {
-    return '在 iPhone 和 Android 上选择不同的主屏幕图标，有淡粉、淡蓝和另外 $count 种颜色，还有秋季、冬季和春季的应季图标。在 Mac 上，应用打开时会更换程序坞图标。';
+    return '在 iPhone 和 Android 上从 $count 款主屏幕图标中选择,包括颜色、节日和骄傲旗。在 Mac 上,应用打开时会更换程序坞图标。';
   }
 
   @override
@@ -8723,34 +8792,22 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   }
 
   @override
-  String get appIconClassic => '经典';
+  String get appIconClassic => '原版蓝';
 
   @override
-  String get appIconPink => '淡粉';
+  String get appIconPink => '粉彩粉';
 
   @override
-  String get appIconBlue => '淡蓝';
+  String get appIconBlue => '粉彩蓝';
 
   @override
-  String get appIconLavender => '薰衣草';
+  String get appIconSpooky => '万圣节';
 
   @override
-  String get appIconMint => '薄荷';
+  String get appIconCozy => '冬日';
 
   @override
-  String get appIconMidnight => '午夜';
-
-  @override
-  String get appIconSunset => '日落';
-
-  @override
-  String get appIconSpooky => '万圣（秋季）';
-
-  @override
-  String get appIconCozy => '暖冬（冬季）';
-
-  @override
-  String get appIconSpring => '春日';
+  String get appIconSpring => '复活节';
 
   @override
   String get serverBrowserExtension => '浏览器扩展';
@@ -10291,4 +10348,85 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get helpNew040i => '新增五种语言:葡萄牙语、意大利语、韩语、中文和荷兰语。';
+
+  @override
+  String get appIconGroupColors => '颜色';
+
+  @override
+  String get appIconGroupHolidays => '节日';
+
+  @override
+  String get appIconGroupPride => '骄傲';
+
+  @override
+  String get appIconHotpink => '粉色';
+
+  @override
+  String get appIconRed => '红色';
+
+  @override
+  String get appIconOrange => '橙色';
+
+  @override
+  String get appIconGold => '金色';
+
+  @override
+  String get appIconGreen => '绿色';
+
+  @override
+  String get appIconCyan => '青色';
+
+  @override
+  String get appIconPurple => '紫色';
+
+  @override
+  String get appIconMonochrome => '黑白';
+
+  @override
+  String get appIconBlackgold => '黑金';
+
+  @override
+  String get appIconSummer => '夏日';
+
+  @override
+  String get appIconThanksgiving => '感恩节';
+
+  @override
+  String get appIconChristmas => '圣诞节';
+
+  @override
+  String get appIconValentines => '情人节';
+
+  @override
+  String get appIconStpatricks => '圣帕特里克节';
+
+  @override
+  String get appIconIndependence => '独立日';
+
+  @override
+  String get appIconRainbow => '彩虹';
+
+  @override
+  String get appIconProgress => '进步';
+
+  @override
+  String get appIconTransgender => '跨性别';
+
+  @override
+  String get appIconLesbian => '女同性恋';
+
+  @override
+  String get appIconBisexual => '双性恋';
+
+  @override
+  String get appIconPansexual => '泛性恋';
+
+  @override
+  String get appIconNonbinary => '非二元';
+
+  @override
+  String get appIconAsexual => '无性恋';
+
+  @override
+  String get appIconGenderfluid => '性别流动';
 }

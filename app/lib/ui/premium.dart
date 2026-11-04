@@ -336,7 +336,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 18, 16, 4),
                   child: Column(children: [
                     perk(Icons.palette_outlined, l10n.premiumPerkThemes, l10n.premiumPerkThemesBody(themeChoices.length - freeThemes.length - 2)),
-                    perk(Icons.apps_outlined, l10n.premiumPerkIcons, l10n.premiumPerkIconsBody(appIcons.length - 6)),
+                    perk(Icons.apps_outlined, l10n.premiumPerkIcons, l10n.premiumPerkIconsBody(appIcons.length)),
                     perk(Icons.sync, l10n.premiumPerkSync, l10n.premiumPerkSyncBody),
                     perk(Icons.phonelink_lock_outlined, l10n.premiumPerkApprove, l10n.premiumPerkApproveBody),
                     perk(Icons.shield_outlined, l10n.premiumPerkBreach, l10n.premiumPerkBreachBody),

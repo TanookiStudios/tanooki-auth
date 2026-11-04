@@ -12,7 +12,7 @@ void main() {
 
   test('pastel pink and pastel blue come first', () {
     expect(appIcons.keys.take(3), ['default', 'pink', 'blue']);
-    expect(appIcons.length, greaterThanOrEqualTo(7));
+    expect(appIcons.length, 30);
   });
 
   for (final id in appIcons.keys) {

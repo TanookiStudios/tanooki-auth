@@ -279,6 +279,8 @@ void main() {
     testWidgets('the screen shows every row with its button, and opens from Settings', (t) async {
       vault.accounts.add(acct('A', 'JBSWY3DPEHPK3PXP'));
       await pump(t, SettingsScreen(vault: vault), size: const Size(420, 6000));
+      await t.ensureVisible(find.byKey(const Key('healthCheck')));
+      await t.pumpAndSettle();
       await t.tap(find.byKey(const Key('healthCheck')));
       await t.pumpAndSettle();
       expect(find.byType(HealthScreen), findsOneWidget);

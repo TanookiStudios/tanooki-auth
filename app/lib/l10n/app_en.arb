@@ -654,7 +654,7 @@
     }
   },
   "premiumPerkIcons": "App icons",
-  "premiumPerkIconsBody": "Pick a different home-screen icon on iPhone and Android, in Pastel Pink, Pastel Blue and {count} more colors, plus seasonal ones for fall, winter and spring. On a Mac it changes the Dock icon while the app is open.",
+  "premiumPerkIconsBody": "Pick from {count} home-screen icons on iPhone and Android, in colors, holidays and Pride flags. On a Mac it changes the Dock icon while the app is open.",
   "@premiumPerkIconsBody": {
     "placeholders": {
       "count": {
@@ -2296,16 +2296,12 @@
       }
     }
   },
-  "appIconClassic": "Classic",
+  "appIconClassic": "Original Blue",
   "appIconPink": "Pastel Pink",
   "appIconBlue": "Pastel Blue",
-  "appIconLavender": "Lavender",
-  "appIconMint": "Mint",
-  "appIconMidnight": "Midnight",
-  "appIconSunset": "Sunset",
-  "appIconSpooky": "Spooky (fall)",
-  "appIconCozy": "Cozy (winter)",
-  "appIconSpring": "Spring",
+  "appIconSpooky": "Halloween",
+  "appIconCozy": "Winter",
+  "appIconSpring": "Easter",
   "serverBrowserExtension": "Browser extension",
   "serverBadRequest": "Tanooki Auth didn't understand that request.",
   "serverLocked": "Tanooki Auth is locked. Unlock it, then try again.",
@@ -3389,5 +3385,32 @@
   "helpNew040f": "Erase a lost device from another one, and settle sync clashes.",
   "helpNew040g": "Team roles, a team activity log, email invites, and a Business plan (coming soon).",
   "helpNew040h": "Make your own theme, seasonal themes, and an Apple Watch Smart Stack widget.",
-  "helpNew040i": "Five more languages: Portuguese, Italian, Korean, Chinese and Dutch."
+  "helpNew040i": "Five more languages: Portuguese, Italian, Korean, Chinese and Dutch.",
+  "appIconGroupColors": "Colors",
+  "appIconGroupHolidays": "Holidays",
+  "appIconGroupPride": "Pride",
+  "appIconHotpink": "Pink",
+  "appIconRed": "Red",
+  "appIconOrange": "Orange",
+  "appIconGold": "Gold",
+  "appIconGreen": "Green",
+  "appIconCyan": "Cyan",
+  "appIconPurple": "Purple",
+  "appIconMonochrome": "Monochrome",
+  "appIconBlackgold": "Black and Gold",
+  "appIconSummer": "Summer",
+  "appIconThanksgiving": "Thanksgiving",
+  "appIconChristmas": "Christmas",
+  "appIconValentines": "Valentine's Day",
+  "appIconStpatricks": "St. Patrick's Day",
+  "appIconIndependence": "Independence Day",
+  "appIconRainbow": "Rainbow",
+  "appIconProgress": "Progress",
+  "appIconTransgender": "Transgender",
+  "appIconLesbian": "Lesbian",
+  "appIconBisexual": "Bisexual",
+  "appIconPansexual": "Pansexual",
+  "appIconNonbinary": "Nonbinary",
+  "appIconAsexual": "Asexual",
+  "appIconGenderfluid": "Genderfluid"
 }

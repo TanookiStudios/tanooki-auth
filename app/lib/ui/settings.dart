@@ -102,7 +102,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   border: Border.all(color: selected ? Palette.accent : Colors.transparent, width: 2.5),
                 ),
                 child: Stack(alignment: Alignment.center, children: [
-                  Image.asset(appIconAsset(id), width: 58, height: 58),
+                  Image.asset(appIconAsset(id), width: 58, height: 58, cacheWidth: 174), // 30 of these: don't decode them at full size
                   if (locked && id != 'default') Icon(Icons.lock, size: 16, color: Palette.muted),
                 ]),
               ),
@@ -129,10 +129,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             style: TextStyle(color: Palette.muted, height: 1.4),
           ),
           if (appIconsSupported) ...[
-            const SizedBox(height: 12),
-            Wrap(spacing: 10, runSpacing: 12, children: [
-              for (final e in appIcons.entries) tile(e.key, e.value),
-            ]),
+            for (final (group, icons) in appIconGroups) ...[
+              const SizedBox(height: 14),
+              Text(group, style: TextStyle(color: Palette.muted, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Wrap(spacing: 10, runSpacing: 12, children: [
+                for (final e in icons.entries) tile(e.key, e.value),
+              ]),
+            ],
           ],
         ]),
       ),

@@ -79,7 +79,7 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     // Premium app icons: one launcher activity-alias per icon in AndroidManifest.xml, exactly one enabled.
-    private val appIconIds = listOf("default", "pink", "blue", "lavender", "mint", "midnight", "sunset", "spooky", "cozy", "spring")
+    private val appIconIds = listOf("default", "pink", "blue", "hotpink", "red", "orange", "gold", "green", "cyan", "purple", "monochrome", "blackgold", "spring", "summer", "spooky", "thanksgiving", "cozy", "christmas", "valentines", "stpatricks", "independence", "rainbow", "progress", "transgender", "lesbian", "bisexual", "pansexual", "nonbinary", "asexual", "genderfluid")
     private fun iconAlias(id: String) = ComponentName(this, "${MainActivity::class.java.`package`!!.name}.AppIcon_$id")
 
     private fun currentAppIcon(): String = appIconIds.firstOrNull { id ->
