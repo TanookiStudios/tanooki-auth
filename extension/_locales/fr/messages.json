@@ -6,7 +6,7 @@
     "message": "Remplit les codes de double authentification depuis l'app de bureau Tanooki Auth ou depuis votre téléphone, uniquement sur le site de chaque compte."
   },
   "errNoApp": {
-    "message": "Tanooki Auth n'est pas ouverte. Ouvrez l'app Tanooki Auth sur cet ordinateur."
+    "message": "Tanooki Auth n'est pas ouverte. Ouvrez l'app Tanooki Auth sur cet ordinateur. Sur Mac, il faut la version Mac : la version iPhone ne peut pas communiquer avec le navigateur."
   },
   "errNotPaired": {
     "message": "Ce navigateur n'est pas encore associé à Tanooki Auth."

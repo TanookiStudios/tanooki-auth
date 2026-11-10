@@ -6,7 +6,7 @@
     "message": "2段階認証のコードを、Tanooki Authのデスクトップアプリまたはスマホから、各アカウントのサイトでだけ入力します。"
   },
   "errNoApp": {
-    "message": "Tanooki Authが起動していません。このパソコンでTanooki Authアプリを開いてください。"
+    "message": "Tanooki Authが起動していません。このパソコンでTanooki Authアプリを開いてください。 Mac では Mac 版が必要です。iPhone 版はブラウザと通信できません。"
   },
   "errNotPaired": {
     "message": "このブラウザはまだTanooki Authと連携していません。"

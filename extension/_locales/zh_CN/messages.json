@@ -6,7 +6,7 @@
     "message": "从 Tanooki Auth 桌面应用或你的手机填写两步验证码，并且只在每个账号所属的网站上填写。"
   },
   "errNoApp": {
-    "message": "Tanooki Auth 没有运行。请在这台电脑上打开 Tanooki Auth 应用。"
+    "message": "Tanooki Auth 没有运行。请在这台电脑上打开 Tanooki Auth 应用。 在 Mac 上必须使用 Mac 版:iPhone 版无法与浏览器通信。"
   },
   "errNotPaired": {
     "message": "这个浏览器还没有与 Tanooki Auth 配对。"

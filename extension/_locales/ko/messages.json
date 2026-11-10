@@ -6,7 +6,7 @@
     "message": "Tanooki Auth 데스크톱 앱이나 휴대폰에서 2단계 인증 코드를 가져와, 각 계정이 속한 웹사이트에서만 채워 줘요."
   },
   "errNoApp": {
-    "message": "Tanooki Auth가 실행 중이 아니에요. 이 컴퓨터에서 Tanooki Auth 앱을 여세요."
+    "message": "Tanooki Auth가 실행 중이 아니에요. 이 컴퓨터에서 Tanooki Auth 앱을 여세요. Mac에서는 Mac용이어야 해요. iPhone용은 브라우저와 통신할 수 없어요."
   },
   "errNotPaired": {
     "message": "이 브라우저는 아직 Tanooki Auth와 연결되지 않았어요."

@@ -6,7 +6,7 @@
     "message": "Preenche códigos de dois fatores do app Tanooki Auth para computador, ou do seu celular, só no site de cada conta."
   },
   "errNoApp": {
-    "message": "O Tanooki Auth não está rodando. Abra o app Tanooki Auth neste computador."
+    "message": "O Tanooki Auth não está rodando. Abra o app Tanooki Auth neste computador. No Mac, tem que ser a versão para Mac: a versão de iPhone não consegue falar com o navegador."
   },
   "errNotPaired": {
     "message": "Este navegador ainda não está pareado com o Tanooki Auth."

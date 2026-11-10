@@ -1429,5 +1429,6 @@
   "appIconPansexual": "Pansexuel",
   "appIconNonbinary": "Non binaire",
   "appIconAsexual": "Asexuel",
-  "appIconGenderfluid": "Genre fluide"
+  "appIconGenderfluid": "Genre fluide",
+  "homeCardsIphoneOnMac": "C'est la version iPhone de Tanooki Auth qui tourne sur votre Mac : les extensions du navigateur ne peuvent pas s'y connecter. Installez plutôt la version Mac : ouvrez TestFlight sur ce Mac, choisissez Tanooki Auth, puis macOS."
 }

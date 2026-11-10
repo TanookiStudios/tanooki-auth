@@ -6,7 +6,7 @@
     "message": "Inserisce i codici a due fattori dall'app desktop Tanooki Auth, o dal tuo telefono, solo sul sito web a cui appartiene ogni account."
   },
   "errNoApp": {
-    "message": "Tanooki Auth non è in esecuzione. Apri l'app Tanooki Auth su questo computer."
+    "message": "Tanooki Auth non è in esecuzione. Apri l'app Tanooki Auth su questo computer. Su Mac serve la versione Mac: la versione iPhone non può comunicare con il browser."
   },
   "errNotPaired": {
     "message": "Questo browser non è ancora abbinato a Tanooki Auth."

@@ -3412,5 +3412,6 @@
   "appIconPansexual": "Pansexual",
   "appIconNonbinary": "Nonbinary",
   "appIconAsexual": "Asexual",
-  "appIconGenderfluid": "Genderfluid"
+  "appIconGenderfluid": "Genderfluid",
+  "homeCardsIphoneOnMac": "This is the iPhone version of Tanooki Auth running on your Mac, so browser extensions can't reach it. Install the Mac version instead: open TestFlight on this Mac, pick Tanooki Auth, and choose macOS."
 }

@@ -5216,6 +5216,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appIconGenderfluid => '性别流动';
+
+  @override
+  String get homeCardsIphoneOnMac =>
+      '这是在你的 Mac 上运行的 iPhone 版 Tanooki Auth,所以浏览器扩展无法连接它。请改为安装 Mac 版:在这台 Mac 上打开 TestFlight,选择 Tanooki Auth,然后选择 macOS。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hans`).
@@ -10429,4 +10433,8 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get appIconGenderfluid => '性别流动';
+
+  @override
+  String get homeCardsIphoneOnMac =>
+      '这是在你的 Mac 上运行的 iPhone 版 Tanooki Auth,所以浏览器扩展无法连接它。请改为安装 Mac 版:在这台 Mac 上打开 TestFlight,选择 Tanooki Auth,然后选择 macOS。';
 }

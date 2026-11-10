@@ -5632,4 +5632,8 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get appIconGenderfluid => 'Genre fluide';
+
+  @override
+  String get homeCardsIphoneOnMac =>
+      'C\'est la version iPhone de Tanooki Auth qui tourne sur votre Mac : les extensions du navigateur ne peuvent pas s\'y connecter. Installez plutôt la version Mac : ouvrez TestFlight sur ce Mac, choisissez Tanooki Auth, puis macOS.';
 }

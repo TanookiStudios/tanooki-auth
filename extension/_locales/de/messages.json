@@ -6,7 +6,7 @@
     "message": "Füllt Zwei-Faktor-Codes aus der Tanooki Auth-Desktop-App oder von deinem Handy aus, nur auf der Website, zu der das jeweilige Konto gehört."
   },
   "errNoApp": {
-    "message": "Tanooki Auth läuft nicht. Öffne die Tanooki Auth-App auf diesem Computer."
+    "message": "Tanooki Auth läuft nicht. Öffne die Tanooki Auth-App auf diesem Computer. Auf dem Mac muss es die Mac-Version sein: Die iPhone-Version kann nicht mit Browsern sprechen."
   },
   "errNotPaired": {
     "message": "Dieser Browser ist noch nicht mit Tanooki Auth gekoppelt."

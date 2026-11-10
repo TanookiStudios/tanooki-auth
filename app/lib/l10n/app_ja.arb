@@ -1429,5 +1429,6 @@
   "appIconPansexual": "パンセクシュアル",
   "appIconNonbinary": "ノンバイナリー",
   "appIconAsexual": "アセクシュアル",
-  "appIconGenderfluid": "ジェンダーフルイド"
+  "appIconGenderfluid": "ジェンダーフルイド",
+  "homeCardsIphoneOnMac": "これは Mac 上で動いている iPhone 版の Tanooki Auth なので、ブラウザ拡張機能から接続できません。Mac 版をインストールしてください。この Mac で TestFlight を開き、Tanooki Auth を選んで macOS を選択します。"
 }

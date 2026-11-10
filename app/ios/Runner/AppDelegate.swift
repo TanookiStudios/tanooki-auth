@@ -75,6 +75,9 @@ final class Extras: NSObject, FlutterSceneLifeCycleDelegate, WCSessionDelegate {
       case "takeAction":
         result(self.pendingAction ?? self.takeSharedImage())
         self.pendingAction = nil
+      case "isIOSAppOnMac":
+        // The iPhone build running on an Apple silicon Mac: it has no browser bridge, so the app says so.
+        result(ProcessInfo.processInfo.isiOSAppOnMac)
       case "getAppIcon":
         // Alternate icon sets are named AppIcon-<id> in Assets.xcassets; nil is the main icon.
         result(UIApplication.shared.alternateIconName.map { String($0.dropFirst("AppIcon-".count)) } ?? "default")

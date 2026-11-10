@@ -6,7 +6,7 @@
     "message": "Rellena códigos de verificación en dos pasos desde la app de escritorio de Tanooki Auth o desde tu teléfono, solo en el sitio web de cada cuenta."
   },
   "errNoApp": {
-    "message": "Tanooki Auth no se está ejecutando. Abre la app Tanooki Auth en esta computadora."
+    "message": "Tanooki Auth no se está ejecutando. Abre la app Tanooki Auth en esta computadora. En un Mac tiene que ser la versión para Mac: la versión de iPhone no puede comunicarse con el navegador."
   },
   "errNotPaired": {
     "message": "Este navegador aún no está emparejado con Tanooki Auth."

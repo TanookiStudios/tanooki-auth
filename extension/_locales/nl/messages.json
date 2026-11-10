@@ -6,7 +6,7 @@
     "message": "Vult tweestapscodes in vanuit de desktop-app van Tanooki Auth of vanaf je telefoon, alleen op de website waar elk account bij hoort."
   },
   "errNoApp": {
-    "message": "Tanooki Auth is niet actief. Open de Tanooki Auth-app op deze computer."
+    "message": "Tanooki Auth is niet actief. Open de Tanooki Auth-app op deze computer. Op een Mac moet het de Mac-versie zijn: de iPhone-versie kan niet met browsers praten."
   },
   "errNotPaired": {
     "message": "Deze browser is nog niet gekoppeld aan Tanooki Auth."

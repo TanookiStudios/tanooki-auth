@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../core/clock_check.dart';
 import '../core/emergency.dart';
@@ -28,10 +31,16 @@ class HomeNotices extends StatefulWidget {
 
 class _HomeNoticesState extends State<HomeNotices> {
   final _clock = ClockCheck.instance, _emergency = EmergencyService.instance;
+  bool _iPhoneAppOnMac = false;
 
   @override
   void initState() {
     super.initState();
+    if (Platform.isIOS) {
+      const MethodChannel('tanooki/extras').invokeMethod<bool>('isIOSAppOnMac').then((on) {
+        if (on == true && mounted) setState(() => _iPhoneAppOnMac = true);
+      }, onError: (_) {}); // older builds and tests: no such call
+    }
     _clock.warning.addListener(_refresh);
     _emergency.status.addListener(_refresh);
   }
@@ -82,6 +91,10 @@ class _HomeNoticesState extends State<HomeNotices> {
   Widget build(BuildContext context) {
     final v = widget.vault, now = DateTime.now();
     final cards = <Widget>[];
+
+    if (_iPhoneAppOnMac) {
+      cards.add(_card(key: const Key('iPhoneOnMacCard'), icon: Icons.laptop_mac, color: Palette.red, text: l10n.homeCardsIphoneOnMac, actions: const []));
+    }
 
     final clock = _clock.warning.value;
     if (clock != null) {

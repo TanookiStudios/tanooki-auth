@@ -8694,6 +8694,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Genderfluid'**
   String get appIconGenderfluid;
+
+  /// No description provided for @homeCardsIphoneOnMac.
+  ///
+  /// In en, this message translates to:
+  /// **'This is the iPhone version of Tanooki Auth running on your Mac, so browser extensions can\'t reach it. Install the Mac version instead: open TestFlight on this Mac, pick Tanooki Auth, and choose macOS.'**
+  String get homeCardsIphoneOnMac;
 }
 
 class _AppLocalizationsDelegate
