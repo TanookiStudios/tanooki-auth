@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "${0:A:h}/.."
 page=site/public/index.html
-files=(dist/*-mac.dmg dist/*-windows-setup.exe dist/*-android.apk dist/*-extension.zip)
+files=(dist/*0.4.0-mac.dmg dist/*0.4.0-windows-setup.exe dist/*0.4.0-android.apk dist/*0.4.0-extension.zip dist/*_0.4.0_amd64.deb dist/*-0.4.0-x86_64.AppImage)
 for f in $files; do
   name=${f:t}
   sum=$(shasum -a 256 "$f" | cut -d' ' -f1)
